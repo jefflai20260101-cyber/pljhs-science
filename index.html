@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>里中自然課 🔬 探索科學的奧秘</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 絢麗的背景光暈 -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <!-- 導覽列 -->
+    <nav class="navbar">
+        <div class="nav-logo">
+            <span class="logo-icon">🧬</span> <span class="logo-text">里中自然課</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" class="active">首頁</a></li>
+            <li><a href="#lessons">探索單元</a></li>
+            <li><a href="#about">學習指南</a></li>
+        </ul>
+    </nav>
+
+    <!-- 主視覺區塊 -->
+    <header class="hero-section">
+        <div class="hero-content">
+            <div class="badge">🚀 2026 全新升級版</div>
+            <h1 class="hero-title">理化不無聊，<br><span class="text-gradient">跟著我們一起玩科學！</span></h1>
+            <p class="hero-subtitle">拋開死背硬記！在這裡，你可以動手做虛擬實驗、探索未知的自然現象。準備好展現你的科學力了嗎？</p>
+            <a href="#lessons" class="cta-btn">開始探索 ➔</a>
+        </div>
+        <div class="hero-image">
+            <div class="glass-card floating-card-1">
+                <span class="card-icon">🧪</span>化學魔法
+            </div>
+            <div class="glass-card floating-card-2">
+                <span class="card-icon">⚡</span>物理能量
+            </div>
+            <div class="glass-card floating-card-3">
+                <span class="card-icon">🌍</span>地球科學
+            </div>
+        </div>
+    </header>
+
+    <!-- 課程清單區塊 -->
+    <main class="main-content" id="lessons">
+        <h2 class="section-title">📍 最新任務單元</h2>
+        <div class="lesson-grid">
+            
+            <!-- 酸鹼指示劑學習單 (真實連結) -->
+            <a href="pages/ph_lesson.html" class="lesson-card featured">
+                <div class="card-image ph-cover">
+                    <div class="cover-pattern"></div>
+                    <span class="status-badge new">✨ 新發布</span>
+                </div>
+                <div class="card-content">
+                    <div class="tags">
+                        <span class="tag tag-chem">化學</span> 
+                        <span class="tag tag-interactive">可互動</span>
+                    </div>
+                    <h3>酸鹼新指標 pH 值</h3>
+                    <p>你知道什麼是 pH 值嗎？這張互動學習單讓你親手滑動看看溶液酸鹼值的變化。馬上成為酸鹼魔法師！</p>
+                    <div class="card-footer">
+                        <span class="difficulty">難度：⭐⭐</span>
+                        <span class="btn-text">進入挑戰</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- 遊戲單元：電解質大師 -->
+            <a href="pages/electrolyte_game.html" class="lesson-card featured">
+                <div class="card-image" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 40%, #2980b9 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
+                    <span class="status-badge new" style="background: #f1c40f; color: #2c3e50;">🎮 遊戲挑戰</span>
+                    ⚡
+                </div>
+                <div class="card-content">
+                    <div class="tags">
+                        <span class="tag tag-chem">化學</span>
+                        <span class="tag tag-interactive">網頁遊戲</span>
+                    </div>
+                    <h3>電解質大師：雙重鑑定挑戰</h3>
+                    <p>化身精靈訓練師！在草叢中遇見各種神秘化學物質，觀察石蕊試紙顏色，用正確動作收服這 11 隻精靈與究極魔王！</p>
+                    <div class="card-footer">
+                        <span class="difficulty">挑戰性：⭐⭐⭐</span>
+                        <span class="btn-text">進場迎戰 ➔</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- 假預告單元 2 -->
+            <div class="lesson-card disabled">
+                <div class="card-image locked-cover">
+                    <span class="status-badge locked">🔒 開發中</span>
+                </div>
+                <div class="card-content">
+                    <div class="tags"><span class="tag tag-earth">地科</span></div>
+                    <h3>板塊漂移冒險</h3>
+                    <p>時光倒流兩億年，親手拼湊盤古大陸，看看地震和火山是如何誕生的。</p>
+                    <div class="card-footer">
+                        <span class="difficulty">即將解鎖</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <p>🔬 里中自然課 © 2026. Designed for awesome students.</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
