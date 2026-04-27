@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>粒子拼裝工廠</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:linear-gradient(135deg,#0f172a,#1e1b4b,#0f172a);min-height:100vh;color:#f1f5f9;font-family:sans-serif;padding:8px}
+button{font-family:sans-serif;cursor:pointer;user-select:none}
+input{font-family:sans-serif;outline:none}
+h1{font-size:18px;font-weight:900;background:linear-gradient(90deg,#fbbf24,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:13px;padding:12px}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:800;width:100%}
+.btn-green{background:linear-gradient(135deg,#059669,#0891b2);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:800;width:100%}
+.btn-red{background:linear-gradient(135deg,#dc2626,#9333ea);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:800;width:100%}
+.btn-yellow{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.4);border-radius:10px;padding:12px;font-size:13px;font-weight:700;width:100%}
+.btn-ghost{background:rgba(255,255,255,0.08);color:#94a3b8;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:5px 12px;font-size:12px}
+.stepper{border-radius:11px;padding:9px 12px;display:flex;align-items:center;gap:7px}
+.stepper-btn{width:30px;height:30px;border-radius:50%;background:transparent;font-size:20px;font-weight:900;cursor:pointer;line-height:1}
+.stepper-val{width:32px;text-align:center;font-size:20px;font-weight:900}
+.msg-ok{background:rgba(74,222,128,0.15);border:1px solid #4ade80;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#bbf7d0}
+.msg-wrong{background:rgba(248,113,113,0.15);border:1px solid #f87171;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#fecdd3}
+.msg-hint{background:rgba(251,191,36,0.12);border:1px solid #fbbf24;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#fde68a}
+.screen{display:none}.screen.active{display:block}
+.progress-bar{display:flex;gap:3px;margin-bottom:8px}
+.progress-seg{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,0.1);transition:background .3s}
+.stage-row{display:flex;gap:10px}
+.stage-list{width:145px;display:flex;flex-direction:column;gap:4px}
+.stage-item{border-radius:8px;padding:6px 9px;cursor:default}
+.stage-body{flex:1;display:flex;flex-direction:column;gap:8px}
+.quiz-opt{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 14px;color:#f1f5f9;font-size:13px;text-align:left;width:100%;margin-bottom:6px;transition:background .2s}
+.quiz-opt:hover:not(:disabled){background:rgba(255,255,255,0.1)}
+.quiz-opt.correct{background:rgba(74,222,128,0.2)!important;border-color:#4ade80!important}
+.quiz-opt.wrong{background:rgba(248,113,113,0.2)!important;border-color:#f87171!important}
+.atom-info{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:7px 12px;text-align:center}
+.stat-box{background:rgba(255,255,255,0.06);border-radius:9px;padding:7px 5px;text-align:center}
+.ion-badge{border-radius:9px;padding:8px 12px;text-align:center}
+.tag{background:#7c3aed;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;display:inline-block}
+</style>
+</head>
+<body>
+
+<!-- ══ LAB SCREEN ══ -->
+<div id="screen-lab" class="screen active">
+  <div style="max-width:740px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h1>⚗️ 粒子拼裝工廠</h1>
+      <button class="btn-primary" style="width:auto;padding:9px 18px;font-size:13px" onclick="startGame()">🏆 開始闖關</button>
+    </div>
+    <div style="display:flex;gap:10px">
+      <!-- Atom viz -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px;min-width:195px">
+        <div style="background:rgba(0,0,0,0.5);border-radius:14px;padding:8px;border:1px solid rgba(255,255,255,0.1)">
+          <canvas id="lab-canvas" width="180" height="180"></canvas>
+        </div>
+        <div class="atom-info" style="width:100%" id="lab-elem-info"><span style="font-size:26px;font-weight:900;color:#fca5a5">Na</span><br><span style="font-size:12px;color:#94a3b8">鈉（原子序11）</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;width:100%">
+          <div class="stat-box" style="border:1px solid #fbbf2444">
+            <div style="font-size:10px;color:#94a3b8">質量數</div>
+            <div style="font-size:20px;font-weight:900;color:#fbbf24" id="lab-mass">23</div>
+            <div style="font-size:10px;color:#475569">p+n</div>
+          </div>
+          <div class="stat-box" id="lab-charge-box" style="border:1px solid #86efac44">
+            <div style="font-size:10px;color:#94a3b8">電荷數</div>
+            <div style="font-size:20px;font-weight:900;color:#86efac" id="lab-charge">0</div>
+            <div style="font-size:10px;color:#475569">p−e</div>
+          </div>
+        </div>
+        <div class="ion-badge" id="lab-ion-badge" style="width:100%;background:rgba(134,239,172,0.13);border:2px solid #86efac">
+          <div style="font-size:14px;font-weight:800;color:#86efac" id="lab-ion-type">⚛️ 電中性原子</div>
+          <div style="font-size:10px;color:#a5b4fc;margin-top:2px" id="lab-ion-name">Na（鈉原子）</div>
+        </div>
+        <div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:9px;padding:7px 10px;width:100%">
+          <div style="font-size:10px;color:#93c5fd;margin-bottom:2px">🔵 電子層分佈</div>
+          <div style="font-size:11px;color:#bfdbfe" id="lab-shell">第1層:2  第2層:8  第3層:1</div>
+        </div>
+      </div>
+      <!-- Controls -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:7px">
+        <div class="card">
+          <div style="font-size:11px;color:#64748b;margin-bottom:8px;font-weight:600">🔧 調整粒子數量</div>
+          <div id="lab-steppers"></div>
+        </div>
+        <div class="card">
+          <div style="font-size:11px;color:#64748b;margin-bottom:7px;font-weight:600">⚡ 快速選元素</div>
+          <div id="lab-elem-btns" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+        </div>
+        <div class="card">
+          <div style="font-size:11px;color:#64748b;margin-bottom:7px;font-weight:600">🧪 快速切換常見離子</div>
+          <div id="lab-ion-btns" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+        </div>
+        <div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:11px;padding:11px">
+          <div style="font-size:11px;color:#a78bfa;font-weight:700;margin-bottom:5px">💡 現在觀察到的原理</div>
+          <div style="font-size:13px;line-height:1.7" id="lab-principle"></div>
+          <div style="margin-top:6px;font-size:11px;color:#6d28d9" id="lab-mass-eq"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div id="screen-game" class="screen">
+  <div style="max-width:740px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h1>⚗️ 粒子拼裝工廠</h1>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.4);border-radius:8px;padding:4px 12px;font-size:13px;font-weight:800;color:#fbbf24" id="game-score-top">0 分</div>
+        <button class="btn-ghost" onclick="goLab()">🔬 實驗室</button>
+      </div>
+    </div>
+    <div class="progress-bar" id="game-progress"></div>
+    <div style="font-size:11px;color:#64748b;margin-bottom:6px;font-weight:600" id="game-zone-label"></div>
+    <div class="stage-row">
+      <div class="stage-list" id="game-stage-list"></div>
+      <div class="stage-body" id="game-stage-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESULT SCREEN ══ -->
+<div id="screen-result" class="screen">
+  <div style="max-width:420px;margin:20px auto;background:rgba(255,255,255,0.05);border:2px solid #fbbf24;border-radius:20px;padding:28px;text-align:center">
+    <div style="font-size:56px;margin-bottom:8px" id="res-emoji">🏆</div>
+    <h2 style="color:#fbbf24;font-size:22px;margin-bottom:4px">闖關完成！</h2>
+    <div style="font-size:14px;color:#a78bfa;margin-bottom:18px" id="res-grade"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:rgba(251,191,36,0.1);border:1px solid #fbbf24;border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:#94a3b8">總得分</div>
+        <div style="font-size:30px;font-weight:900;color:#fbbf24" id="res-score">0</div>
+        <div style="font-size:11px;color:#475569" id="res-max"></div>
+      </div>
+      <div style="background:rgba(139,92,246,0.1);border:1px solid #a78bfa;border-radius:12px;padding:14px">
+        <div style="font-size:11px;color:#94a3b8">得分率</div>
+        <div style="font-size:30px;font-weight:900;color:#a78bfa" id="res-pct">0%</div>
+        <div style="font-size:11px;color:#475569" id="res-correct"></div>
+      </div>
+    </div>
+    <div id="res-zones" style="margin-bottom:18px;text-align:left"></div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button onclick="startGame()" style="background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border:none;border-radius:11px;padding:11px 22px;font-size:14px;font-weight:800;cursor:pointer">🔄 再挑戰</button>
+      <button onclick="goLab()" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:11px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer">🔬 實驗室</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────
+var ELEMENTS=[
+  {z:1, sym:"H", name:"氫", n:0, col:"#f9a8d4"},
+  {z:2, sym:"He",name:"氦",n:2, col:"#fde68a"},
+  {z:6, sym:"C", name:"碳", n:6, col:"#d1d5db"},
+  {z:7, sym:"N", name:"氮", n:7, col:"#bfdbfe"},
+  {z:8, sym:"O", name:"氧", n:8, col:"#a5f3fc"},
+  {z:11,sym:"Na",name:"鈉", n:12,col:"#fca5a5"},
+  {z:12,sym:"Mg",name:"鎂", n:12,col:"#86efac"},
+  {z:13,sym:"Al",name:"鋁", n:14,col:"#c4b5fd"},
+  {z:17,sym:"Cl",name:"氯", n:18,col:"#6ee7b7"},
+  {z:20,sym:"Ca",name:"鈣", n:20,col:"#fcd34d"},
+  {z:26,sym:"Fe",name:"鐵", n:30,col:"#fb923c"}
+];
+var IONS=[
+  {z:1, e:0,  label:"H⁺",  tip:"氫離子（失去唯一電子）"},
+  {z:8, e:10, label:"O²⁻", tip:"氧離子（得2個電子）"},
+  {z:11,e:10, label:"Na⁺", tip:"鈉離子（失1個電子）"},
+  {z:12,e:10, label:"Mg²⁺",tip:"鎂離子（失2個電子）"},
+  {z:13,e:10, label:"Al³⁺",tip:"鋁離子（失3個電子）"},
+  {z:17,e:18, label:"Cl⁻", tip:"氯離子（得1個電子）"},
+  {z:20,e:18, label:"Ca²⁺",tip:"鈣離子（失2個電子）"},
+  {z:26,e:23, label:"Fe³⁺",tip:"鐵離子（失3個電子）"},
+  {z:26,e:24, label:"Fe²⁺",tip:"亞鐵離子（失2個電子）"}
+];
+var STAGES=[
+  {id:1, type:"build",zone:"⚗️ 基礎拼裝",star:"⭐",   pts:100,time:60,title:"鈉原子",      desc:"拼出電中性的鈉原子（原子序11，質量數23）",           check:function(p,n,e){return p===11&&n===12&&e===11;},hint:"鈉原子序=11，電中性代表質子=電子，質量數23所以中子=12"},
+  {id:2, type:"build",zone:"⚗️ 基礎拼裝",star:"⭐",   pts:100,time:60,title:"氫離子 H⁺",   desc:"拼出氫離子 H⁺（質量數=1，不含任何電子）",             check:function(p,n,e){return p===1&&n===0&&e===0;},   hint:"H原子序=1，H⁺失去唯一電子，質量數=1所以中子=0"},
+  {id:3, type:"build",zone:"⚗️ 基礎拼裝",star:"⭐⭐",  pts:150,time:60,title:"氯離子 Cl⁻",  desc:"拼出氯離子 Cl⁻（氯原子序17，得到1個電子）",           check:function(p,n,e){return p===17&&e===18;},        hint:"Cl原子序=17，Cl⁻多了1個電子，所以電子數=18"},
+  {id:4, type:"build",zone:"⚗️ 基礎拼裝",star:"⭐⭐",  pts:150,time:60,title:"鐵離子 Fe³⁺", desc:"拼出鐵離子 Fe³⁺（鐵原子序26，失去3個電子）",          check:function(p,n,e){return p===26&&e===23;},        hint:"Fe原子序=26，Fe³⁺失去3個電子，電子數=26-3=23"},
+  {id:5, type:"quiz", zone:"🎯 會考概念",star:"⭐⭐",  pts:150,title:"電子得失",    src:"改編自103會考",q:"關於鎵原子（Ga）形成鎵離子（Ga³⁺）的敘述，下列何者正確？",  opts:["(A) 失去3個電子","(B) 失去3個質子","(C) 得到3個電子","(D) 得到3個質子"],ans:0,hint:"形成正離子代表電子（負電荷）變少了！質子數不會改變。"},
+  {id:6, type:"quiz", zone:"🎯 會考概念",star:"⭐⭐",  pts:150,title:"粒子數比較",   src:"改編自110會考",q:"比較鐵離子（Fe³⁺）和亞鐵離子（Fe²⁺）的電子數，下列何者正確？",opts:["(A) Fe³⁺ > Fe²⁺","(B) Fe²⁺ > Fe³⁺","(C) 兩者相等","(D) 無法比較"],ans:1,hint:"失去越多電子，正電荷越大，剩下的電子越少。Fe³⁺失去3個，比失去2個的Fe²⁺電子更少。"},
+  {id:7, type:"quiz", zone:"🎯 會考概念",star:"⭐⭐",  pts:150,title:"陽離子判斷",   src:"改編自105會考",q:"若某粒子有1個質子、0個電子，它應該是什麼？",               opts:["(A) 氫原子","(B) 氫離子","(C) 氦原子","(D) 氦離子"],ans:1,hint:"質子數=1代表是氫元素；電子數(0) < 質子數(1) → 陽離子，即氫離子H⁺。"},
+  {id:8, type:"build",zone:"🔬 進階拼裝",star:"⭐⭐⭐",pts:200,time:60,title:"鎂離子 Mg²⁺", desc:"拼出鎂離子 Mg²⁺（原子序12，失去2個電子，質量數24）",   check:function(p,n,e){return p===12&&n===12&&e===10;},hint:"Mg原子序=12，質量數24中子=12，失去2個電子電子=10"},
+  {id:9, type:"build",zone:"🔬 進階拼裝",star:"⭐⭐⭐",pts:200,time:60,title:"鋁離子 Al³⁺", desc:"拼出鋁離子 Al³⁺（原子序13，失去3個電子，質量數27）",   check:function(p,n,e){return p===13&&n===14&&e===10;},hint:"Al原子序=13，質量數27中子=14，失去3個電子電子=10"},
+  {id:10,type:"build",zone:"🔬 進階拼裝",star:"⭐⭐⭐",pts:200,time:60,title:"鈣離子 Ca²⁺", desc:"拼出鈣離子 Ca²⁺（原子序20，失去2個電子，質量數40）",   check:function(p,n,e){return p===20&&n===20&&e===18;},hint:"Ca原子序=20，質量數40中子=20，失去2個電子電子=18"},
+  {id:11,type:"quiz", zone:"🏆 進階挑戰",star:"⭐⭐⭐",pts:200,title:"電中性原理",  src:"改編自109補考",q:"關於電解質水溶液中離子的敘述，下列何者正確？",            opts:["(A) 正負離子個數一定相等","(B) 正負離子所帶總電量一定相等","(C) 只有化合物能導電","(D) 電解質不一定能溶於水"],ans:1,hint:"水溶液整體呈電中性，正電總量=負電總量。個數不一定相等，例如一個Ca²⁺可對兩個Cl⁻。"},
+  {id:12,type:"quiz", zone:"🏆 進階挑戰",star:"⭐⭐⭐",pts:200,title:"陽離子關係",  src:"改編自111會考",q:"若一個離子為「陽離子」，質子數為Z、電子數為X，則兩者關係為何？",opts:["(A) X > Z","(B) Z > X","(C) X = Z","(D) X + Z = 0"],ans:1,hint:"陽離子是正電荷，代表正（質子）多、負（電子）少，所以質子數Z > 電子數X。"},
+  {id:13,type:"build",zone:"🏆 進階挑戰",star:"⭐⭐⭐",pts:250,time:60,title:"亞鐵離子 Fe²⁺",desc:"拼出亞鐵離子 Fe²⁺（鐵原子序26，失去2個電子）。終極關卡！",check:function(p,n,e){return p===26&&e===24;},hint:"Fe²⁺只失去2個電子，電子數=26-2=24，注意與Fe³⁺（電子數23）的差別！"}
+];
+var MAX_SCORE=STAGES.reduce(function(s,st){return s+st.pts;},0);
+var ZONES=[...new Set(STAGES.map(function(s){return s.zone;}))];
+
+// ── State ─────────────────────────────────────────────────
+var labP=11,labN=12,labE=11;
+var gameIdx=0,gameDoneIds=[],gameScore=0;
+var buildP=1,buildN=0,buildE=1;
+var timeLeft=60,timerInterval=null;
+var stageDone=false,quizChosen=null;
+
+// ── Canvas draw ───────────────────────────────────────────
+function drawAtom(canvasId,p,n,e,col){
+  var cv=document.getElementById(canvasId);
+  if(!cv)return;
+  var ctx=cv.getContext("2d");
+  var sz=cv.width,cx=sz/2,cy=sz/2;
+  var caps=[2,8,8,18],radii=[42,64,84,104];
+  ctx.clearRect(0,0,sz,sz);
+  var left=Math.min(e,36);
+  var shells=radii.map(function(r,i){var c=Math.min(left,caps[i]);left-=c;return{r:r,count:c};});
+  // orbits
+  shells.forEach(function(sh){
+    if(sh.count===0)return;
+    ctx.beginPath();ctx.arc(cx,cy,sh.r,0,Math.PI*2);
+    ctx.strokeStyle="rgba(255,255,255,0.15)";ctx.lineWidth=1.5;
+    ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
+  });
+  // electrons
+  shells.forEach(function(sh,i){
+    for(var ei=0;ei<sh.count;ei++){
+      var a=(ei/Math.max(sh.count,1))*Math.PI*2-Math.PI/2;
+      var ex=cx+sh.r*Math.cos(a),ey=cy+sh.r*Math.sin(a);
+      var grd=ctx.createRadialGradient(ex-1,ey-1,0,ex,ey,5);
+      grd.addColorStop(0,"#93c5fd");grd.addColorStop(1,"#1d4ed8");
+      ctx.beginPath();ctx.arc(ex,ey,5,0,Math.PI*2);
+      ctx.fillStyle=grd;ctx.fill();
+      ctx.beginPath();ctx.arc(ex,ey,2.5,0,Math.PI*2);
+      ctx.fillStyle="#bfdbfe";ctx.fill();
+    }
+  });
+  // nucleus
+  var grd2=ctx.createRadialGradient(cx-8,cy-8,0,cx,cy,28);
+  grd2.addColorStop(0,col||"#fde68a");grd2.addColorStop(1,"#92400e");
+  ctx.shadowColor=col||"#fde68a";ctx.shadowBlur=12;
+  ctx.beginPath();ctx.arc(cx,cy,28,0,Math.PI*2);ctx.fillStyle=grd2;ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle="#fff";ctx.font="bold 10px sans-serif";ctx.textAlign="center";
+  ctx.fillText(p+"p⁺",cx,cy-3);
+  ctx.fillStyle="#e5e7eb";ctx.font="9px sans-serif";
+  ctx.fillText(n+"n",cx,cy+9);
+}
+
+function shellStr(e){
+  var caps=[2,8,8,18];var left=e;var parts=[];
+  caps.forEach(function(v,i){if(left>0){var x=Math.min(left,v);parts.push("第"+(i+1)+"層:"+x);left-=x;}});
+  return parts.join("  ")||"無電子";
+}
+
+// ── Lab ───────────────────────────────────────────────────
+function updateLab(){
+  drawAtom("lab-canvas",labP,labN,labE,getElemCol(labP));
+  var mass=labP+labN,charge=labP-labE;
+  document.getElementById("lab-mass").textContent=mass;
+  var chargeStr=charge>=0?"+"+charge:charge;
+  document.getElementById("lab-charge").textContent=chargeStr;
+  var typeColor=charge===0?"#86efac":charge>0?"#fca5a5":"#93c5fd";
+  var typeLabel=charge===0?"⚛️ 電中性原子":charge>0?"⚡ 陽離子 +"+charge:"💧 陰離子 "+charge;
+  document.getElementById("lab-charge-box").style.border="1px solid "+typeColor+"44";
+  document.getElementById("lab-charge").style.color=typeColor;
+  document.getElementById("lab-ion-badge").style.background=typeColor+"22";
+  document.getElementById("lab-ion-badge").style.border="2px solid "+typeColor;
+  document.getElementById("lab-ion-type").style.color=typeColor;
+  document.getElementById("lab-ion-type").textContent=typeLabel;
+  var el=getElem(labP);
+  document.getElementById("lab-elem-info").innerHTML=el
+    ?"<span style='font-size:26px;font-weight:900;color:"+el.col+"'>"+el.sym+"</span><br><span style='font-size:12px;color:#94a3b8'>"+el.name+"（原子序"+el.z+"）</span>"
+    :"<span style='font-size:12px;color:#94a3b8'>質子數="+labP+"</span>";
+  var ion=getIon(labP,labE);
+  document.getElementById("lab-ion-name").textContent=ion?ion.label+" — "+ion.tip:(el?el.sym+"（元素）":"");
+  document.getElementById("lab-shell").textContent=shellStr(labE);
+  // principle
+  var pr=document.getElementById("lab-principle");
+  if(charge===0) pr.innerHTML="<span style='color:#d8b4fe'>質子數（"+labP+"）= 電子數（"+labE+"）→ <b style='color:#86efac'>電中性原子</b>"+(el?"，這是"+el.name+"（"+el.sym+"）":"")+"。</span>";
+  else if(charge>0) pr.innerHTML="<span style='color:#fecdd3'>質子（"+labP+"）&gt; 電子（"+labE+"），多"+charge+"個正電 → <b style='color:#fca5a5'>陽離子</b>"+(ion?"，即"+ion.label:"")+"。</span>";
+  else pr.innerHTML="<span style='color:#bfdbfe'>質子（"+labP+"）&lt; 電子（"+labE+"），多"+(-charge)+"個負電 → <b style='color:#93c5fd'>陰離子</b>"+(ion?"，即"+ion.label:"")+"。</span>";
+  document.getElementById("lab-mass-eq").innerHTML="質量數 = "+labP+" + "+labN+" = <b style='color:#fbbf24'>"+mass+"</b>";
+}
+
+function getElem(z){return ELEMENTS.find(function(el){return el.z===z;});}
+function getElemCol(z){var el=getElem(z);return el?el.col:"#fde68a";}
+function getIon(z,e){return IONS.find(function(k){return k.z===z&&k.e===e;});}
+
+function buildSteppers(prefix,pVal,nVal,eVal,pChange,nChange,eChange){
+  var data=[
+    {label:"🔴 質子 p⁺",val:pVal,color:"#f87171",bg:"rgba(248,113,113,0.08)",min:1,max:30,cb:pChange},
+    {label:"⚫ 中子 n",  val:nVal,color:"#9ca3af",bg:"rgba(156,163,175,0.08)",min:0,max:40,cb:nChange},
+    {label:"🔵 電子 e⁻", val:eVal,color:"#60a5fa",bg:"rgba(96,165,250,0.08)", min:0,max:36,cb:eChange}
+  ];
+  return data.map(function(d,i){
+    var id=prefix+"-val-"+i;
+    return "<div class='stepper' style='background:"+d.bg+";border:2px solid "+d.color+";margin-bottom:7px'>"+
+      "<div style='flex:1'><div style='font-size:12px;font-weight:700;color:"+d.color+"'>"+d.label+"</div>"+
+      "<div style='font-size:10px;color:#64748b;margin-top:1px' id='"+prefix+"-hint-"+i+"'></div></div>"+
+      "<button class='stepper-btn' style='border:2px solid "+d.color+";color:"+d.color+"' onclick='stepChange(\""+prefix+"\","+i+","+(d.min)+","+(d.max)+",-1)'>−</button>"+
+      "<span class='stepper-val' style='color:"+d.color+"' id='"+id+"'>"+d.val+"</span>"+
+      "<button class='stepper-btn' style='border:2px solid "+d.color+";color:"+d.color+"' onclick='stepChange(\""+prefix+"\","+i+","+(d.min)+","+(d.max)+",1)'>+</button>"+
+      "</div>";
+  }).join("");
+}
+
+function stepChange(prefix,idx,min,max,delta){
+  if(prefix==="lab"){
+    if(idx===0) labP=Math.max(min,Math.min(max,labP+delta));
+    else if(idx===1) labN=Math.max(min,Math.min(max,labN+delta));
+    else labE=Math.max(min,Math.min(max,labE+delta));
+    document.getElementById("lab-val-"+idx).textContent=[labP,labN,labE][idx];
+    updateLab();
+    updateLabHints();
+  } else {
+    if(idx===0) buildP=Math.max(min,Math.min(max,buildP+delta));
+    else if(idx===1) buildN=Math.max(min,Math.min(max,buildN+delta));
+    else buildE=Math.max(min,Math.min(max,buildE+delta));
+    document.getElementById("build-val-"+idx).textContent=[buildP,buildN,buildE][idx];
+    updateBuildAtom();
+    updateBuildHints();
+  }
+}
+
+function updateLabHints(){
+  var charge=labP-labE,mass=labP+labN;
+  var hints=["決定元素種類（原子序）","質量數 = "+labP+"（質子）+ 中子 = "+mass,
+    charge===0?"= 質子數，電中性":charge>0?"比質子少"+charge+"個 → 陽離子":"比質子多"+(-charge)+"個 → 陰離子"];
+  hints.forEach(function(h,i){var el=document.getElementById("lab-hint-"+i);if(el)el.textContent=h;});
+}
+
+function initLab(){
+  // steppers
+  document.getElementById("lab-steppers").innerHTML=buildSteppers("lab",labP,labN,labE);
+  // elem buttons
+  var ebContainer=document.getElementById("lab-elem-btns");
+  ebContainer.innerHTML=ELEMENTS.map(function(el){
+    return "<button onclick='setLabElem("+el.z+")' style='padding:4px 9px;border-radius:7px;border:1px solid "+el.col+"55;background:"+el.col+"22;color:"+el.col+";font-size:11px;font-weight:700;cursor:pointer'>"+el.sym+"</button>";
+  }).join("");
+  // ion buttons
+  var ibContainer=document.getElementById("lab-ion-btns");
+  ibContainer.innerHTML=IONS.map(function(ion){
+    var c=ion.e<ion.z?"#fca5a5":ion.e>ion.z?"#93c5fd":"#86efac";
+    return "<button onclick='setLabIon("+ion.z+","+ion.e+")' style='padding:4px 10px;border-radius:7px;border:1px solid "+c+"44;background:"+c+"18;color:"+c+";font-size:11px;font-weight:700;cursor:pointer'>"+ion.label+"</button>";
+  }).join("");
+  updateLab();updateLabHints();
+}
+
+function setLabElem(z){
+  var el=getElem(z);if(!el)return;
+  labP=el.z;labN=el.n;labE=el.z;
+  document.getElementById("lab-val-0").textContent=labP;
+  document.getElementById("lab-val-1").textContent=labN;
+  document.getElementById("lab-val-2").textContent=labE;
+  updateLab();updateLabHints();
+}
+function setLabIon(z,e){
+  var el=getElem(z);
+  labP=z;labN=el?el.n:z;labE=e;
+  document.getElementById("lab-val-0").textContent=labP;
+  document.getElementById("lab-val-1").textContent=labN;
+  document.getElementById("lab-val-2").textContent=labE;
+  updateLab();updateLabHints();
+}
+
+// ── Game ──────────────────────────────────────────────────
+function startGame(){
+  gameIdx=0;gameDoneIds=[];gameScore=0;
+  showScreen("game");
+  loadStage(0);
+}
+
+function goLab(){
+  clearInterval(timerInterval);
+  showScreen("lab");
+}
+
+function showScreen(name){
+  document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});
+  document.getElementById("screen-"+name).classList.add("active");
+}
+
+function loadStage(idx){
+  clearInterval(timerInterval);
+  gameIdx=idx;stageDone=false;quizChosen=null;
+  buildP=1;buildN=0;buildE=1;
+  var s=STAGES[idx];
+  // score
+  document.getElementById("game-score-top").textContent=gameScore+" 分";
+  // zone label
+  document.getElementById("game-zone-label").textContent=s.zone+"　第 "+(idx+1)+" / "+STAGES.length+" 關　"+s.star;
+  // progress
+  var pgBar=document.getElementById("game-progress");
+  pgBar.innerHTML=STAGES.map(function(st,i){
+    var bg=gameDoneIds.indexOf(st.id)>=0?"#4ade80":i===idx?"#a78bfa":"rgba(255,255,255,0.1)";
+    return "<div class='progress-seg' style='background:"+bg+"'></div>";
+  }).join("");
+  // stage list
+  var list=document.getElementById("game-stage-list");
+  list.innerHTML=STAGES.map(function(st,i){
+    var done=gameDoneIds.indexOf(st.id)>=0,cur2=i===idx;
+    var zc=st.zone.indexOf("基礎")>=0?"#60a5fa":st.zone.indexOf("會考")>=0?"#f472b6":st.zone.indexOf("進階")>=0?"#a78bfa":"#fbbf24";
+    var bg2=cur2?"rgba(124,58,237,0.3)":done?"rgba(74,222,128,0.1)":"rgba(255,255,255,0.03)";
+    var bdr=cur2?"#7c3aed":done?"#4ade80":"rgba(255,255,255,0.07)";
+    return "<div class='stage-item' style='background:"+bg2+";border:1px solid "+bdr+"'>"+
+      "<div style='display:flex;align-items:center;gap:4px'><span style='font-size:10px'>"+(st.type==="quiz"?"🎯":"⚗️")+"</span>"+
+      "<span style='font-size:10px;font-weight:700;color:"+(cur2?"#c4b5fd":done?"#86efac":"#64748b")+"'>第"+st.id+"關</span></div>"+
+      "<div style='font-size:10px;color:"+(done?"#86efac":cur2?zc:"#475569")+";margin-top:1px'>"+st.title+"</div>"+
+      "<div style='font-size:9px;color:#fbbf24'>"+st.pts+"分 "+(done?"✅":"")+"</div></div>";
+  }).join("");
+  list.innerHTML+="<div style='margin-top:4px;background:rgba(251,191,36,0.1);border-radius:8px;padding:8px 10px;border:1px solid rgba(251,191,36,0.25)'>"+
+    "<div style='font-size:10px;color:#94a3b8'>目前得分</div>"+
+    "<div style='font-size:20px;font-weight:900;color:#fbbf24'>"+gameScore+"</div>"+
+    "<div style='font-size:9px;color:#475569'>滿分 "+MAX_SCORE+"</div></div>";
+  // body
+  if(s.type==="build") renderBuildStage(s);
+  else renderQuizStage(s);
+  // timer
+  if(s.type==="build"){
+    timeLeft=s.time;
+    timerInterval=setInterval(function(){
+      timeLeft--;
+      var tc=document.getElementById("stage-timer");
+      if(tc){tc.textContent=timeLeft;tc.style.color=timeLeft>30?"#4ade80":timeLeft>10?"#fbbf24":"#f87171";}
+      if(timeLeft<=0){
+        clearInterval(timerInterval);
+        showMsg("fail","⏰ 時間到！這關不計分，點「重試」再來一次！");
+        renderButtons(s,true,false);
+      }
+    },1000);
+  }
+}
+
+function renderBuildStage(s){
+  var canvasId="build-canvas";
+  var body=document.getElementById("game-stage-body");
+  body.innerHTML=
+    "<div style='background:rgba(124,58,237,0.15);border:2px solid #7c3aed;border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center'>"+
+      "<div><div style='font-size:12px;color:#a78bfa;font-weight:700'>"+s.zone+" ─ "+s.title+"</div>"+
+      "<div style='font-size:12px;color:#c4b5fd;margin-top:2px'>"+s.desc+"</div></div>"+
+      "<div style='text-align:center;min-width:44px'><div style='font-size:26px;font-weight:900;line-height:1' id='stage-timer'>"+timeLeft+"</div><div style='font-size:9px;color:#64748b'>秒</div></div>"+
+    "</div>"+
+    "<div style='display:flex;gap:8px;align-items:center'>"+
+      "<div style='background:rgba(0,0,0,0.4);border-radius:12px;padding:6px;border:1px solid rgba(255,255,255,0.1)'>"+
+        "<canvas id='"+canvasId+"' width='128' height='128'></canvas></div>"+
+      "<div style='flex:1;display:flex;flex-direction:column;gap:5px'>"+
+        "<div style='display:grid;grid-template-columns:1fr 1fr;gap:5px'>"+
+          "<div class='stat-box' style='border:1px solid #fbbf2444'><div style='font-size:10px;color:#64748b'>質量數</div><div style='font-size:18px;font-weight:900;color:#fbbf24' id='build-mass'>1</div></div>"+
+          "<div class='stat-box' id='build-charge-box' style='border:1px solid #86efac44'><div style='font-size:10px;color:#64748b'>電荷</div><div style='font-size:18px;font-weight:900;color:#86efac' id='build-charge'>0</div></div>"+
+        "</div>"+
+        "<div id='build-type-badge' style='background:rgba(134,239,172,0.13);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;color:#86efac;text-align:center'>⚛️ 電中性原子</div>"+
+        "<div id='build-elem-name' style='font-size:11px;color:#94a3b8;text-align:center'></div>"+
+      "</div>"+
+    "</div>"+
+    "<div id='build-steppers-container'></div>"+
+    "<div id='stage-msg'></div>"+
+    "<div id='stage-btns'></div>";
+  document.getElementById("build-steppers-container").innerHTML=buildSteppers("build",buildP,buildN,buildE);
+  updateBuildAtom();updateBuildHints();
+  renderButtons(s,false,false);
+}
+
+function updateBuildAtom(){
+  drawAtom("build-canvas",buildP,buildN,buildE,getElemCol(buildP));
+  var mass=buildP+buildN,charge=buildP-buildE;
+  var massEl=document.getElementById("build-mass");
+  var chargeEl=document.getElementById("build-charge");
+  var badgeEl=document.getElementById("build-type-badge");
+  var cbEl=document.getElementById("build-charge-box");
+  var nameEl=document.getElementById("build-elem-name");
+  if(!massEl)return;
+  massEl.textContent=mass;
+  var chargeStr=charge>=0?"+"+charge:charge;
+  chargeEl.textContent=chargeStr;
+  var tc=charge===0?"#86efac":charge>0?"#fca5a5":"#93c5fd";
+  var tl=charge===0?"⚛️ 電中性原子":charge>0?"⚡ 陽離子 +"+charge:"💧 陰離子 "+charge;
+  chargeEl.style.color=tc;cbEl.style.border="1px solid "+tc+"44";
+  badgeEl.style.color=tc;badgeEl.textContent=tl;
+  var el=getElem(buildP);
+  nameEl.textContent=el?el.name+"（"+el.sym+"）":"";
+}
+
+function updateBuildHints(){
+  var charge=buildP-buildE,mass=buildP+buildN;
+  var hints=["決定元素種類（原子序）","質量數 = "+buildP+"+"+buildN+" = "+mass,
+    charge===0?"電中性":charge>0?"比質子少"+charge+"個":"比質子多"+(-charge)+"個"];
+  hints.forEach(function(h,i){var el=document.getElementById("build-hint-"+i);if(el)el.textContent=h;});
+}
+
+function renderQuizStage(s){
+  var body=document.getElementById("game-stage-body");
+  body.innerHTML=
+    "<div style='background:rgba(124,58,237,0.15);border:2px solid #7c3aed;border-radius:12px;padding:10px 14px'>"+
+      "<div style='font-size:12px;color:#a78bfa;font-weight:700'>"+s.zone+" ─ "+s.title+"</div>"+
+      "<div style='font-size:10px;color:#6d28d9;margin-top:2px'>"+s.src+"</div>"+
+    "</div>"+
+    "<p style='font-size:14px;font-weight:600;line-height:1.75;color:#e2e8f0;background:rgba(255,255,255,0.04);border-radius:10px;padding:12px 14px;border:1px solid rgba(255,255,255,0.08)'>"+s.q+"</p>"+
+    "<div id='quiz-opts'>"+
+      s.opts.map(function(opt,oi){
+        return "<button class='quiz-opt' id='quiz-opt-"+oi+"' onclick='chooseQuiz("+oi+")'>"+opt+"</button>";
+      }).join("")+
+    "</div>"+
+    "<div id='stage-msg'></div>"+
+    "<div id='stage-btns'></div>";
+}
+
+function chooseQuiz(oi){
+  if(stageDone||quizChosen!==null)return;
+  quizChosen=oi;
+  var s=STAGES[gameIdx];
+  s.opts.forEach(function(_,i){
+    var btn=document.getElementById("quiz-opt-"+i);
+    if(btn)btn.disabled=true;
+  });
+  var correct=document.getElementById("quiz-opt-"+s.ans);
+  if(correct)correct.classList.add("correct");
+  if(oi===s.ans){
+    gameScore+=s.pts;
+    gameDoneIds.push(s.id);
+    stageDone=true;
+    showMsg("ok","🎉 正確！+"+s.pts+" 分");
+    renderButtons(s,false,true);
+  } else {
+    var chosen=document.getElementById("quiz-opt-"+oi);
+    if(chosen)chosen.classList.add("wrong");
+    showMsg("wrong","❌ 答錯了！"+s.hint);
+    renderButtons(s,false,true);
+  }
+}
+
+function checkBuild(){
+  if(stageDone)return;
+  var s=STAGES[gameIdx];
+  if(s.check(buildP,buildN,buildE)){
+    clearInterval(timerInterval);
+    var bonus=timeLeft>30?2:timeLeft>10?1.5:1;
+    var pts=Math.round(s.pts*bonus);
+    gameScore+=pts;
+    gameDoneIds.push(s.id);
+    stageDone=true;
+    showMsg("ok","🎉 正確！+"+pts+" 分"+(bonus>1?" (速度獎勵 ×"+bonus+")":""));
+    renderButtons(s,false,true);
+  } else {
+    var charge=buildP-buildE;
+    var fb="";
+    if(charge===0&&buildP!==buildE) fb="你選對元素了！現在調整電子數使它等於質子數（電中性）。";
+    else if(charge>0) fb="目前是陽離子（+"+charge+"），再想想這個離子應帶幾個電荷？";
+    else if(charge<0) fb="目前是陰離子（"+charge+"），再想想這個離子應帶幾個電荷？";
+    else fb="質子數不對，請先確認元素的原子序。";
+    showMsg("wrong","🔍 "+fb);
+  }
+}
+
+function showMsg(type,text){
+  var el=document.getElementById("stage-msg");
+  if(!el)return;
+  el.className=type==="ok"?"msg-ok":type==="fail"?"msg-wrong":"msg-"+type;
+  el.textContent=text;
+}
+
+function renderButtons(s,timedOut,done){
+  var el=document.getElementById("stage-btns");
+  if(!el)return;
+  var html="<div style='display:flex;gap:7px;margin-top:2px'>";
+  if(timedOut){
+    html+="<button class='btn-red' onclick='retryStage()'>🔄 重試這關</button>";
+  } else if(done){
+    var nextLabel=gameIdx<STAGES.length-1?"下一關 →":"查看成績 🏆";
+    html+="<button class='btn-green' onclick='nextStage()'>"+nextLabel+"</button>";
+  } else {
+    if(s.type==="build"){
+      html+="<button class='btn-primary' style='flex:2' onclick='checkBuild()'>✅ 提交答案</button>";
+      html+="<button class='btn-yellow' style='flex:1;width:auto' onclick='showHint()'>💡 提示</button>";
+    }
+  }
+  html+="</div>";
+  el.innerHTML=html;
+}
+
+function showHint(){
+  var s=STAGES[gameIdx];
+  showMsg("hint","💡 "+s.hint);
+}
+
+function nextStage(){
+  if(gameIdx<STAGES.length-1){
+    loadStage(gameIdx+1);
+  } else {
+    showResult();
+  }
+}
+
+function retryStage(){loadStage(gameIdx);}
+
+function showResult(){
+  clearInterval(timerInterval);
+  showScreen("result");
+  var pct=Math.round(gameScore/MAX_SCORE*100);
+  var grade=pct>=90?"💎 鑽石大師":pct>=75?"🥇 金牌科學家":pct>=60?"🥈 銀牌研究員":pct>=40?"🥉 銅牌學徒":"⚗️ 繼續加油";
+  document.getElementById("res-emoji").textContent=pct>=90?"🏆":pct>=60?"🌟":"💪";
+  document.getElementById("res-grade").textContent=grade;
+  document.getElementById("res-score").textContent=gameScore;
+  document.getElementById("res-max").textContent="滿分 "+MAX_SCORE;
+  document.getElementById("res-pct").textContent=pct+"%";
+  document.getElementById("res-correct").textContent=gameDoneIds.length+" / "+STAGES.length+" 關正確";
+  var zonesHtml=ZONES.map(function(z){
+    var zStages=STAGES.filter(function(s){return s.zone===z;});
+    var zDone=zStages.filter(function(s){return gameDoneIds.indexOf(s.id)>=0;}).length;
+    var zPts=zStages.filter(function(s){return gameDoneIds.indexOf(s.id)>=0;}).reduce(function(a,s){return a+s.pts;},0);
+    return "<div style='display:flex;align-items:center;gap:8px;margin-bottom:6px;background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 12px'>"+
+      "<div style='flex:1;font-size:12px;color:#c4b5fd'>"+z+"</div>"+
+      "<div style='font-size:12px;color:#94a3b8'>"+zDone+"/"+zStages.length+" 關</div>"+
+      "<div style='font-size:12px;font-weight:700;color:#fbbf24;min-width:55px;text-align:right'>+"+zPts+"分</div></div>";
+  }).join("");
+  document.getElementById("res-zones").innerHTML=zonesHtml;
+}
+
+// ── Init ──────────────────────────────────────────────────
+initLab();
+</script>
+</body>
+</html>
