@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f0f0e8;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:.75rem}
+#app{width:100%;max-width:580px}
+.menu{background:#fff;border-radius:18px;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.menu h1{font-size:1.3rem;font-weight:700;text-align:center;margin-bottom:.25rem;color:#111}
+.menu .sub{font-size:13px;color:#888;text-align:center;margin-bottom:1.25rem}
+.section-label{font-size:12px;font-weight:600;color:#aaa;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem}
+.mode-grid{display:grid;gap:.5rem;margin-bottom:1.25rem}
+.mode-btn{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem;border:2px solid #e8e8e0;border-radius:12px;background:#fafaf7;cursor:pointer;font-size:14px;font-weight:500;font-family:inherit;text-align:left;transition:border-color .15s,background .15s;width:100%}
+.mode-btn:hover{background:#f0f0e8;border-color:#ccc}
+.mode-btn.sel-blue{border-color:#378ADD;background:#E6F1FB}
+.mode-btn.sel-orange{border-color:#D85A30;background:#FAECE7}
+.mode-btn.sel-green{border-color:#1D9E75;background:#E1F5EE}
+.mode-btn.sel-purple{border-color:#7C5CBF;background:#EEE9FA}
+.mode-icon{font-size:1.4rem;width:28px;text-align:center;flex-shrink:0}
+.mode-desc{font-size:12px;color:#888;margin-top:2px;font-weight:400}
+.start-btn{width:100%;padding:1rem;border:none;border-radius:12px;background:#111;color:#fff;font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s}
+.start-btn:hover{background:#333}
+.start-btn:disabled{background:#ccc;cursor:not-allowed}
+/* Game chrome */
+.info-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;font-size:13px;color:#666;padding:0 2px}
+.info-bar span b{color:#111;font-weight:600}
+.prog-wrap{height:7px;background:#ddd;border-radius:99px;margin-bottom:.6rem;overflow:hidden}
+.prog-fill{height:100%;background:#1D9E75;border-radius:99px;transition:width .3s}
+.card{background:#fff;border:1px solid #e8e8e0;border-radius:14px;padding:.875rem 1.125rem;margin-bottom:.6rem;box-shadow:0 1px 4px rgba(0,0,0,.06);text-align:center}
+.compound-formula{font-size:2rem;font-weight:700;letter-spacing:.02em;color:#111}
+.compound-name{font-size:13px;color:#888;margin-top:3px}
+.mode-tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;margin-bottom:.5rem}
+.tag-blue{background:#E6F1FB;color:#185FA5}
+.tag-orange{background:#FAECE7;color:#993C1D}
+.tag-green{background:#E1F5EE;color:#0F6E56}
+.tag-purple{background:#EEE9FA;color:#4B2D9E}
+.step-badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin-bottom:.5rem}
+.step1{background:#E6F1FB;color:#185FA5}
+.step2{background:#E1F5EE;color:#0F6E56}
+/* Ion visual */
+.ion-visual{background:#fafaf7;border:1px solid #e8e8e0;border-radius:14px;padding:.875rem;margin-bottom:.6rem;text-align:center}
+.balls-row{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin-bottom:.6rem}
+.ball{width:66px;height:66px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.14)}
+.ball.cation{background:#F0997B;color:#4A1B0C}
+.ball.anion{background:#85B7EB;color:#042C53}
+.ball-sym{font-size:13px;font-weight:700;line-height:1.1}
+.ball-chg{font-size:10px;opacity:.8}
+.plus-sep{font-size:20px;color:#bbb;font-weight:300;flex-shrink:0}
+.ion-legend{display:flex;justify-content:center;gap:1.25rem;flex-wrap:wrap;font-size:12px}
+.ion-leg-item{display:flex;align-items:center;gap:5px;color:#555}
+.ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ldot.c{background:#D85A30}
+.ldot.a{background:#378ADD}
+/* Options */
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.6rem}
+.opt-btn{background:#fff;border:2px solid #e0e0d8;border-radius:12px;padding:.875rem .5rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:inherit;width:100%;min-height:52px;transition:background .15s,border-color .15s}
+.opt-btn:hover:not(:disabled){background:#f5f5f0;border-color:#bbb}
+.opt-btn .ratio{font-size:1.25rem;font-weight:700;color:#111}
+.opt-btn .opt-name{font-size:11px;color:#555;text-align:center;line-height:1.4;font-weight:500}
+.odots{display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:center}
+.odot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.odot.c{background:#D85A30}
+.odot.a{background:#378ADD}
+.osep{font-size:9px;color:#bbb;margin:0 2px}
+.opt-btn.correct{background:#EAF3DE;border-color:#639922}
+.opt-btn.wrong{background:#FCEBEB;border-color:#A32D2D}
+.opt-btn.correct .ratio,.opt-btn.correct .opt-name{color:#3B6D11}
+.opt-btn.wrong .ratio,.opt-btn.wrong .opt-name{color:#791F1F}
+/* Charge opts */
+.charge-opts{display:grid;gap:.5rem;margin-bottom:.6rem}
+.charge-opt{background:#fff;border:2px solid #e0e0d8;border-radius:12px;padding:.875rem 1rem;cursor:pointer;font-size:13px;font-family:inherit;text-align:left;min-height:52px;transition:background .15s,border-color .15s;line-height:1.6;font-weight:500}
+.charge-opt:hover:not(:disabled){background:#f5f5f0;border-color:#bbb}
+.charge-opt.correct{background:#EAF3DE;border-color:#639922;color:#3B6D11}
+.charge-opt.wrong{background:#FCEBEB;border-color:#A32D2D;color:#791F1F}
+/* Exam opts */
+.exam-opts{display:grid;gap:.5rem;margin-bottom:.6rem}
+.exam-opt{background:#fff;border:2px solid #e0e0d8;border-radius:12px;padding:.875rem 1rem;cursor:pointer;font-size:14px;font-family:inherit;text-align:left;min-height:52px;transition:background .15s,border-color .15s;line-height:1.5;display:flex;align-items:center;gap:.75rem}
+.exam-opt:hover:not(:disabled){background:#f5f5f0;border-color:#bbb}
+.exam-opt .opt-letter{font-weight:700;font-size:15px;color:#555;flex-shrink:0;width:22px}
+.exam-opt.correct{background:#EAF3DE;border-color:#639922}
+.exam-opt.correct .opt-letter{color:#3B6D11}
+.exam-opt.wrong{background:#FCEBEB;border-color:#A32D2D}
+.exam-opt.wrong .opt-letter{color:#791F1F}
+/* Feedback */
+.feedback{border-radius:10px;padding:.875rem 1rem;margin-bottom:.6rem;font-size:13px;line-height:1.6;display:none;border:1px solid #e8e8e0}
+.feedback.show{display:block}
+.feedback.ok{border-left:4px solid #1D9E75;background:#f7fdf9}
+.feedback.err{border-left:4px solid #E24B4A;background:#fff8f8}
+.fb-title{font-weight:700;font-size:14px;margin-bottom:4px}
+.feedback.ok .fb-title{color:#0F6E56}
+.feedback.err .fb-title{color:#A32D2D}
+.fb-eq{font-family:monospace;font-size:12px;color:#777;background:#f0f0e8;padding:3px 8px;border-radius:5px;display:inline-block;margin:.25rem 0}
+.fb-explain{color:#444;margin-top:4px;font-size:13px}
+.next-btn{width:100%;padding:.875rem;border:1px solid #ccc;border-radius:12px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;font-family:inherit;color:#111;display:none;transition:background .15s;margin-bottom:.5rem}
+.next-btn:hover{background:#f5f5f0}
+.next-btn.show{display:block}
+/* End */
+#end-screen{display:none;text-align:center;padding:.5rem 0}
+.trophy-big{font-size:3.5rem;margin-bottom:.5rem}
+.end-grade{font-size:1.25rem;font-weight:700;color:#111;margin-bottom:.25rem}
+.end-score{font-size:2.8rem;font-weight:700;color:#1D9E75;margin-bottom:.25rem}
+.end-sub{font-size:13px;color:#888;margin-bottom:1rem}
+.review-list{text-align:left;border:1px solid #e8e8e0;border-radius:10px;overflow:hidden;margin-bottom:1rem;background:#fff}
+.rev-item{display:flex;align-items:center;gap:.75rem;padding:.55rem .875rem;font-size:13px;border-bottom:1px solid #f0f0e8}
+.rev-item:last-child{border-bottom:none}
+.rev-item.ok{background:#fff}
+.rev-item.err{background:#fff8f8}
+.rev-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.rev-f{font-weight:600;min-width:80px;color:#111;flex-shrink:0}
+.rev-info{color:#777;flex:1;font-size:12px}
+.restart-btn{width:100%;padding:.875rem;border:1px solid #ccc;border-radius:12px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;font-family:inherit;color:#111;transition:background .15s}
+.restart-btn:hover{background:#f5f5f0}
+.exam-q{font-size:14px;line-height:1.7;color:#111;margin-bottom:.75rem;padding:.875rem 1rem;background:#fafaf7;border-radius:10px;border:1px solid #e8e8e0}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- MENU -->
+<div class="menu" id="menu-screen">
+  <h1>⚗️ 解離方程式遊戲</h1>
+  <p class="sub">選擇模式，立即開始！</p>
+  <div class="section-label">遊戲模式</div>
+  <div class="mode-grid">
+    <button class="mode-btn" onclick="startGame(0)">
+      <span class="mode-icon">🔵</span>
+      <div><div>解離配對</div><div class="mode-desc">看化合物，選出正確的陽：陰個數比</div></div>
+    </button>
+    <button class="mode-btn" onclick="startGame(1)">
+      <span class="mode-icon">🟠</span>
+      <div><div>電荷守恆</div><div class="mode-desc">選個數比後，再選出正確的電荷算式</div></div>
+    </button>
+    <button class="mode-btn" onclick="startGame(2)">
+      <span class="mode-icon">🟢</span>
+      <div><div>反向推理</div><div class="mode-desc">看離子球的種類與數量，猜回化合物</div></div>
+    </button>
+    <button class="mode-btn" onclick="startGame(3)">
+      <span class="mode-icon">📝</span>
+      <div><div>會考題練習</div><div class="mode-desc">精選歷屆會考相關題目，模擬作答</div></div>
+    </button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-screen" style="display:none">
+  <div class="info-bar">
+    <span>得分 <b id="score">0</b></span>
+    <span>連擊 <b id="streak">0</b></span>
+    <span>進度 <b id="progress">1/8</b></span>
+  </div>
+  <div class="prog-wrap"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="card" id="q-card">
+    <div class="mode-tag" id="mode-tag"></div>
+    <div class="compound-formula" id="formula"></div>
+    <div class="compound-name" id="cname"></div>
+  </div>
+  <div id="ion-visual-wrap"></div>
+  <div id="opts-area"></div>
+  <div class="feedback" id="fb"></div>
+  <button class="next-btn" id="next-btn">下一題 →</button>
+</div>
+
+<!-- END -->
+<div id="end-screen">
+  <div class="trophy-big" id="end-trophy">🏆</div>
+  <div class="end-grade" id="end-grade"></div>
+  <div class="end-score" id="end-score"></div>
+  <div class="end-sub" id="end-sub"></div>
+  <div class="review-list" id="review-list"></div>
+  <button class="restart-btn" onclick="backToMenu()">🔄 再玩一次（回主選單）</button>
+</div>
+
+</div>
+<script>
+// ─── Data ───────────────────────────────────────────────
+const QS=[
+  {f:"NaCl",cn:"氯化鈉",eq:"NaCl → Na⁺ + Cl⁻",
+   cat:"Na⁺",catC:1,catV:1, ani:"Cl⁻",aniC:1,aniV:-1,
+   ratio:"1:1",ropts:["1:1","1:2","2:1","1:3"],
+   distractors:["KCl","CaCl₂","Na₂SO₄"]},
+  {f:"BaCl₂",cn:"氯化鋇",eq:"BaCl₂ → Ba²⁺ + 2Cl⁻",
+   cat:"Ba²⁺",catC:1,catV:2, ani:"Cl⁻",aniC:2,aniV:-1,
+   ratio:"1:2",ropts:["1:1","1:2","2:1","1:3"],
+   distractors:["CaCl₂","NaCl","Na₂SO₄"]},
+  {f:"Na₂SO₄",cn:"硫酸鈉",eq:"Na₂SO₄ → 2Na⁺ + SO₄²⁻",
+   cat:"Na⁺",catC:2,catV:1, ani:"SO₄²⁻",aniC:1,aniV:-2,
+   ratio:"2:1",ropts:["1:1","1:2","2:1","1:3"],
+   distractors:["NaCl","Na₂CO₃","CuSO₄"]},
+  {f:"CaCl₂",cn:"氯化鈣",eq:"CaCl₂ → Ca²⁺ + 2Cl⁻",
+   cat:"Ca²⁺",catC:1,catV:2, ani:"Cl⁻",aniC:2,aniV:-1,
+   ratio:"1:2",ropts:["1:1","1:2","2:1","1:3"],
+   distractors:["BaCl₂","KCl","NaCl"]},
+  {f:"CuSO₄",cn:"硫酸銅",eq:"CuSO₄ → Cu²⁺ + SO₄²⁻",
+   cat:"Cu²⁺",catC:1,catV:2, ani:"SO₄²⁻",aniC:1,aniV:-2,
+   ratio:"1:1",ropts:["1:1","1:2","2:1","1:3"],
+   distractors:["Na₂SO₄","BaCl₂","NaCl"]},
+  {f:"Na₂CO₃",cn:"碳酸鈉",eq:"Na₂CO₃ → 2Na⁺ + CO₃²⁻",
+   cat:"Na⁺",catC:2,catV:1, ani:"CO₃²⁻",aniC:1,aniV:-2,
+   ratio:"2:1",ropts:["1:1","1:2","2:1","1:3"],
+   distractors:["Na₂SO₄","NaCl","CaCl₂"]},
+  {f:"KCl",cn:"氯化鉀",eq:"KCl → K⁺ + Cl⁻",
+   cat:"K⁺",catC:1,catV:1, ani:"Cl⁻",aniC:1,aniV:-1,
+   ratio:"1:1",ropts:["1:1","1:2","2:1","1:3"],
+   distractors:["NaCl","CaCl₂","BaCl₂"]},
+  {f:"AlCl₃",cn:"氯化鋁",eq:"AlCl₃ → Al³⁺ + 3Cl⁻",
+   cat:"Al³⁺",catC:1,catV:3, ani:"Cl⁻",aniC:3,aniV:-1,
+   ratio:"1:3",ropts:["1:1","1:2","2:1","1:3"],
+   distractors:["CaCl₂","BaCl₂","NaCl"]},
+];
+const LOOKUP={};QS.forEach(q=>LOOKUP[q.f]=q);
+
+// ─── Exam questions ────────────────────────────────────
+const EXAM_QS=[
+  {
+    stem:"關於電解質溶液，下列說明何者最合理？",
+    opts:["可導電的物質都是化合物","可導電的物質都可以溶於水","電解質溶於水後，其水溶液都可導電","電解質溶液內的正、負離子個數一定相等"],
+    ans:2,
+    explain:"(A)銅可導電但不是化合物；(B)銅不溶於水；(D)電解質溶液中正、負離子總電量相等，但個數不一定相等，例如 Na₂SO₄ 解離出 2 個 Na⁺ 和 1 個 SO₄²⁻。"
+  },
+  {
+    stem:"1 個鎵原子（Ga）形成鎵離子（Ga³⁺）的敘述，下列何者正確？",
+    opts:["鎵原子失去 3 個電子形成鎵離子","鎵原子失去 3 個質子形成鎵離子","鎵原子得到 3 個電子形成鎵離子","鎵原子得到 3 個質子形成鎵離子"],
+    ans:0,
+    explain:"原子因得到或失去電子而形成帶電離子，質子數不會改變。由中性鎵原子形成帶正電的 Ga³⁺，代表失去了 3 個電子。"
+  },
+  {
+    stem:"將 1L 的 0.5M BaCl₂ 水溶液與 1L 的 0.5M Na₂SO₄ 水溶液混合，產生 BaSO₄ 白色沉澱後過濾。濾液在室溫下具有良好的導電性，則濾液中「主要的」導電粒子為下列何者？",
+    opts:["H⁺、OH⁻","Na⁺、Cl⁻","Ba²⁺、Cl⁻","Na⁺、SO₄²⁻"],
+    ans:1,
+    explain:"BaCl₂ → Ba²⁺ + 2Cl⁻；Na₂SO₄ → 2Na⁺ + SO₄²⁻。混合後 Ba²⁺ 與 SO₄²⁻ 結合成 BaSO₄ 沉澱被過濾去除，剩餘濾液中主要含 Na⁺ 與 Cl⁻。"
+  },
+  {
+    stem:"已知化合物 X 為強電解質，分析其不同濃度水溶液中正、負離子數目比恆為 2：1，則化合物 X 最可能為下列何者？",
+    opts:["CaCl₂","CuSO₄","Na₂SO₄","CH₃COOH"],
+    ans:2,
+    explain:"Na₂SO₄ → 2Na⁺ + SO₄²⁻，正、負離子數目比 = 2:1。CaCl₂ 為 1:2；CuSO₄ 為 1:1；CH₃COOH 為弱電解質且比為 1:1。"
+  },
+  {
+    stem:"Fe（鐵原子）、Fe³⁺（鐵離子）和 Fe²⁺（亞鐵離子）三種粒子，下列數值比較何者正確？",
+    opts:["Fe³⁺的質子數 > Fe的電子數","Fe³⁺的電子數 > Fe的質子數","Fe²⁺的電子數 > Fe的電子數","Fe²⁺的電子數 > Fe³⁺的電子數"],
+    ans:3,
+    explain:"Fe 失去電子形成正離子，質子數不變。電子數關係：Fe > Fe²⁺ > Fe³⁺，因此 Fe²⁺ 的電子數多於 Fe³⁺。"
+  },
+];
+
+// ─── State ──────────────────────────────────────────────
+let gMode,questions,cur,score,streak,results,answered,step2phase;
+
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startGame(m){
+  gMode=m;
+  if(m===3) questions=shuf([...EXAM_QS]);
+  else questions=shuf([...QS]);
+  cur=0;score=0;streak=0;results=[];answered=false;step2phase=false;
+  document.getElementById('menu-screen').style.display='none';
+  document.getElementById('game-screen').style.display='block';
+  document.getElementById('end-screen').style.display='none';
+  renderQ();
+}
+function backToMenu(){
+  document.getElementById('end-screen').style.display='none';
+  document.getElementById('menu-screen').style.display='block';
+}
+
+// ─── Render question ────────────────────────────────────
+function renderQ(){
+  answered=false;step2phase=false;
+  const q=questions[cur];
+  const tot=questions.length;
+  document.getElementById('score').textContent=score;
+  document.getElementById('streak').textContent=streak;
+  document.getElementById('progress').textContent=(cur+1)+'/'+tot;
+  document.getElementById('prog-fill').style.width=(cur/tot*100)+'%';
+
+  const tags=[['🔵 解離配對','tag-blue'],['🟠 電荷守恆','tag-orange'],['🟢 反向推理','tag-green'],['📝 會考題','tag-purple']];
+  const mt=document.getElementById('mode-tag');
+  mt.textContent=tags[gMode][0];mt.className='mode-tag '+tags[gMode][1];
+
+  const iv=document.getElementById('ion-visual-wrap');
+  iv.innerHTML='';
+
+  if(gMode===3){
+    // Exam mode
+    document.getElementById('formula').textContent='';
+    document.getElementById('cname').textContent='';
+    renderExam(q);
+  } else if(gMode===2){
+    document.getElementById('formula').textContent='這些離子能組成哪個化合物？';
+    document.getElementById('cname').textContent='';
+    renderIonVisual(q,true); // hide labels
+    renderReverseOpts(q);
+  } else {
+    document.getElementById('formula').textContent=q.f;
+    document.getElementById('cname').textContent=q.cn;
+    renderIonVisual(q,false);
+    if(gMode===0) renderRatioOpts(q);
+    else renderStep1(q);
+  }
+
+  document.getElementById('fb').className='feedback';
+  document.getElementById('fb').innerHTML='';
+  const nb=document.getElementById('next-btn');
+  nb.className='next-btn';nb.onclick=null;
+}
+
+// ─── Ion visual ──────────────────────────────────────────
+function renderIonVisual(q, hideLabels){
+  const wrap=document.getElementById('ion-visual-wrap');
+  const div=document.createElement('div');div.className='ion-visual';
+  const row=document.createElement('div');row.className='balls-row';
+  for(let i=0;i<q.catC;i++){if(i>0)row.appendChild(psep());row.appendChild(mkBall(q.cat,'cation',hideLabels));}
+  if(q.catC&&q.aniC)row.appendChild(psep());
+  for(let i=0;i<q.aniC;i++){if(i>0)row.appendChild(psep());row.appendChild(mkBall(q.ani,'anion',hideLabels));}
+  div.appendChild(row);
+  if(!hideLabels){
+    const leg=document.createElement('div');leg.className='ion-legend';
+    leg.innerHTML='<span class="ion-leg-item"><span class="ldot c"></span>陽離子 '+q.cat+' ×'+q.catC+'</span>'
+      +'<span class="ion-leg-item"><span class="ldot a"></span>陰離子 '+q.ani+' ×'+q.aniC+'</span>';
+    div.appendChild(leg);
+  } else {
+    // only show color legend, no ion names
+    const leg=document.createElement('div');leg.className='ion-legend';
+    leg.innerHTML='<span class="ion-leg-item"><span class="ldot c"></span>橘球＝陽離子</span>'
+      +'<span class="ion-leg-item"><span class="ldot a"></span>藍球＝陰離子</span>';
+    div.appendChild(leg);
+  }
+  wrap.appendChild(div);
+}
+function psep(){const s=document.createElement('span');s.className='plus-sep';s.textContent='+';return s}
+function mkBall(ion,cls,hideLabel){
+  const b=document.createElement('div');b.className='ball '+cls;
+  if(hideLabel){
+    // show charge only, no element name
+    const chg=ion.match(/[²³]?[⁺⁻\+\-]+$/);
+    b.innerHTML='<span class="ball-chg" style="font-size:14px;font-weight:700;">'+(chg?chg[0]:'')+'</span>';
+  } else {
+    const sym=ion.replace(/[²³⁺⁻₂₃₄\+\-]/g,'').replace(/\s/g,'');
+    const chg=ion.match(/[²³]?[⁺⁻\+\-]+$/);
+    b.innerHTML='<span class="ball-sym">'+sym+'</span><span class="ball-chg">'+(chg?chg[0]:'')+'</span>';
+  }
+  return b;
+}
+
+// ─── Mode 0: ratio opts ──────────────────────────────────
+function renderRatioOpts(q){
+  const area=document.getElementById('opts-area');area.innerHTML='';
+  const grid=document.createElement('div');grid.className='opts-grid';
+  shuf([...q.ropts]).forEach(r=>{
+    const btn=document.createElement('button');btn.className='opt-btn';
+    const parts=r.split(':').map(Number);
+    let dots='';
+    for(let i=0;i<parts[0];i++) dots+='<span class="odot c"></span>';
+    dots+='<span class="osep">:</span>';
+    for(let i=0;i<parts[1];i++) dots+='<span class="odot a"></span>';
+    btn.innerHTML='<span class="ratio">'+r+'</span><span class="odots">'+dots+'</span>';
+    btn.addEventListener('click',()=>pickRatio(r,btn,q));
+    grid.appendChild(btn);
+  });
+  area.appendChild(grid);
+}
+function pickRatio(opt,btn,q){
+  if(answered)return;answered=true;
+  const ok=opt===q.ratio;
+  markRatioOpts(q.ratio,btn,ok);
+  applyScore(ok,q,null);
+  showNext(q);
+}
+
+// ─── Mode 1: step1 + step2 ───────────────────────────────
+function renderStep1(q){
+  const area=document.getElementById('opts-area');area.innerHTML='';
+  const lbl=document.createElement('div');lbl.className='step-badge step1';lbl.textContent='步驟一：選出正確的陽：陰個數比';
+  area.appendChild(lbl);
+  const grid=document.createElement('div');grid.className='opts-grid';
+  shuf([...q.ropts]).forEach(r=>{
+    const btn=document.createElement('button');btn.className='opt-btn';
+    const parts=r.split(':').map(Number);
+    let dots='';
+    for(let i=0;i<parts[0];i++) dots+='<span class="odot c"></span>';
+    dots+='<span class="osep">:</span>';
+    for(let i=0;i<parts[1];i++) dots+='<span class="odot a"></span>';
+    btn.innerHTML='<span class="ratio">'+r+'</span><span class="odots">'+dots+'</span>';
+    btn.addEventListener('click',()=>pickStep1(r,btn,q));
+    grid.appendChild(btn);
+  });
+  area.appendChild(grid);
+}
+function pickStep1(opt,btn,q){
+  if(answered)return;answered=true;
+  const ok=opt===q.ratio;
+  markRatioOpts(q.ratio,btn,ok);
+  if(ok){
+    let pts=10;if(streak>=1)pts+=5;score+=pts;streak++;
+    document.getElementById('score').textContent=score;
+    document.getElementById('streak').textContent=streak;
+    const fb=document.getElementById('fb');
+    fb.className='feedback show ok';
+    fb.innerHTML='<div class="fb-title">✅ 個數比正確！+'+pts+' 分，進入步驟二</div>';
+    setTimeout(()=>renderStep2(q),500);
+  } else {
+    streak=0;document.getElementById('streak').textContent=0;
+    const fb=document.getElementById('fb');
+    fb.className='feedback show err';
+    fb.innerHTML='<div class="fb-title">❌ 答錯了，正確答案是 '+q.ratio+'</div>'
+      +'<div class="fb-eq">'+q.eq+'</div>'
+      +'<div class="fb-explain">步驟一答錯，跳過步驟二</div>';
+    results.push({f:q.f,ok:false,note:'個數比錯誤'});
+    showNext(q);
+  }
+}
+function renderStep2(q){
+  answered=false;step2phase=true;
+  const area=document.getElementById('opts-area');area.innerHTML='';
+  const lbl=document.createElement('div');lbl.className='step-badge step2';lbl.textContent='步驟二：選出正確的電荷守恆算式';
+  area.appendChild(lbl);
+  const correct=buildChargeOpt(q);
+  const wrongs=buildChargeWrongs(q);
+  const all=shuf([correct,...wrongs]);
+  const cDiv=document.createElement('div');cDiv.className='charge-opts';
+  all.forEach(o=>{
+    const btn=document.createElement('button');btn.className='charge-opt';
+    btn.textContent=o.text;
+    btn.addEventListener('click',()=>pickStep2(o.ok,btn,q,correct.text));
+    cDiv.appendChild(btn);
+  });
+  area.appendChild(cDiv);
+  document.getElementById('fb').className='feedback';
+}
+function buildChargeOpt(q){
+  const sg=v=>v>0?'(+'+v+')':'('+v+')';
+  const ct=q.catV*q.catC, at=q.aniV*q.aniC;
+  const text=sg(q.catV)+'×'+q.catC+' = '+(ct>=0?'+':'')+ct+'　　'
+    +sg(q.aniV)+'×'+q.aniC+' = '+(at>=0?'+':'')+at;
+  return {text,ok:true};
+}
+function buildChargeWrongs(q){
+  const sg=v=>v>0?'(+'+v+')':'('+v+')';
+  const fmt=v=>(v>=0?'+':'')+v;
+  const correctText=buildChargeOpt(q).text;
+  const candidates=[];
+
+  // wrong1: swap counts (only if different from correct)
+  if(q.catC!==q.aniC){
+    const t1=q.catV*q.aniC, t2=q.aniV*q.catC;
+    const txt=sg(q.catV)+'×'+q.aniC+' = '+fmt(t1)+'　　'+sg(q.aniV)+'×'+q.catC+' = '+fmt(t2);
+    if(txt!==correctText) candidates.push({text:txt,ok:false});
+  }
+
+  // wrong2: catV+1, keep counts
+  const fC2=q.catV+1, t3=fC2*q.catC, t4=q.aniV*q.aniC;
+  const txt2=sg(fC2)+'×'+q.catC+' = '+fmt(t3)+'　　'+sg(q.aniV)+'×'+q.aniC+' = '+fmt(t4);
+  if(txt2!==correctText) candidates.push({text:txt2,ok:false});
+
+  // wrong3: aniV-1, keep counts
+  const fA3=q.aniV-1, t5=q.catV*q.catC, t6=fA3*q.aniC;
+  const txt3=sg(q.catV)+'×'+q.catC+' = '+fmt(t5)+'　　'+sg(fA3)+'×'+q.aniC+' = '+fmt(t6);
+  if(txt3!==correctText && txt3!==txt2) candidates.push({text:txt3,ok:false});
+
+  // wrong4: catC+1
+  const fC4=q.catC+1, t7=q.catV*fC4, t8=q.aniV*q.aniC;
+  const txt4=sg(q.catV)+'×'+fC4+' = '+fmt(t7)+'　　'+sg(q.aniV)+'×'+q.aniC+' = '+fmt(t8);
+  if(txt4!==correctText && !candidates.find(c=>c.text===txt4)) candidates.push({text:txt4,ok:false});
+
+  // wrong5: aniC+1
+  const fA5=q.aniC+1, t9=q.catV*q.catC, t10=q.aniV*fA5;
+  const txt5=sg(q.catV)+'×'+q.catC+' = '+fmt(t9)+'　　'+sg(q.aniV)+'×'+fA5+' = '+fmt(t10);
+  if(txt5!==correctText && !candidates.find(c=>c.text===txt5)) candidates.push({text:txt5,ok:false});
+
+  // return 2 unique wrongs
+  return shuf(candidates).slice(0,2);
+}
+function pickStep2(ok,btn,q,correctText){
+  if(answered)return;answered=true;
+  document.querySelectorAll('.charge-opt').forEach(b=>{b.disabled=true});
+  btn.classList.add(ok?'correct':'wrong');
+  if(!ok){
+    document.querySelectorAll('.charge-opt').forEach(b=>{
+      if(b.textContent===correctText) b.classList.add('correct');
+    });
+  }
+  let pts=0;if(ok){pts=10;score+=pts;streak++;}else{streak=0;}
+  document.getElementById('score').textContent=score;
+  document.getElementById('streak').textContent=streak;
+  const fb=document.getElementById('fb');
+  if(ok){
+    fb.className='feedback show ok';
+    fb.innerHTML='<div class="fb-title">✅ 電荷守恆！+'+pts+' 分</div>'
+      +'<div class="fb-explain">正離子總電荷與負離子總電荷絕對值相等，化合物電中性成立。</div>';
+  } else {
+    fb.className='feedback show err';
+    fb.innerHTML='<div class="fb-title">❌ 算式有誤</div>'
+      +'<div class="fb-eq">'+q.eq+'</div>';
+  }
+  results.push({f:q.f,ok,note:'電荷守恆'});
+  showNext(q);
+}
+
+// ─── Mode 2: reverse ─────────────────────────────────────
+function ionSig(q){return q.catV+'x'+q.catC+'|'+q.aniV+'x'+q.aniC;}
+function renderReverseOpts(q){
+  const area=document.getElementById('opts-area');area.innerHTML='';
+  const sig=ionSig(q);
+  // filter distractors: remove any that have identical ion signature
+  const safeDistractors=q.distractors
+    .map(f=>LOOKUP[f])
+    .filter(x=>ionSig(x)!==sig);
+  // if not enough, fill from other QS (excluding same sig and correct)
+  let pool=safeDistractors;
+  if(pool.length<3){
+    const extras=QS.filter(x=>x.f!==q.f && ionSig(x)!==sig && !q.distractors.includes(x.f));
+    pool=[...pool,...shuf(extras)].slice(0,3);
+  }
+  const wrongs=pool.slice(0,3);
+  const all=shuf([q,...wrongs]);
+  const grid=document.createElement('div');grid.className='opts-grid';
+  all.forEach(x=>{
+    const btn=document.createElement('button');btn.className='opt-btn';
+    btn.innerHTML='<span class="ratio" style="font-size:1rem">'+x.f+'</span><span class="opt-name">'+x.cn+'</span>';
+    btn.addEventListener('click',()=>pickReverse(x.f,btn,q));
+    grid.appendChild(btn);
+  });
+  area.appendChild(grid);
+}
+function pickReverse(opt,btn,q){
+  if(answered)return;answered=true;
+  const ok=opt===q.f;
+  document.querySelectorAll('.opt-btn').forEach(b=>{
+    b.disabled=true;
+    const lbl=b.querySelector('.ratio').textContent;
+    if(lbl===q.f) b.classList.add('correct');
+    else if(b===btn&&!ok) b.classList.add('wrong');
+  });
+  applyScore(ok,q,null);
+  showNext(q);
+}
+
+// ─── Mode 3: exam ─────────────────────────────────────────
+function renderExam(q){
+  const area=document.getElementById('opts-area');area.innerHTML='';
+  const qDiv=document.createElement('div');qDiv.className='exam-q';qDiv.textContent=q.stem;
+  area.appendChild(qDiv);
+  const oDiv=document.createElement('div');oDiv.className='exam-opts';
+  const letters=['A','B','C','D'];
+  q.opts.forEach((o,i)=>{
+    const btn=document.createElement('button');btn.className='exam-opt';
+    btn.innerHTML='<span class="opt-letter">'+letters[i]+'</span><span>'+o+'</span>';
+    btn.addEventListener('click',()=>pickExam(i,btn,q));
+    oDiv.appendChild(btn);
+  });
+  area.appendChild(oDiv);
+}
+function pickExam(idx,btn,q){
+  if(answered)return;answered=true;
+  const ok=idx===q.ans;
+  const letters=['A','B','C','D'];
+  document.querySelectorAll('.exam-opt').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===q.ans) b.classList.add('correct');
+    else if(b===btn&&!ok) b.classList.add('wrong');
+  });
+  let pts=0;if(ok){pts=10;if(streak>=1)pts+=5;score+=pts;streak++;}else{streak=0;}
+  document.getElementById('score').textContent=score;
+  document.getElementById('streak').textContent=streak;
+  const fb=document.getElementById('fb');
+  if(ok){
+    fb.className='feedback show ok';
+    fb.innerHTML='<div class="fb-title">✅ 答對了！+'+pts+' 分</div>'
+      +'<div class="fb-explain">'+q.explain+'</div>';
+  } else {
+    fb.className='feedback show err';
+    fb.innerHTML='<div class="fb-title">❌ 答錯了。正確答案是 <b>'+letters[q.ans]+'</b></div>'
+      +'<div class="fb-explain">'+q.explain+'</div>';
+  }
+  results.push({f:'題'+(cur+1),ok,note:ok?'答對':'選'+letters[idx]+'，正確'+letters[q.ans]});
+  showNext(q);
+}
+
+// ─── Helpers ─────────────────────────────────────────────
+function markRatioOpts(ans,clickedBtn,ok){
+  document.querySelectorAll('.opt-btn').forEach(b=>{
+    b.disabled=true;
+    const lbl=b.querySelector('.ratio');
+    if(lbl&&lbl.textContent===ans) b.classList.add('correct');
+    else if(b===clickedBtn&&!ok) b.classList.add('wrong');
+  });
+}
+function applyScore(ok,q,override){
+  let pts=0;
+  if(ok){pts=10;if(streak>=1)pts+=5;score+=pts;streak++;}else{streak=0;}
+  document.getElementById('score').textContent=score;
+  document.getElementById('streak').textContent=streak;
+  const fb=document.getElementById('fb');
+  if(ok){
+    fb.className='feedback show ok';
+    fb.innerHTML='<div class="fb-title">✅ 答對了！'+(pts>10?' 連擊加成 +5！':'')+' +'+pts+' 分</div>'
+      +(q.eq?'<div class="fb-eq">'+q.eq+'</div>':'');
+  } else {
+    fb.className='feedback show err';
+    fb.innerHTML='<div class="fb-title">❌ '+(override||('答錯了，正確答案是 '+(q.ratio||'')))+'</div>'
+      +(q.eq?'<div class="fb-eq">'+q.eq+'</div>':'');
+  }
+  results.push({f:q.f||('題'+(cur+1)),ok,note:ok?'':'答錯'});
+}
+function showNext(q){
+  const nb=document.getElementById('next-btn');
+  nb.className='next-btn show';
+  nb.textContent=cur+1<questions.length?'下一題 →':'查看成績 →';
+  nb.onclick=()=>{cur++;cur<questions.length?renderQ():showEnd()};
+}
+
+// ─── End screen ───────────────────────────────────────────
+function showEnd(){
+  document.getElementById('game-screen').style.display='none';
+  document.getElementById('end-screen').style.display='block';
+  const ok=results.filter(r=>r.ok).length;
+  const tot=results.length;
+  const pct=ok/tot;
+  let trophy,grade;
+  if(pct>=0.88){trophy='🏆';grade='離子大師！'}
+  else if(pct>=0.63){trophy='⭐';grade='表現不錯！'}
+  else if(pct>=0.38){trophy='📚';grade='有點進步！'}
+  else{trophy='🌱';grade='繼續加油！'}
+  document.getElementById('end-trophy').textContent=trophy;
+  document.getElementById('end-grade').textContent=grade;
+  document.getElementById('end-score').textContent=score+' 分';
+  document.getElementById('end-sub').textContent='答對 '+ok+' / '+tot+' 題（'+Math.round(pct*100)+'%）';
+  const rl=document.getElementById('review-list');rl.innerHTML='';
+  results.forEach(r=>{
+    const d=document.createElement('div');d.className='rev-item '+(r.ok?'ok':'err');
+    d.innerHTML='<span class="rev-icon">'+(r.ok?'✅':'❌')+'</span>'
+      +'<span class="rev-f">'+r.f+'</span>'
+      +'<span class="rev-info">'+(r.ok?'答對':'答錯'+(r.note?'：'+r.note:''))+'</span>';
+    rl.appendChild(d);
+  });
+}
+</script>
+</body>
+</html>
