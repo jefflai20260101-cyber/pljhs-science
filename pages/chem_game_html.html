@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>化學反應速率 — 闖關學習活動</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f1e;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px;font-family:"Segoe UI","Microsoft JhengHei",sans-serif}
+#root{width:100%;max-width:600px}
+button:focus{outline:2px solid #f59e0b;outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {createElement:h,useState,Fragment} = React;
+
+const ROUNDS=[
+  {id:"bbq",scene:"🍖 燒烤場景",icon:"🍖",intro:"你在戶外烤肉，木炭燃燒得很慢，肉也熟得很慢，想讓火更旺、肉更快熟！",steps:[
+    {question:"第一步：木炭燒得慢，你選哪個因素來加快燃燒？",options:[
+      {label:"🌬 濃度（增加氧氣）",correct:true,hint:"正確！氧氣是燃燒的反應物，增加濃度讓碰撞更頻繁，燃燒加快。"},
+      {label:"❄️ 降低溫度",correct:false,hint:"錯了！降低溫度讓分子動能減少，燃燒反而更慢。"},
+      {label:"🪵 換更大塊的木炭",correct:false,hint:"錯了！更大塊代表表面積更小，接觸氧氣更少，燃燒更慢。"}]},
+    {question:"第二步：要增加氧氣濃度，你會怎麼做？",options:[
+      {label:"💨 用扇子搧風",correct:true,hint:"正確！搧風帶入新鮮空氣，提高氧氣濃度，燃燒更旺。"},
+      {label:"🪣 蓋上蓋子密封",correct:false,hint:"錯了！密封阻絕氧氣，火很快就熄滅。"},
+      {label:"💧 灑一點水",correct:false,hint:"錯了！灑水降溫又減少接觸，燃燒大幅減慢。"}]},
+    {question:"第三步：搧風後想讓火更旺，再選哪個因素？",options:[
+      {label:"🌡 溫度（讓火更熱）",correct:true,hint:"正確！升高溫度讓分子動能增加，有效碰撞增多，燃燒加速。"},
+      {label:"🧪 加入催化劑",correct:false,hint:"燃燒反應一般不靠催化劑，烤肉不會這樣操作。"},
+      {label:"📵 什麼都不做",correct:false,hint:"什麼都不做，燃燒速率不會改變。"}]},
+    {question:"第四步：要升高溫度，你會怎麼做？",options:[
+      {label:"🪵 再加一些柴火",correct:true,hint:"正確！加柴讓燃燒更旺，溫度升高，分子速度加快。"},
+      {label:"🌬 停止搧風",correct:false,hint:"錯了！停止搧風讓氧氣減少，火反而變小。"},
+      {label:"💧 加水調節溫度",correct:false,hint:"錯了！加水降溫，燃燒速率減慢。"}]},
+    {question:"第五步：肉熟得很慢，選哪個因素能讓肉更快熟？",options:[
+      {label:"📐 表面積（切小塊）",correct:true,hint:"正確！切小塊讓肉與熱源接觸面積增大，加熱更均勻，熟得更快。"},
+      {label:"🌬 繼續搧風",correct:false,hint:"搧風是針對木炭，對肉的熟化影響不大，換個角度思考。"},
+      {label:"🌡 再升溫（已夠熱）",correct:false,hint:"溫度已足夠，這步換個因素效果更顯著。"}]},
+    {question:"第六步：要增加肉的表面積，你怎麼做？",options:[
+      {label:"🔪 把肉切成薄片或小塊",correct:true,hint:"正確！切薄切小讓更多面積接觸熱源，肉熟得更快、更均勻！"},
+      {label:"🥩 換一整塊大牛排",correct:false,hint:"錯了！大塊牛排表面積相對較小，中心難以受熱，熟得更慢。"},
+      {label:"🔒 把肉壓扁堆疊",correct:false,hint:"錯了！堆疊讓肉互相遮蔽，接觸熱源的面積反而減少。"}]}
+  ]},
+  {id:"food",scene:"🍱 食品保存場景",icon:"🍱",intro:"你買了新鮮草莓，想讓它盡量不腐壞、保存更久！",steps:[
+    {question:"第一步：腐壞是化學反應，選哪個因素能降低腐壞速率？",options:[
+      {label:"🌡 溫度（讓環境更冷）",correct:true,hint:"正確！低溫讓細菌和酵素的反應速率降低，食物保存更久。"},
+      {label:"🔥 加熱食物",correct:false,hint:"錯了！加熱升溫加快細菌繁殖，食物更快壞。"},
+      {label:"✂️ 把草莓切成小塊",correct:false,hint:"錯了！切小塊增加表面積，細菌接觸更多，腐壞更快！"}]},
+    {question:"第二步：要降低溫度，你實際怎麼做？",options:[
+      {label:"❄️ 放進冰箱冷藏",correct:true,hint:"正確！冰箱低溫使分子動能減少，細菌有效碰撞大幅降低。"},
+      {label:"☀️ 放在窗邊讓陽光照射",correct:false,hint:"錯了！陽光使溫度升高，加速腐壞。"},
+      {label:"🫙 放密封罐置於室溫",correct:false,hint:"密封能稍微隔絕氧氣，但室溫下溫度沒降，效果有限。"}]},
+    {question:"第三步：放冰箱後，還想進一步保存，再選哪個因素？",options:[
+      {label:"🌬 濃度（減少氧氣接觸）",correct:true,hint:"正確！減少氧氣濃度，讓需要氧氣的腐敗反應無法進行。"},
+      {label:"📐 增加表面積",correct:false,hint:"錯了！增加表面積讓細菌接觸更多草莓，腐壞更快。"},
+      {label:"🔥 稍微加熱殺菌",correct:false,hint:"加熱雖可殺部分細菌，但草莓不適合加熱，會破壞質地。"}]},
+    {question:"第四步：要減少氧氣濃度，你怎麼做？",options:[
+      {label:"🫙 裝入密封保鮮盒",correct:true,hint:"正確！密封隔絕空氣中的氧氣，減少腐敗反應的反應物。"},
+      {label:"🌬 放通風處吹風",correct:false,hint:"錯了！通風讓更多氧氣接觸草莓，腐壞反而加速。"},
+      {label:"✂️ 切開讓水分蒸發",correct:false,hint:"錯了！切開增加表面積，草莓更快氧化腐壞。"}]},
+    {question:"第五步：密封冷藏後，最後還能用哪個因素進一步保存？",options:[
+      {label:"🧂 用鹽或糖醃製",correct:true,hint:"正確！高鹽或高糖使細菌失水，降低活性，減慢腐敗速率。"},
+      {label:"🌡 移到室溫解凍",correct:false,hint:"錯了！升溫加快所有化學反應，包括腐敗。"},
+      {label:"✂️ 切更小塊分裝",correct:false,hint:"切更小塊表面積增加，反而更容易氧化。"}]},
+    {question:"第六步：鹽醃保存食物，從化學角度看最相關的概念是？",options:[
+      {label:"📉 降低反應物有效濃度，減少碰撞，降低腐敗速率",correct:true,hint:"正確！高鹽讓細菌的水分活性降低，等同減少反應物可用量。"},
+      {label:"🧪 鹽是催化劑，改變了反應路徑",correct:false,hint:"錯了！鹽不是催化劑，它是透過改變環境濃度來抑制反應。"},
+      {label:"🌡 鹽能降低環境溫度，速率變慢",correct:false,hint:"錯了！鹽不會降低溫度，它是藉由濃度效應抑制細菌活動。"}]}
+  ]}
+];
+
+const QUIZ=[
+  {q:"一般情況下，下列何者的反應速率最快？",opts:["鐵釘生鏽","鐘乳石的生成","木材燃燒","銅生銅綠"],ans:2,exp:"在一般情況下，反應由快至慢為：木材燃燒＞鐵釘生鏽＞銅生銅綠＞鐘乳石生成。燃燒是快速氧化反應，速率遠大於其他緩慢的化學反應。"},
+  {q:"阿康家晚上要烤肉，下列哪一種行為無法讓烤肉更有效率？",opts:["把木炭敲小塊","生火時對著木炭搧風","把烤肉網放離火近一些","把食材堆疊在一起烤"],ans:3,exp:"把食材堆疊在一起烤，等於減少接觸面積，熱量無法均勻傳到每片食材；其他選項（敲小塊、搧風、靠近火源）都能增加反應速率。"},
+  {q:"雙氧水塗在受傷流血的皮膚上會快速冒出氣泡，最主要的原因為何？",opts:["受傷的皮膚細菌很多，反應比較快","血液內含有加速分解雙氧水的酶（催化劑）","受傷皮膚內含有氧氣","受傷皮膚表面與雙氧水接觸的面積比較多"],ans:1,exp:"人體血液中含有亞鐵的化合物，能催化雙氧水分解成水和氧氣，冒出的氣泡就是氧氣。這是催化劑加快反應速率的例子。"},
+  {q:"在硫代硫酸鈉與鹽酸的實驗中，下列何者為控制變因？",opts:["硫代硫酸鈉溶液的溫度","沉澱物遮住十字的時間","硫代硫酸鈉溶液的濃度與體積","硫沉澱的顏色"],ans:2,exp:"操縱變因是「溫度」；應變變因是「沉澱物遮住十字所需的時間」；控制變因則是「硫代硫酸鈉溶液的濃度與體積、鹽酸的濃度與體積」，這些需保持不變才能公平比較。"},
+  {q:"小軒進行兩次鹽酸與金屬反應實驗，第二次氣泡速率明顯比第一次慢，若只改變了一個條件，最可能是下列何者？",opts:["提高了反應溫度","把鎂帶換成活性較小的鐵片","使用顆粒較小的鎂粉","換成較濃的鹽酸"],ans:1,exp:"鐵片的活性小於鎂，相同條件下反應速率較慢。其他選項（升溫、顆粒更小、更濃的鹽酸）都會加快反應速率，不符合題意。"},
+  {q:"加入催化劑後，下列何者正確？",opts:["反應速率加快，且生成物的量也會增加","反應速率加快，但生成物的量不變","反應速率不變，只有生成物的量增加","催化劑參與反應後會被消耗掉"],ans:1,exp:"催化劑能降低活化能、加快反應速率，但不改變生成物最終的量，且本身不被消耗，可重複使用。"}
+];
+
+// ── helpers ──────────────────────────────────────────────────────────────
+const C = (tag,props,...kids) => h(tag,props,...kids);
+const btn = (label,onClick,style) => C("button",{onClick,style:{fontFamily:"inherit",cursor:"pointer",...style}},label);
+
+function ProgressDots({current,total}){
+  return C("div",{style:{display:"flex",gap:5,justifyContent:"center",marginBottom:14}},
+    ...Array.from({length:total},(_,i)=>
+      C("div",{key:i,style:{width:i===current?22:10,height:10,borderRadius:5,
+        background:i<current?"#10b981":i===current?"#f59e0b":"#1e293b",transition:"all 0.3s"}})
+    )
+  );
+}
+
+function Badge({label,color}){
+  color=color||"#f59e0b";
+  return C("span",{style:{background:color+"22",color,border:`1px solid ${color}55`,
+    borderRadius:20,padding:"2px 10px",fontSize:12,fontWeight:600}},label);
+}
+
+// ── SceneStep ────────────────────────────────────────────────────────────
+function SceneStep({step,stepNum,totalSteps,onNext}){
+  const [chosen,setChosen]=useState(null);
+  const answered=chosen!==null;
+  const isCorrect=answered&&step.options[chosen].correct;
+
+  const optBtns=step.options.map((opt,i)=>{
+    let bg="#1e293b",border="2px solid #334155",color="#f1f5f9";
+    if(answered){
+      if(opt.correct){bg="#064e3b";border="2px solid #10b981";color="#6ee7b7";}
+      else if(i===chosen){bg="#7f1d1d";border="2px solid #ef4444";color="#fca5a5";}
+      else{bg="#0f172a";border="2px solid #1e293b";color="#334155";}
+    }
+    return C("button",{key:i,onClick:()=>!answered&&setChosen(i),
+      style:{background:bg,color,border,borderRadius:12,padding:"12px 16px",
+        cursor:answered?"default":"pointer",textAlign:"left",fontSize:14,
+        transition:"all 0.2s",width:"100%",fontFamily:"inherit",marginBottom:10}},
+      C("span",{style:{marginRight:8}},answered?(opt.correct?"✅":i===chosen?"❌":"　"):"　"),
+      opt.label
+    );
+  });
+
+  return C("div",null,
+    C("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}},
+      C(Badge,{label:`步驟 ${stepNum}／${totalSteps}`}),
+      C(ProgressDots,{current:stepNum-1,total:totalSteps})
+    ),
+    C("p",{style:{color:"#f1f5f9",fontWeight:600,fontSize:15,lineHeight:1.6,marginBottom:16}},step.question),
+    C("div",null,...optBtns),
+    answered&&C("div",{style:{background:"#0f172a",borderRadius:12,padding:14,marginBottom:14,
+      borderLeft:`4px solid ${isCorrect?"#10b981":"#f59e0b"}`}},
+      C("p",{style:{color:isCorrect?"#6ee7b7":"#fcd34d",fontSize:13,lineHeight:1.6,margin:0}},
+        "💡 "+step.options[chosen].hint)
+    ),
+    answered&&C("button",{onClick:()=>onNext(isCorrect),
+      style:{background:"#f59e0b",color:"#000",border:"none",borderRadius:12,
+        padding:"11px 28px",fontSize:15,fontWeight:700,cursor:"pointer",width:"100%",fontFamily:"inherit"}},
+      stepNum<totalSteps?"下一步 →":"完成此關卡 ✓"
+    )
+  );
+}
+
+// ── QuizStep ─────────────────────────────────────────────────────────────
+function QuizStep({q,num,total,onNext}){
+  const [chosen,setChosen]=useState(null);
+  const answered=chosen!==null;
+  const isCorrect=answered&&chosen===q.ans;
+
+  const optBtns=q.opts.map((opt,i)=>{
+    let bg="#1e293b",border="2px solid #334155",color="#f1f5f9";
+    if(answered){
+      if(i===q.ans){bg="#064e3b";border="2px solid #10b981";color="#6ee7b7";}
+      else if(i===chosen){bg="#7f1d1d";border="2px solid #ef4444";color="#fca5a5";}
+      else{bg="#0f172a";border="2px solid #1e293b";color="#334155";}
+    }
+    return C("button",{key:i,onClick:()=>!answered&&setChosen(i),
+      style:{background:bg,color,border,borderRadius:12,padding:"12px 16px",
+        cursor:answered?"default":"pointer",textAlign:"left",fontSize:14,
+        transition:"all 0.2s",width:"100%",fontFamily:"inherit",marginBottom:10}},
+      C("span",{style:{marginRight:8}},answered?(i===q.ans?"✅":i===chosen?"❌":"　"):"　"),
+      "("+String.fromCharCode(65+i)+") "+opt
+    );
+  });
+
+  return C("div",null,
+    C("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}},
+      C(Badge,{label:`題目 ${num}／${total}`,color:"#a78bfa"}),
+      C(ProgressDots,{current:num-1,total})
+    ),
+    answered&&C("div",{style:{textAlign:"center",fontSize:28,marginBottom:8}},isCorrect?"🎉":"💪"),
+    C("p",{style:{color:"#f1f5f9",fontWeight:600,fontSize:15,lineHeight:1.6,marginBottom:16}},"Q"+num+". "+q.q),
+    C("div",null,...optBtns),
+    answered&&C("div",{style:{background:"#0f172a",borderRadius:12,padding:14,marginBottom:14,
+      borderLeft:`4px solid ${isCorrect?"#10b981":"#f59e0b"}`}},
+      C("p",{style:{color:"#94a3b8",fontSize:13,lineHeight:1.6,margin:0}},"💡 "+q.exp)
+    ),
+    answered&&C("button",{onClick:()=>onNext(isCorrect),
+      style:{background:"#a78bfa",color:"#000",border:"none",borderRadius:12,
+        padding:"11px 28px",fontSize:15,fontWeight:700,cursor:"pointer",width:"100%",fontFamily:"inherit"}},
+      num<total?"下一題 →":"完成測驗 ✓"
+    )
+  );
+}
+
+// ── RoundClear ───────────────────────────────────────────────────────────
+function RoundClear({scene,correct,total,onNext,isLast}){
+  const pct=Math.round((correct/total)*100);
+  return C("div",{style:{textAlign:"center"}},
+    C("div",{style:{fontSize:52,marginBottom:8}},pct===100?"🌟":pct>=67?"😊":"😅"),
+    C("h3",{style:{color:"#f59e0b",fontSize:19,marginBottom:4}},"關卡完成！"),
+    C("p",{style:{color:"#94a3b8",fontSize:13,marginBottom:8}},scene),
+    C("div",{style:{fontSize:40,fontWeight:900,color:"#f1f5f9",marginBottom:4}},
+      correct, C("span",{style:{fontSize:20,color:"#64748b"}},"／"+total)
+    ),
+    C("div",{style:{maxWidth:200,margin:"0 auto 20px"}},
+      C("div",{style:{background:"#334155",borderRadius:8,height:12,overflow:"hidden"}},
+        C("div",{style:{width:pct+"%",background:pct===100?"#10b981":pct>=67?"#f59e0b":"#ef4444",
+          height:"100%",borderRadius:8,transition:"width 0.6s"}})
+      ),
+      C("p",{style:{color:"#64748b",fontSize:12,marginTop:5}},pct+"% 正確率")
+    ),
+    C("button",{onClick:onNext,style:{background:"#f59e0b",color:"#000",border:"none",
+      borderRadius:12,padding:"12px 32px",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}},
+      isLast?"前往最終測驗 📝":"前往下一關 →"
+    )
+  );
+}
+
+// ── FinalScreen ───────────────────────────────────────────────────────────
+function FinalScreen({sceneResults,quizCorrect}){
+  const sceneTotal=ROUNDS.reduce((a,r)=>a+r.steps.length,0);
+  const sceneCorrect=sceneResults.reduce((a,r)=>a+r.correct,0);
+  const sceneScore=Math.round((sceneCorrect/sceneTotal)*60);
+  const perQ=Math.round(40/QUIZ.length);
+  const quizScore=quizCorrect*perQ;
+  const total=Math.min(100,sceneScore+quizScore);
+  const grade=total>=90?"S":total>=80?"A":total>=70?"B":total>=60?"C":"D";
+  const gc=total>=90?"#f59e0b":total>=80?"#10b981":total>=70?"#3b82f6":total>=60?"#a78bfa":"#ef4444";
+  const gl={S:"化學反應速率大師 🏆",A:"優秀 — 概念掌握紮實 🌟",B:"良好 — 再複習幾個細節 👍",C:"尚可 — 繼續加油練習 💪",D:"需要加強 — 一起再來一遍 📚"};
+  const stars=total>=90?3:total>=70?2:1;
+  const factors=[["🌡 溫度↑","分子動能↑ → 有效碰撞↑ → 速率↑"],["🌬 濃度↑","粒子數↑ → 碰撞機會↑ → 速率↑"],["📐 表面積↑","接觸面↑ → 碰撞次數↑ → 速率↑"],["🧪 加催化劑","活化能↓ → 有效碰撞↑ → 速率↑"]];
+
+  return C("div",{style:{textAlign:"center"}},
+    C("div",{style:{fontSize:52,marginBottom:6}},"🎓"),
+    C("h2",{style:{color:"#f59e0b",fontSize:24,marginBottom:2}},"闖關完成！"),
+    C("div",{style:{display:"flex",gap:3,justifyContent:"center",marginBottom:10}},
+      ...[1,2,3].map(i=>C("span",{key:i,style:{fontSize:30,color:i<=stars?"#f59e0b":"#334155"}},"★"))
+    ),
+    C("div",{style:{background:"#1e293b",borderRadius:20,padding:"20px 16px",maxWidth:340,
+      margin:"0 auto 16px",display:"flex",alignItems:"center",justifyContent:"center",gap:20}},
+      C("div",null,C("div",{style:{fontSize:64,fontWeight:900,color:gc,lineHeight:1}},grade),
+        C("div",{style:{color:"#64748b",fontSize:12}},"等級")),
+      C("div",{style:{textAlign:"left"}},C("div",{style:{fontSize:48,fontWeight:900,color:"#f1f5f9",lineHeight:1}},total),
+        C("div",{style:{color:"#64748b",fontSize:12}},"/ 100 分"))
+    ),
+    C("p",{style:{color:"#f1f5f9",fontSize:14,marginBottom:18,lineHeight:1.6}},gl[grade]),
+    C("div",{style:{background:"#1e293b",borderRadius:16,padding:18,maxWidth:380,margin:"0 auto 14px",textAlign:"left"}},
+      C("p",{style:{color:"#f59e0b",fontWeight:700,fontSize:14,marginBottom:12}},"📊 分數明細"),
+      ...ROUNDS.map((r,i)=>C("div",{key:i,style:{display:"flex",justifyContent:"space-between",
+        padding:"7px 0",borderBottom:"1px solid #334155"}},
+        C("span",{style:{color:"#94a3b8",fontSize:13}},r.icon+" "+r.scene),
+        C("span",{style:{color:"#f1f5f9",fontSize:13}},(sceneResults[i]?.correct||0)+"/"+r.steps.length+" 題")
+      )),
+      C("div",{style:{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid #334155"}},
+        C("span",{style:{color:"#94a3b8",fontSize:13}},"📝 習作測驗"),
+        C("span",{style:{color:"#f1f5f9",fontSize:13}},quizCorrect+"/"+QUIZ.length+" 題")
+      ),
+      C("div",{style:{display:"flex",gap:8,paddingTop:10}},
+        ...[["情境關卡（60分）",sceneScore,"#10b981"],["習作測驗（40分）",quizScore,"#a78bfa"],["總分",total,gc]].map(([lbl,val,cl])=>
+          C("div",{key:lbl,style:{flex:1,background:"#0f172a",borderRadius:10,padding:"8px 12px",textAlign:"center"}},
+            C("div",{style:{color:"#64748b",fontSize:11}},lbl),
+            C("div",{style:{color:cl,fontWeight:700,fontSize:18}},val)
+          )
+        )
+      )
+    ),
+    C("div",{style:{background:"#1e293b",borderRadius:14,padding:16,maxWidth:380,margin:"0 auto 20px",textAlign:"left"}},
+      C("p",{style:{color:"#f59e0b",fontWeight:700,fontSize:14,marginBottom:10}},"🔑 四大因素總整理"),
+      ...factors.map(([k,v])=>C("div",{key:k,style:{display:"flex",gap:10,marginBottom:7,alignItems:"flex-start"}},
+        C("span",{style:{color:"#f59e0b",fontWeight:700,whiteSpace:"nowrap",fontSize:13}},k),
+        C("span",{style:{color:"#94a3b8",fontSize:13}},v)
+      ))
+    ),
+    C("button",{onClick:()=>location.reload(),style:{background:"#f59e0b",color:"#000",border:"none",
+      borderRadius:14,padding:"13px 36px",fontSize:17,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}},
+      "🔄 再挑戰一次"
+    )
+  );
+}
+
+// ── TitleScreen ───────────────────────────────────────────────────────────
+function TitleScreen({onStart}){
+  return C("div",{style:{textAlign:"center"}},
+    C("div",{style:{fontSize:60,marginBottom:10}},"⚗️"),
+    C("h1",{style:{fontSize:26,fontWeight:900,color:"#f59e0b",marginBottom:4}},"化學反應速率"),
+    C("h2",{style:{fontSize:15,color:"#94a3b8",fontWeight:400,marginBottom:20}},"闖關學習活動"),
+    C("div",{style:{display:"flex",gap:8,justifyContent:"center",marginBottom:20,flexWrap:"wrap"}},
+      ...[["🍖","燒烤場景","關卡一"],["🍱","食品保存","關卡二"],["📝","習作測驗","最終關"]].map(([ic,name,tag])=>
+        C("div",{key:name,style:{background:"#1e293b",borderRadius:14,padding:"14px 16px",minWidth:90}},
+          C("div",{style:{fontSize:30}},ic),
+          C("div",{style:{color:"#f1f5f9",fontWeight:600,fontSize:13,marginTop:4}},name),
+          C("div",{style:{color:"#64748b",fontSize:11,marginTop:2}},tag)
+        )
+      )
+    ),
+    C("div",{style:{background:"#1e293b",borderRadius:14,padding:16,maxWidth:360,margin:"0 auto 20px",textAlign:"left"}},
+      C("p",{style:{color:"#f59e0b",fontWeight:700,fontSize:13,marginBottom:10}},"🏆 評分方式（滿分 100 分）"),
+      ...[["情境關卡","60分","兩個生活情境，各 6 個步驟"],["習作測驗","40分","6 題選擇題"],["等級","S/A/B/C/D","依總分給予等級評定"]].map(([k,v,d])=>
+        C("div",{key:k,style:{display:"flex",gap:10,marginBottom:8,alignItems:"flex-start"}},
+          C("span",{style:{color:"#f59e0b",fontWeight:700,minWidth:60,fontSize:13}},k+"　"+v),
+          C("span",{style:{color:"#64748b",fontSize:12}},d)
+        )
+      )
+    ),
+    C("button",{onClick:onStart,style:{background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+      color:"#fff",border:"none",borderRadius:16,padding:"14px 40px",fontSize:18,
+      fontWeight:900,cursor:"pointer",fontFamily:"inherit"}},"開始闖關！")
+  );
+}
+
+// ── StageBar ──────────────────────────────────────────────────────────────
+function StageBar({screen,roundIdx}){
+  return C("div",{style:{display:"flex",gap:4,marginBottom:16}},
+    ...[...ROUNDS.map(r=>r.icon),"📝"].map((ic,i)=>{
+      const active=screen==="game"?i===roundIdx:screen==="quiz"?i===ROUNDS.length:false;
+      const done=screen==="game"?i<roundIdx:screen==="roundClear"?i<=roundIdx:screen==="quiz"||screen==="final"?i<ROUNDS.length:false;
+      return C("div",{key:i,style:{flex:1,background:done&&!active?"#1e4a2e":active?"#f59e0b22":"#1e293b",
+        border:`2px solid ${active?"#f59e0b":done?"#10b981":"#334155"}`,
+        borderRadius:10,padding:"5px 4px",textAlign:"center",fontSize:13,
+        color:active?"#f59e0b":done?"#10b981":"#475569",fontWeight:active?700:400,transition:"all 0.3s"}},ic);
+    })
+  );
+}
+
+// ── App ───────────────────────────────────────────────────────────────────
+function App(){
+  const [screen,setScreen]=useState("title");
+  const [roundIdx,setRoundIdx]=useState(0);
+  const [stepIdx,setStepIdx]=useState(0);
+  const [roundCorrect,setRoundCorrect]=useState(0);
+  const [sceneResults,setSceneResults]=useState([]);
+  const [quizIdx,setQuizIdx]=useState(0);
+  const [quizCorrect,setQuizCorrect]=useState(0);
+
+  const handleSceneNext=(correct)=>{
+    const nc=roundCorrect+(correct?1:0);
+    const round=ROUNDS[roundIdx];
+    if(stepIdx+1<round.steps.length){setRoundCorrect(nc);setStepIdx(stepIdx+1);}
+    else{setRoundCorrect(nc);setScreen("roundClear");}
+  };
+  const handleRoundClear=()=>{
+    const res=[...sceneResults,{correct:roundCorrect,total:ROUNDS[roundIdx].steps.length}];
+    setSceneResults(res);
+    if(roundIdx+1<ROUNDS.length){setRoundIdx(roundIdx+1);setStepIdx(0);setRoundCorrect(0);setScreen("game");}
+    else{setQuizIdx(0);setQuizCorrect(0);setScreen("quiz");}
+  };
+  const handleQuizNext=(correct)=>{
+    const nc=quizCorrect+(correct?1:0);
+    if(quizIdx+1<QUIZ.length){setQuizCorrect(nc);setQuizIdx(quizIdx+1);}
+    else{setScreen("final");setQuizCorrect(nc);}
+  };
+
+  const round=ROUNDS[roundIdx];
+  const wrap={minHeight:520,background:"#0f172a",borderRadius:20,padding:"26px 22px",
+    color:"#f1f5f9",maxWidth:600,margin:"0 auto"};
+
+  if(screen==="title") return C("div",{style:wrap},C(TitleScreen,{onStart:()=>setScreen("game")}));
+  if(screen==="final") return C("div",{style:wrap},C(FinalScreen,{sceneResults,quizCorrect}));
+
+  return C("div",{style:wrap},
+    C(StageBar,{screen,roundIdx}),
+    screen==="game"&&C("div",null,
+      C("div",{style:{marginBottom:16}},
+        C("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}},
+          C("h2",{style:{color:"#f59e0b",fontSize:17,margin:0}},round.scene),
+          C("span",{style:{color:"#64748b",fontSize:12}},"情境 "+(roundIdx+1)+"/"+ROUNDS.length)
+        ),
+        C("p",{style:{color:"#94a3b8",fontSize:13,margin:"0 0 10px",lineHeight:1.5}},round.intro)
+      ),
+      C(SceneStep,{key:roundIdx+"-"+stepIdx,step:round.steps[stepIdx],stepNum:stepIdx+1,
+        totalSteps:round.steps.length,onNext:handleSceneNext})
+    ),
+    screen==="roundClear"&&C(RoundClear,{scene:round.scene,correct:roundCorrect,
+      total:round.steps.length,isLast:roundIdx+1>=ROUNDS.length,onNext:handleRoundClear}),
+    screen==="quiz"&&C("div",null,
+      C("div",{style:{textAlign:"center",marginBottom:16}},
+        C("div",{style:{fontSize:44,marginBottom:4}},"📝"),
+        C("h2",{style:{color:"#a78bfa",fontSize:20,fontWeight:800,margin:"0 0 4px"}},"習作測驗"),
+        C("p",{style:{color:"#64748b",fontSize:13,margin:0}},"綜合測驗，共 "+QUIZ.length+" 題")
+      ),
+      C(QuizStep,{key:quizIdx,q:QUIZ[quizIdx],num:quizIdx+1,total:QUIZ.length,onNext:handleQuizNext})
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(h(App,null));
+</script>
+</body>
+</html>
