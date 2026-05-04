@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>科學變因大挑戰</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+</script>
+</body>
+</html>
+body { font-family: 'Segoe UI', sans-serif; background: #0f0c29; color: #fff; min-height: 100vh; font-size: 18px; }
+.screen { display: none; min-height: 100vh; padding: 20px; }
+.screen.active { display: flex; flex-direction: column; align-items: center; }
+#title-screen { background: linear-gradient(135deg,#0f0c29,#302b63,#24243e); justify-content:center; text-align:center; }
+.title-logo { font-size:56px; margin-bottom:10px; }
+.title-main { font-size:38px; font-weight:900; color:#ffe066; text-shadow:0 0 20px #ffcc00; margin-bottom:8px; }
+.title-sub { font-size:22px; color:#aaa; margin-bottom:40px; }
+.module-cards { display:flex; gap:24px; flex-wrap:wrap; justify-content:center; }
+.module-card { background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.2); border-radius:20px; padding:30px 28px; width:260px; cursor:pointer; transition:all 0.3s; text-align:center; }
+.module-card:hover { transform:translateY(-6px); border-color:#ffe066; background:rgba(255,224,102,0.12); }
+.micon { font-size:52px; margin-bottom:12px; }
+.mname { font-size:24px; font-weight:800; color:#ffe066; margin-bottom:4px; }
+.mtitle { font-size:19px; color:#fff; margin-bottom:6px; }
+.mdesc { font-size:15px; color:#ccc; line-height:1.5; }
+.back-btn { background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.3); color:#fff; padding:10px 24px; border-radius:30px; font-size:18px; cursor:pointer; margin-bottom:20px; align-self:flex-start; }
+.back-btn:hover { background:rgba(255,255,255,0.2); }
+.game-title { font-size:30px; font-weight:900; color:#ffe066; margin-bottom:6px; text-align:center; }
+.game-sub { font-size:17px; color:#bbb; margin-bottom:16px; text-align:center; }
+.coins-bar { display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:16px; }
+.game-layout { display:flex; gap:20px; width:100%; max-width:920px; align-items:flex-start; flex-wrap:wrap; justify-content:center; }
+.game-main { flex:1; min-width:300px; max-width:530px; }
+.game-side { width:290px; min-width:260px; }
+.opt-group { margin-bottom:18px; }
+.opt-label { font-size:17px; color:#aaa; margin-bottom:10px; font-weight:600; }
+.btn-row { display:flex; gap:10px; flex-wrap:wrap; }
+.opt-btn { flex:1; min-width:80px; padding:14px 10px; border-radius:14px; border:2px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.07); color:#fff; font-size:17px; font-weight:700; cursor:pointer; transition:all 0.2s; }
+.opt-btn:hover { border-color:#64dfdf; background:rgba(100,223,223,0.1); }
+.opt-btn.sel1 { border-color:#64dfdf !important; background:rgba(100,223,223,0.22) !important; color:#64dfdf !important; }
+.opt-btn.sel2 { border-color:#c77dff !important; background:rgba(199,125,255,0.22) !important; color:#c77dff !important; }
+.tag { font-size:12px; padding:2px 8px; border-radius:6px; font-weight:700; }
+.tag-op { background:#ff6b6b33; color:#ff6b6b; border:1px solid #ff6b6b; }
+.tag-dep { background:#64dfdf33; color:#64dfdf; border:1px solid #64dfdf; }
+.tag-ctrl { background:#ffe06633; color:#ffe066; border:1px solid #ffe066; }
+.start-btn { width:100%; padding:17px; border-radius:16px; background:linear-gradient(90deg,#64dfdf,#48bfe3); border:none; color:#0f3460; font-size:21px; font-weight:900; cursor:pointer; margin-top:10px; transition:all 0.2s; }
+.start-btn:hover:not(:disabled) { transform:scale(1.02); box-shadow:0 6px 20px rgba(100,223,223,0.4); }
+.start-btn:disabled { opacity:0.4; cursor:not-allowed; }
+.reset-btn { width:100%; padding:13px; border-radius:14px; background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.18); color:#fff; font-size:17px; font-weight:700; cursor:pointer; margin-top:10px; }
+.warn-box { background:rgba(255,107,107,0.15); border:2px solid #ff6b6b; border-radius:14px; padding:14px; margin-top:12px; display:none; }
+.warn-box.show { display:block; }
+.warn-title { font-size:19px; font-weight:900; color:#ff6b6b; margin-bottom:4px; }
+.warn-text { font-size:15px; color:#ffb3b3; line-height:1.5; }
+.exp-result { background:rgba(100,223,223,0.1); border:2px solid #64dfdf; border-radius:14px; padding:14px; margin-top:12px; text-align:center; display:none; }
+.exp-result.show { display:block; }
+.exp-result-val { font-size:34px; font-weight:900; color:#64dfdf; }
+.record-table { background:rgba(255,255,255,0.06); border-radius:18px; padding:18px; }
+.record-title { font-size:20px; font-weight:900; color:#ffe066; margin-bottom:14px; text-align:center; }
+.grid-table { width:100%; border-collapse:collapse; font-size:15px; text-align:center; }
+.grid-table th { padding:8px 4px; color:#ffe066; font-size:13px; border-bottom:1px solid #ffffff22; }
+.grid-table td { padding:9px 4px; border-bottom:1px solid #ffffff11; color:#444; font-weight:700; }
+.filled-fast { color:#64dfdf !important; }
+.filled-mid  { color:#ffe066 !important; }
+.filled-slow { color:#ff6b6b !important; }
+.wide-opt { width:100%; text-align:left; padding:14px 16px; border-radius:14px; border:2px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.07); color:#fff; font-size:16px; font-weight:600; cursor:pointer; transition:all 0.2s; margin-bottom:8px; display:block; }
+.wide-opt:hover { border-color:#64dfdf; background:rgba(100,223,223,0.1); }
+.wide-opt.sel-conc { border-color:#64dfdf !important; background:rgba(100,223,223,0.22) !important; color:#64dfdf !important; }
+.chart-wrap { background:rgba(255,255,255,0.04); border-radius:16px; padding:18px 14px; margin-bottom:18px; }
+.bar-group { margin-bottom:14px; }
+.bar-cup-label { font-size:15px; color:#fff; font-weight:700; margin-bottom:6px; }
+.bar-row { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.bar-temp-label { font-size:13px; color:#aaa; width:52px; flex-shrink:0; text-align:right; }
+.bar-track { flex:1; background:rgba(255,255,255,0.08); border-radius:6px; height:22px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:6px; display:flex; align-items:center; padding-left:8px; font-size:12px; font-weight:700; color:#000; }
+.bar-val { font-size:13px; color:#aaa; width:40px; flex-shrink:0; }
+#mod2-screen { background:linear-gradient(135deg,#1a0533,#2d1b69,#1a0533); }
+.hero-viz { background:rgba(255,255,255,0.05); border-radius:20px; padding:20px; margin-bottom:18px; text-align:center; }
+.hero-emoji { font-size:70px; margin-bottom:8px; }
+.hero-stats { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; }
+.hstat-val { font-size:26px; font-weight:900; color:#c77dff; }
+.hstat-lbl { font-size:14px; color:#aaa; }
+.start-btn2 { width:100%; padding:17px; border-radius:16px; background:linear-gradient(90deg,#c77dff,#9d4edd); border:none; color:#fff; font-size:21px; font-weight:900; cursor:pointer; margin-top:10px; transition:all 0.2s; }
+.start-btn2:hover:not(:disabled) { transform:scale(1.02); box-shadow:0 6px 20px rgba(199,125,255,0.4); }
+.start-btn2:disabled { opacity:0.4; cursor:not-allowed; }
+.xp-result { background:rgba(199,125,255,0.1); border:2px solid #c77dff; border-radius:14px; padding:14px; margin-top:12px; text-align:center; display:none; }
+.xp-result.show { display:block; }
+.xp-val { font-size:34px; font-weight:900; color:#c77dff; }
+.wide-opt2 { border-color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.07); }
+.wide-opt2:hover { border-color:#c77dff !important; background:rgba(199,125,255,0.1) !important; }
+.wide-opt2.sel-conc2 { border-color:#c77dff !important; background:rgba(199,125,255,0.22) !important; color:#c77dff !important; }
+.submit-btn { width:100%; padding:16px; border-radius:14px; background:linear-gradient(90deg,#ffe066,#ffb700); border:none; color:#1a1a2e; font-size:20px; font-weight:900; cursor:pointer; margin-top:4px; }
+.feedback-box { display:none; margin-top:16px; border:2px solid #64dfdf; border-radius:14px; padding:16px; font-size:15px; color:#fff; line-height:1.8; }
+@media(max-width:650px){ .game-layout{flex-direction:column;align-items:center;} .game-side{width:100%;max-width:530px;} }
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div id="title-screen" class="screen active">
+  <div class="title-logo">🔬</div>
+  <div class="title-main">科學變因大挑戰</div>
+  <div class="title-sub">學習「單一變因原則」，成為實驗設計大師！</div>
+  <div class="module-cards">
+    <div class="module-card" onclick="showScreen('mod1-screen');initMod1()">
+      <div class="micon">🧋</div><div class="mname">模組一</div>
+      <div class="mtitle">冷飲特攻</div>
+      <div class="mdesc">測試容器材質 × 環境溫度，找出保冰最久的組合！</div>
+    </div>
+    <div class="module-card" onclick="showScreen('mod2-screen');initMod2()">
+      <div class="micon">⚔️</div><div class="mname">模組二</div>
+      <div class="mtitle">英雄修煉場</div>
+      <div class="mdesc">找出最強藥水，填滿對照表，寫下實驗結論！</div>
+    </div>
+    <div class="module-card" onclick="showScreen('mod3-screen');initMod3()">
+      <div class="micon">📝</div><div class="mname">模組三</div>
+      <div class="mtitle">學力大挑戰</div>
+      <div class="mdesc">挑戰習作選擇題，測試你對反應速率與變因的掌握！</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODULE 1 -->
+<div id="mod1-screen" class="screen" style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);">
+  <button class="back-btn" onclick="showScreen('title-screen')">← 返回選關</button>
+  <div class="game-title">🧋 冷飲特攻</div>
+  <div class="game-sub">控制環境溫度，改變容器材質，記錄冰塊融化時間！</div>
+  <div class="coins-bar"><span style="font-size:26px">🪙</span><span style="font-size:24px;font-weight:900;color:#ffe066" id="m1-coins">0</span><span style="color:#aaa;font-size:16px;">金幣</span>&emsp;<span style="font-size:16px;color:#aaa;">模組一得分：</span><span style="font-size:20px;font-weight:900;color:#64dfdf" id="m1-final-score">—</span></div>
+  <div style="width:100%;max-width:920px;margin-bottom:18px;">
+    <div class="record-table">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+        <div class="record-title" style="margin-bottom:0;">📋 對照實驗表</div>
+        <div style="font-size:13px;color:#aaa;">同一溫度只換容器 → 公平比較！</div>
+        <div style="font-size:15px;color:#ffe066;" id="m1-progress">已完成：0 / 9</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="grid-table">
+          <thead><tr><th>溫度＼容器</th><th>🥤 塑膠</th><th>🧊 保麗龍</th><th>🥛 不鏽鋼</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#aaa;font-size:13px;">❄️ 低溫15°C</td><td id="g1-低溫15°C-塑膠杯">—</td><td id="g1-低溫15°C-保麗龍杯">—</td><td id="g1-低溫15°C-不鏽鋼杯">—</td></tr>
+            <tr><td style="color:#aaa;font-size:13px;">🌤 常溫25°C</td><td id="g1-常溫25°C-塑膠杯">—</td><td id="g1-常溫25°C-保麗龍杯">—</td><td id="g1-常溫25°C-不鏽鋼杯">—</td></tr>
+            <tr><td style="color:#aaa;font-size:13px;">🔥 高溫35°C</td><td id="g1-高溫35°C-塑膠杯">—</td><td id="g1-高溫35°C-保麗龍杯">—</td><td id="g1-高溫35°C-不鏽鋼杯">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;background:rgba(100,223,223,0.08);border:1.5px solid #64dfdf44;border-radius:10px;padding:9px 12px;font-size:13px;color:#64dfdf;line-height:1.7;">💡 填完同一排（同溫度）的三種容器，才能公平比較保冰效果！</div>
+    </div>
+  </div>
+  <div class="game-layout">
+    <div class="game-main">
+      <div id="m1-exp-phase">
+        <div class="opt-group">
+          <div class="opt-label">🌡️ 固定環境溫度 <span class="tag tag-ctrl">控制變因</span></div>
+          <div class="btn-row">
+            <button class="opt-btn" id="m1-t1" onclick="m1SelectTemp('低溫15°C')">❄️ 低溫 15°C</button>
+            <button class="opt-btn" id="m1-t2" onclick="m1SelectTemp('常溫25°C')">🌤 常溫 25°C</button>
+            <button class="opt-btn" id="m1-t3" onclick="m1SelectTemp('高溫35°C')">🔥 高溫 35°C</button>
+          </div>
+        </div>
+        <div class="opt-group">
+          <div class="opt-label">🥤 選擇容器材質 <span class="tag tag-op">操作變因</span></div>
+          <div class="btn-row">
+            <button class="opt-btn" id="m1-c1" onclick="m1SelectCup('塑膠杯')">塑膠杯</button>
+            <button class="opt-btn" id="m1-c2" onclick="m1SelectCup('保麗龍杯')">保麗龍杯</button>
+            <button class="opt-btn" id="m1-c3" onclick="m1SelectCup('不鏽鋼杯')">不鏽鋼杯</button>
+          </div>
+        </div>
+        <div style="background:rgba(255,224,102,0.07);border:1.5px dashed #ffe066;border-radius:12px;padding:11px 15px;font-size:14px;color:#ffe066;margin-bottom:14px;line-height:1.8;">📌 固定不變：飲料甜度 50%　冰塊初溫 −5°C　飲料容量 700ml</div>
+        <button class="start-btn" id="m1-start-btn" onclick="m1Run()" disabled>🔬 開始觀測</button>
+        <button class="reset-btn" onclick="m1Reset()">🔄 全部重置</button>
+        <div class="warn-box" id="m1-warn"><div class="warn-title">⚠️ 注意！</div><div class="warn-text" id="m1-warn-text"></div></div>
+        <div class="exp-result" id="m1-exp-res"><div class="exp-result-val" id="m1-res-val"></div><div style="font-size:16px;color:#aaa;">冰塊融化時間（秒）</div><div style="font-size:15px;color:#64dfdf;margin-top:6px;" id="m1-res-msg"></div></div>
+      </div>
+      <div id="m1-conc-phase" style="display:none;">
+        <div style="background:rgba(255,224,102,0.1);border:2px solid #ffe066;border-radius:16px;padding:14px;margin-bottom:16px;text-align:center;font-size:17px;color:#ffe066;">🎉 9 格全部填完！看圖回答下面四題吧！</div>
+        <div class="chart-wrap"><div style="font-size:16px;color:#aaa;margin-bottom:14px;text-align:center;">📊 各容器 × 各溫度的冰塊融化時間（秒）－數字越大保冰越久</div><div id="m1-chart"></div><div style="display:flex;gap:16px;justify-content:center;margin-top:10px;font-size:13px;"><span style="color:#64dfdf;">■ 快（≤120s）</span><span style="color:#ffe066;">■ 中（121–200s）</span><span style="color:#ff6b6b;">■ 慢（>200s）</span></div></div>
+        <div style="margin-bottom:18px;"><div style="font-size:17px;color:#fff;font-weight:700;margin-bottom:10px;">Q1. 哪個容器整體保冰時間最長？<span style="color:#ffe066;font-size:14px;">（25分）</span></div>
+          <button class="wide-opt" id="c1q1-塑膠杯" onclick="m1ConcSel('q1','塑膠杯')">🥤 塑膠杯</button>
+          <button class="wide-opt" id="c1q1-保麗龍杯" onclick="m1ConcSel('q1','保麗龍杯')">🧊 保麗龍杯</button>
+          <button class="wide-opt" id="c1q1-不鏽鋼杯" onclick="m1ConcSel('q1','不鏽鋼杯')">🥛 不鏽鋼杯</button></div>
+        <div style="margin-bottom:18px;"><div style="font-size:17px;color:#fff;font-weight:700;margin-bottom:10px;">Q2. 你如何從圖表判斷？<span style="color:#ffe066;font-size:14px;">（25分）</span></div>
+          <button class="wide-opt" id="c1q2-bar" onclick="m1ConcSel('q2','bar')">📊 它在所有溫度條件下，長條都是最長的</button>
+          <button class="wide-opt" id="c1q2-avg" onclick="m1ConcSel('q2','avg')">📈 它的平均融化時間（三溫加總）最大</button>
+          <button class="wide-opt" id="c1q2-feel" onclick="m1ConcSel('q2','feel')">💭 它的顏色看起來比較好看（憑感覺）</button></div>
+        <div style="margin-bottom:18px;"><div style="font-size:17px;color:#fff;font-weight:700;margin-bottom:10px;">Q3. 環境溫度在這個實驗扮演什麼角色？<span style="color:#ffe066;font-size:14px;">（25分）</span></div>
+          <button class="wide-opt" id="c1q3-ctrl" onclick="m1ConcSel('q3','ctrl')">🗂️ 控制變因：每次固定同一溫度，才能公平比較容器</button>
+          <button class="wide-opt" id="c1q3-op" onclick="m1ConcSel('q3','op')">🔧 操作變因：我們主動改變溫度來測試差異</button>
+          <button class="wide-opt" id="c1q3-dep" onclick="m1ConcSel('q3','dep')">📉 應變變因：溫度會跟著融化時間一起變化</button></div>
+        <div style="margin-bottom:18px;">
+          <div style="background:rgba(255,224,102,0.08);border:1.5px solid #ffe066;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:14px;color:#ffe066;line-height:1.7;">📖 【學力挑戰】小雯設計了兩組實驗：<br>實驗甲：常溫25°C，塑膠杯，700ml飲料<br>實驗乙：常溫25°C，保麗龍杯，1000ml飲料<br>小雯說「保麗龍杯保冰比較久」，這樣的結論可靠嗎？</div>
+          <div style="font-size:17px;color:#fff;font-weight:700;margin-bottom:10px;">Q4. 小雯的實驗設計有什麼問題？<span style="color:#ffe066;font-size:14px;">（25分）</span></div>
+          <button class="wide-opt" id="c1q4-two" onclick="m1ConcSel('q4','two')">❌ 同時改變了容器材質和飲料容量兩個變因，違反單一變因原則</button>
+          <button class="wide-opt" id="c1q4-temp" onclick="m1ConcSel('q4','temp')">❌ 兩組實驗的溫度不同，所以無法比較</button>
+          <button class="wide-opt" id="c1q4-ok" onclick="m1ConcSel('q4','ok')">✅ 沒有問題，結論完全正確</button></div>
+        <div id="m1-conc-warn" style="display:none;color:#ff6b6b;font-size:15px;margin-bottom:10px;">⚠️ 請四題都選好再提交！</div>
+        <button class="submit-btn" onclick="m1Submit()">📤 提交我的結論</button>
+        <div class="feedback-box" id="m1-feedback"></div>
+        <button class="reset-btn" style="margin-top:10px;" onclick="m1Reset()">🔄 重新實驗</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODULE 2 -->
+<div id="mod2-screen" class="screen" style="background:linear-gradient(135deg,#1a0533,#2d1b69,#1a0533);">
+  <button class="back-btn" onclick="showScreen('title-screen')">← 返回選關</button>
+  <div class="game-title">⚔️ 英雄修煉場</div>
+  <div class="game-sub">找出最強藥水，填滿對照表，再挑戰結論關卡！</div>
+  <div class="coins-bar"><span style="font-size:26px">⭐</span><span style="font-size:24px;font-weight:900;color:#ffe066" id="m2-xp-total">0</span><span style="color:#aaa;font-size:16px;">經驗值</span>&emsp;<span style="font-size:16px;color:#aaa;">模組二得分：</span><span style="font-size:20px;font-weight:900;color:#c77dff" id="m2-final-score">—</span></div>
+  <div class="game-layout">
+    <div class="game-main">
+      <div class="hero-viz">
+        <div class="hero-emoji" id="hero-emoji">🧙</div>
+        <div class="hero-stats">
+          <div><div class="hstat-val" id="hero-lv">Lv.1</div><div class="hstat-lbl">等級</div></div>
+          <div><div class="hstat-val" id="hero-xp-bar">0%</div><div class="hstat-lbl">升級進度</div></div>
+        </div>
+      </div>
+      <div id="m2-exp-phase">
+        <div class="opt-group">
+          <div class="opt-label">🗺️ 固定打怪地區 <span class="tag tag-ctrl">控制變因</span></div>
+          <div class="btn-row">
+            <button class="opt-btn" id="m2-map1" onclick="m2SelectMap('森林')">🌲 森林</button>
+            <button class="opt-btn" id="m2-map2" onclick="m2SelectMap('沙漠')">🏜️ 沙漠</button>
+            <button class="opt-btn" id="m2-map3" onclick="m2SelectMap('雪山')">🏔️ 雪山</button>
+          </div>
+        </div>
+        <div class="opt-group">
+          <div class="opt-label">🧪 選擇藥水品牌 <span class="tag tag-op">操作變因</span></div>
+          <div class="btn-row">
+            <button class="opt-btn" id="m2-potA" onclick="m2SelectPot('A')">藥水 A</button>
+            <button class="opt-btn" id="m2-potB" onclick="m2SelectPot('B')">藥水 B</button>
+            <button class="opt-btn" id="m2-potC" onclick="m2SelectPot('C')">藥水 C</button>
+          </div>
+        </div>
+        <button class="start-btn2" id="m2-start-btn" onclick="m2Run()" disabled>⚔️ 開始升級實驗</button>
+        <button class="reset-btn" onclick="m2Reset()">🔄 全部重置</button>
+        <div class="warn-box" id="m2-warn"><div class="warn-title">⚠️ 注意！</div><div class="warn-text" id="m2-warn-text"></div></div>
+        <div class="xp-result" id="m2-exp-res"><div class="xp-val" id="m2-res-val"></div><div style="font-size:16px;color:#aaa;">升級所需時間（分鐘）</div><div style="font-size:15px;color:#c77dff;margin-top:6px;" id="m2-res-msg"></div></div>
+      </div>
+      <div id="m2-conc-phase" style="display:none;">
+        <div style="background:rgba(255,224,102,0.1);border:2px solid #ffe066;border-radius:16px;padding:14px;margin-bottom:16px;text-align:center;font-size:17px;color:#ffe066;">🎉 9 格全部填完！根據你的表格，回答下面四題吧！</div>
+        <div style="margin-bottom:18px;"><div style="font-size:17px;color:#fff;font-weight:700;margin-bottom:10px;">Q1. 哪款藥水整體升級最快？<span style="color:#ffe066;font-size:14px;">（25分）</span></div>
+          <button class="wide-opt wide-opt2" id="c2q1-A" onclick="m2ConcSel('q1','A')">💊 藥水 A</button>
+          <button class="wide-opt wide-opt2" id="c2q1-B" onclick="m2ConcSel('q1','B')">💊 藥水 B</button>
+          <button class="wide-opt wide-opt2" id="c2q1-C" onclick="m2ConcSel('q1','C')">💊 藥水 C</button></div>
+        <div style="margin-bottom:18px;"><div style="font-size:17px;color:#fff;font-weight:700;margin-bottom:10px;">Q2. 你的判斷依據是什麼？<span style="color:#ffe066;font-size:14px;">（25分）</span></div>
+          <button class="wide-opt wide-opt2" id="c2q2-time" onclick="m2ConcSel('q2','time')">📊 它在所有地區的升級時間數字都最小</button>
+          <button class="wide-opt wide-opt2" id="c2q2-avg" onclick="m2ConcSel('q2','avg')">📈 它的平均升級時間比其他藥水少</button>
+          <button class="wide-opt wide-opt2" id="c2q2-feel" onclick="m2ConcSel('q2','feel')">💭 我覺得它的數字看起來比較小（憑感覺）</button></div>
+        <div style="margin-bottom:18px;"><div style="font-size:17px;color:#fff;font-weight:700;margin-bottom:10px;">Q3. 這次實驗的控制變因是什麼？<span style="color:#ffe066;font-size:14px;">（25分）</span></div>
+          <button class="wide-opt wide-opt2" id="c2q3-map" onclick="m2ConcSel('q3','map')">🗺️ 打怪地區（每次保持同一個地區）</button>
+          <button class="wide-opt wide-opt2" id="c2q3-pot" onclick="m2ConcSel('q3','pot')">🧪 藥水品牌（每次只換一種藥水）</button>
+          <button class="wide-opt wide-opt2" id="c2q3-lv" onclick="m2ConcSel('q3','lv')">⚔️ 角色等級（讓角色保持相同等級）</button></div>
+        <div style="margin-bottom:18px;">
+          <div style="background:rgba(199,125,255,0.08);border:1.5px solid #c77dff;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:14px;color:#c77dff;line-height:1.7;">📖 【學力挑戰】阿康做了兩次藥水實驗：<br>實驗一：森林地區，使用藥水A，角色等級 Lv.5<br>實驗二：沙漠地區，使用藥水B，角色等級 Lv.5<br>阿康說「藥水B比藥水A差」。這樣的結論合理嗎？</div>
+          <div style="font-size:17px;color:#fff;font-weight:700;margin-bottom:10px;">Q4. 阿康的實驗設計問題在哪？<span style="color:#ffe066;font-size:14px;">（25分）</span></div>
+          <button class="wide-opt wide-opt2" id="c2q4-two" onclick="m2ConcSel('q4','two')">❌ 同時改變了藥水品牌和打怪地區兩個變因，無法判斷哪個造成差異</button>
+          <button class="wide-opt wide-opt2" id="c2q4-lv" onclick="m2ConcSel('q4','lv')">❌ 兩次實驗的角色等級相同，所以結果不準確</button>
+          <button class="wide-opt wide-opt2" id="c2q4-ok" onclick="m2ConcSel('q4','ok')">✅ 沒有問題，結論完全正確</button></div>
+        <div id="m2-conc-warn" style="display:none;color:#ff6b6b;font-size:15px;margin-bottom:10px;">⚠️ 請四題都選好再提交！</div>
+        <button class="submit-btn" style="background:linear-gradient(90deg,#c77dff,#9d4edd);color:#fff;" onclick="m2Submit()">📤 提交我的結論</button>
+        <div class="feedback-box" id="m2-feedback" style="border-color:#c77dff;"></div>
+        <button class="reset-btn" style="margin-top:10px;" onclick="m2Reset()">🔄 重新實驗</button>
+      </div>
+    </div>
+    <div class="game-side">
+      <div class="record-table">
+        <div class="record-title">📋 對照實驗表</div>
+        <div style="font-size:13px;color:#aaa;margin-bottom:12px;text-align:center;">同一地區只換藥水 → 公平比較！</div>
+        <div style="overflow-x:auto;">
+          <table class="grid-table">
+            <thead><tr><th>地區＼藥水</th><th style="color:#c77dff;">💊 A</th><th style="color:#c77dff;">💊 B</th><th style="color:#c77dff;">💊 C</th></tr></thead>
+            <tbody>
+              <tr><td style="color:#aaa;font-size:13px;">🌲 森林</td><td id="g2-森林-A">—</td><td id="g2-森林-B">—</td><td id="g2-森林-C">—</td></tr>
+              <tr><td style="color:#aaa;font-size:13px;">🏜️ 沙漠</td><td id="g2-沙漠-A">—</td><td id="g2-沙漠-B">—</td><td id="g2-沙漠-C">—</td></tr>
+              <tr><td style="color:#aaa;font-size:13px;">🏔️ 雪山</td><td id="g2-雪山-A">—</td><td id="g2-雪山-B">—</td><td id="g2-雪山-C">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;background:rgba(199,125,255,0.08);border:1.5px solid #c77dff44;border-radius:10px;padding:10px;font-size:14px;color:#c77dff;line-height:1.7;">💡 填完同一地區的 A、B、C，才能公平比較！填完全部 9 格解鎖結論關卡！</div>
+        <div style="margin-top:10px;text-align:center;font-size:15px;color:#ffe066;" id="m2-progress">已完成：0 / 9</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODULE 3 -->
+<div id="mod3-screen" class="screen" style="background:linear-gradient(135deg,#0d1b2a,#1b2838,#0d1b2a);">
+  <button class="back-btn" onclick="showScreen('title-screen')">← 返回選關</button>
+  <div class="game-title">📝 學力大挑戰</div>
+  <div class="game-sub">挑戰習作選擇題，每題作答後立即解說，全對才算大師！</div>
+  <div style="width:100%;max-width:700px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:18px;color:#aaa;">題目：<span id="m3-prog" style="color:#ffe066;font-weight:900;">1 / 5</span></div>
+      <div style="font-size:18px;color:#aaa;">得分：<span id="m3-score-disp" style="color:#64dfdf;font-weight:900;">0</span></div>
+      <div style="font-size:18px;color:#aaa;">答對：<span id="m3-correct-disp" style="color:#c77dff;font-weight:900;">0</span> / 5</div>
+    </div>
+    <div id="m3-dots" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;"></div>
+    <div id="m3-card" style="background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.15);border-radius:20px;padding:24px;">
+      <div id="m3-ctx" style="display:none;background:rgba(255,224,102,0.07);border:1.5px solid #ffe06655;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:15px;color:#ffe066;line-height:1.8;"></div>
+      <div id="m3-qnum" style="font-size:14px;color:#aaa;margin-bottom:6px;"></div>
+      <div id="m3-qtext" style="font-size:19px;font-weight:700;color:#fff;margin-bottom:18px;line-height:1.6;"></div>
+      <div id="m3-opts" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <div id="m3-fb" style="display:none;margin-top:16px;border-radius:12px;padding:14px;font-size:16px;line-height:1.7;"></div>
+      <button id="m3-next-btn" onclick="m3Next()" style="display:none;width:100%;margin-top:14px;padding:14px;border-radius:14px;background:linear-gradient(90deg,#ffe066,#ffb700);border:none;color:#1a1a2e;font-size:19px;font-weight:900;cursor:pointer;">下一題 →</button>
+    </div>
+    <div id="m3-result" style="display:none;background:rgba(255,255,255,0.06);border:2px solid #ffe066;border-radius:20px;padding:28px;text-align:center;margin-top:16px;">
+      <div id="m3-final-stars" style="font-size:42px;margin-bottom:10px;"></div>
+      <div id="m3-final-badge" style="font-size:24px;font-weight:900;margin-bottom:8px;"></div>
+      <div id="m3-final-score" style="font-size:32px;font-weight:900;color:#ffe066;margin-bottom:16px;"></div>
+      <div id="m3-wrong-list" style="text-align:left;margin-bottom:16px;"></div>
+      <button onclick="m3Restart()" style="width:100%;padding:15px;border-radius:14px;background:linear-gradient(90deg,#64dfdf,#48bfe3);border:none;color:#0f3460;font-size:20px;font-weight:900;cursor:pointer;">🔄 再挑戰一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== GLOBAL SCORES =====
+var gScore = { m1: null, m2: null, m3: null };
+function gRecordM1(s){ gScore.m1=s; cel('m1-final-score').textContent=s+' / 100'; }
+function gRecordM2(s){ gScore.m2=s; cel('m2-final-score').textContent=s+' / 100'; }
+function gRecordM3(s){ gScore.m3=s; }
+
+// ===== UTILS =====
+function showScreen(id){ document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');}); document.getElementById(id).classList.add('active'); }
+function cel(id){ return document.getElementById(id); }
+
+// ===== MODULE 1 =====
+var m1CupBase={'塑膠杯':120,'保麗龍杯':240,'不鏽鋼杯':55};
+var m1TempMod={'低溫15°C':80,'常溫25°C':0,'高溫35°C':-60};
+var m1Temps=['低溫15°C','常溫25°C','高溫35°C'];
+var m1Cups=['塑膠杯','保麗龍杯','不鏽鋼杯'];
+var m1TempBtnId={'低溫15°C':'m1-t1','常溫25°C':'m1-t2','高溫35°C':'m1-t3'};
+var m1CupBtnId={'塑膠杯':'m1-c1','保麗龍杯':'m1-c2','不鏽鋼杯':'m1-c3'};
+var m1S={temp:null,cup:null,grid:{},coins:0,conc:{q1:null,q2:null,q3:null,q4:null}};
+function initMod1(){m1Reset();}
+function m1SelectTemp(t){m1S.temp=t;m1Temps.forEach(function(x){cel(m1TempBtnId[x]).className='opt-btn';});cel(m1TempBtnId[t]).classList.add('sel1');m1CheckReady();}
+function m1SelectCup(c){m1S.cup=c;m1Cups.forEach(function(x){cel(m1CupBtnId[x]).className='opt-btn';});cel(m1CupBtnId[c]).classList.add('sel1');m1CheckReady();}
+function m1CheckReady(){cel('m1-start-btn').disabled=!(m1S.temp&&m1S.cup);}
+function m1Run(){
+  cel('m1-warn').classList.remove('show');cel('m1-exp-res').classList.remove('show');
+  var t=m1S.temp,c=m1S.cup;
+  if(m1S.grid[t]&&m1S.grid[t][c]!==undefined){cel('m1-warn').classList.add('show');cel('m1-warn-text').textContent='「'+t+' × '+c+'」已測過（'+m1S.grid[t][c]+'秒）！請換一組。';return;}
+  var val=Math.max(10,m1CupBase[c]+m1TempMod[t]);
+  if(!m1S.grid[t])m1S.grid[t]={};m1S.grid[t][c]=val;
+  var cell=cel('g1-'+t+'-'+c);
+  if(cell){cell.textContent=val+'s';cell.className=val<=120?'filled-fast':val<=200?'filled-mid':'filled-slow';}
+  cel('m1-res-val').textContent=val+' 秒';cel('m1-res-msg').textContent='✅ '+t+' × '+c+' 記錄完成！數字越大保冰越久。';cel('m1-exp-res').classList.add('show');
+  m1S.coins+=10;cel('m1-coins').textContent=m1S.coins;
+  var total=m1CountDone();cel('m1-progress').textContent='已完成：'+total+' / 9';
+  if(total===9){cel('m1-exp-phase').style.display='none';cel('m1-conc-phase').style.display='block';m1DrawChart();}
+}
+function m1CountDone(){return m1Temps.reduce(function(n,t){return n+(m1S.grid[t]?m1Cups.filter(function(c){return m1S.grid[t][c]!==undefined;}).length:0);},0);}
+function m1DrawChart(){
+  var maxVal=0;m1Cups.forEach(function(c){m1Temps.forEach(function(t){if(m1S.grid[t]&&m1S.grid[t][c])maxVal=Math.max(maxVal,m1S.grid[t][c]);});});
+  var colors={'低溫15°C':'#48cae4','常溫25°C':'#ffe066','高溫35°C':'#ff6b6b'};
+  var cupIcons={'塑膠杯':'🥤 塑膠杯','保麗龍杯':'🧊 保麗龍杯','不鏽鋼杯':'🥛 不鏽鋼杯'};
+  var html='';
+  m1Cups.forEach(function(c){
+    html+='<div class="bar-group"><div class="bar-cup-label">'+cupIcons[c]+'</div>';
+    m1Temps.forEach(function(t){
+      var val=m1S.grid[t]&&m1S.grid[t][c]?m1S.grid[t][c]:0,pct=Math.round(val/maxVal*100);
+      var lbl=t==='低溫15°C'?'❄️15°C':t==='常溫25°C'?'🌤25°C':'🔥35°C';
+      html+='<div class="bar-row"><div class="bar-temp-label">'+lbl+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+colors[t]+';"></div></div><div class="bar-val">'+val+'s</div></div>';
+    });html+='</div>';
+  });cel('m1-chart').innerHTML=html;
+}
+function m1ConcSel(q,v){
+  m1S.conc[q]=v;
+  var pre={q1:['塑膠杯','保麗龍杯','不鏽鋼杯'],q2:['bar','avg','feel'],q3:['ctrl','op','dep'],q4:['two','temp','ok']};
+  pre[q].forEach(function(x){var e=cel('c1'+q+'-'+x);if(e)e.className='wide-opt';});
+  var e=cel('c1'+q+'-'+v);if(e)e.classList.add('sel-conc');
+}
+function m1Submit(){
+  var q1=m1S.conc.q1,q2=m1S.conc.q2,q3=m1S.conc.q3,q4=m1S.conc.q4;
+  if(!q1||!q2||!q3||!q4){cel('m1-conc-warn').style.display='block';return;}
+  cel('m1-conc-warn').style.display='none';
+  var avgs=m1Cups.map(function(c){return{c:c,avg:m1Temps.reduce(function(s,t){return s+(m1S.grid[t]&&m1S.grid[t][c]?m1S.grid[t][c]:0);},0)/m1Temps.length};});
+  avgs.sort(function(a,b){return b.avg-a.avg;});
+  var best=avgs[0].c,rankStr=avgs.map(function(x,i){return '第'+(i+1)+'名：'+x.c+'（平均'+x.avg.toFixed(0)+'秒）';}).join('　');
+  var q1ok=q1===best,q2ok=(q2==='bar'||q2==='avg'),q3ok=(q3==='ctrl'),q4ok=(q4==='two');
+  var score=(q1ok?25:0)+(q2ok?25:0)+(q3ok?25:0)+(q4ok?25:0);
+  var bc=score===100?'#64dfdf':score>=60?'#ffe066':'#ff6b6b';
+  var stars=score===100?'⭐⭐⭐':score>=60?'⭐⭐':'⭐';
+  var badge=score===100?'🏆 闖關成功！':score>=60?'🌟 差一點！':'❌ 再觀察一次圖表！';
+  var fb=cel('m1-feedback');fb.style.display='block';fb.style.borderColor=bc;fb.style.background=score===100?'rgba(100,223,223,0.1)':score>=60?'rgba(255,224,102,0.08)':'rgba(255,107,107,0.1)';
+  fb.innerHTML='<div style="text-align:center;margin-bottom:14px;"><div style="font-size:36px;">'+stars+'</div><div style="font-size:22px;font-weight:900;color:'+bc+';margin:6px 0;">'+badge+'</div><div style="font-size:30px;font-weight:900;">得分：'+score+' / 100</div></div>'
+    +'<div style="display:flex;flex-direction:column;gap:8px;">'
+    +'<div style="padding:12px;border-radius:10px;background:rgba(255,255,255,0.06);">'+(q1ok?'✅':'❌')+' <b>Q1：</b>'+(q1ok?best+' 答對！（'+rankStr+'）':'正確答案是 '+best+'。'+rankStr)+'</div>'
+    +'<div style="padding:12px;border-radius:10px;background:rgba(255,255,255,0.06);">'+(q2ok?'✅':'❌')+' <b>Q2：</b>'+(q2ok?'正確！從長條或平均值判斷才是科學推論。':'應看長條長度或平均值，不能憑感覺！')+'</div>'
+    +'<div style="padding:12px;border-radius:10px;background:rgba(255,255,255,0.06);">'+(q3ok?'✅':'❌')+' <b>Q3：</b>'+(q3ok?'正確！溫度是控制變因，固定它才能公平比較容器。':'溫度是控制變因，固定它確保比較公平！')+'</div>'
+    +'<div style="padding:12px;border-radius:10px;background:rgba(255,255,255,0.06);">'+(q4ok?'✅':'❌')+' <b>Q4：</b>'+(q4ok?'正確！同時改變容器材質和飲料容量，違反單一變因原則。':'正確答案：同時改變了容器材質和飲料容量兩個變因，違反單一變因原則！')+'</div>'
+    +'</div>'+(score===100?'<div style="text-align:center;margin-top:12px;font-size:16px;color:#64dfdf;">🎓 你已掌握「控制變因」的概念！</div>':'<button onclick="m1Retry()" style="width:100%;margin-top:14px;padding:12px;border-radius:12px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);color:#fff;font-size:17px;font-weight:700;cursor:pointer;">🔄 再試一次</button>');
+  m1S.coins+=score;cel('m1-coins').textContent=m1S.coins;
+}
+function m1Retry(){
+  m1S.conc={q1:null,q2:null,q3:null,q4:null};
+  ['塑膠杯','保麗龍杯','不鏽鋼杯'].forEach(function(x){var e=cel('c1q1-'+x);if(e)e.className='wide-opt';});
+  ['bar','avg','feel'].forEach(function(x){var e=cel('c1q2-'+x);if(e)e.className='wide-opt';});
+  ['ctrl','op','dep'].forEach(function(x){var e=cel('c1q3-'+x);if(e)e.className='wide-opt';});
+  ['two','temp','ok'].forEach(function(x){var e=cel('c1q4-'+x);if(e)e.className='wide-opt';});
+  cel('m1-feedback').style.display='none';
+}
+function m1Reset(){
+  m1S={temp:null,cup:null,grid:{},coins:m1S?m1S.coins:0,conc:{q1:null,q2:null,q3:null,q4:null}};
+  m1Temps.forEach(function(x){var e=cel(m1TempBtnId[x]);if(e)e.className='opt-btn';});
+  m1Cups.forEach(function(x){var e=cel(m1CupBtnId[x]);if(e)e.className='opt-btn';});
+  cel('m1-start-btn').disabled=true;cel('m1-warn').classList.remove('show');cel('m1-exp-res').classList.remove('show');
+  cel('m1-exp-phase').style.display='block';cel('m1-conc-phase').style.display='none';
+  cel('m1-feedback').style.display='none';cel('m1-conc-warn').style.display='none';
+  cel('m1-progress').textContent='已完成：0 / 9';
+  m1Temps.forEach(function(t){m1Cups.forEach(function(c){var e=cel('g1-'+t+'-'+c);if(e){e.textContent='—';e.className='';}});});
+  m1Retry();
+}
+
+// ===== MODULE 2 =====
+var m2PotBase={A:45,B:30,C:55},m2MapMod={'森林':0,'沙漠':12,'雪山':-10};
+var m2Maps=['森林','沙漠','雪山'],m2Pots=['A','B','C'];
+var m2MapBtn={'森林':'m2-map1','沙漠':'m2-map2','雪山':'m2-map3'};
+var m2S={map:null,pot:null,grid:{},xp:0,lv:1,lvXp:0,conc:{q1:null,q2:null,q3:null,q4:null}};
+function initMod2(){m2Reset();}
+function m2SelectMap(m){m2S.map=m;m2Maps.forEach(function(x){cel(m2MapBtn[x]).className='opt-btn';});cel(m2MapBtn[m]).classList.add('sel2');m2CheckReady();}
+function m2SelectPot(p){m2S.pot=p;m2Pots.forEach(function(x){cel('m2-pot'+x).className='opt-btn';});cel('m2-pot'+p).classList.add('sel2');m2CheckReady();}
+function m2CheckReady(){cel('m2-start-btn').disabled=!(m2S.map&&m2S.pot);}
+function m2Run(){
+  cel('m2-warn').classList.remove('show');cel('m2-exp-res').classList.remove('show');
+  var m=m2S.map,p=m2S.pot;
+  if(m2S.grid[m]&&m2S.grid[m][p]!==undefined){cel('m2-warn').classList.add('show');cel('m2-warn-text').textContent='「'+m+' × 藥水'+p+'」已測過（'+m2S.grid[m][p]+'分）！請換一組。';return;}
+  var val=Math.max(10,m2PotBase[p]+m2MapMod[m]);
+  if(!m2S.grid[m])m2S.grid[m]={};m2S.grid[m][p]=val;
+  var cell=cel('g2-'+m+'-'+p);if(cell){cell.textContent=val+'分';cell.className=val<=30?'filled-fast':val<=45?'filled-mid':'filled-slow';}
+  cel('m2-res-val').textContent=val+' 分鐘';cel('m2-res-msg').textContent='✅ '+m+' × 藥水'+p+' 記錄完成！';cel('m2-exp-res').classList.add('show');
+  m2S.xp+=15;cel('m2-xp-total').textContent=m2S.xp;m2S.lvXp+=15;
+  if(m2S.lvXp>=100){m2S.lv++;m2S.lvXp=0;cel('hero-emoji').textContent=['🧙','🧝','🦸','🧝‍♂️','👑'][Math.min(m2S.lv-1,4)];}
+  cel('hero-lv').textContent='Lv.'+m2S.lv;cel('hero-xp-bar').textContent=m2S.lvXp+'%';
+  var total=m2Maps.reduce(function(n,mm){return n+(m2S.grid[mm]?m2Pots.filter(function(pp){return m2S.grid[mm][pp]!==undefined;}).length:0);},0);
+  cel('m2-progress').textContent='已完成：'+total+' / 9';
+  if(total===9){cel('m2-exp-phase').style.display='none';cel('m2-conc-phase').style.display='block';}
+}
+function m2ConcSel(q,v){
+  m2S.conc[q]=v;
+  var pre={q1:['A','B','C'],q2:['time','avg','feel'],q3:['map','pot','lv'],q4:['two','lv','ok']};
+  pre[q].forEach(function(x){var e=cel('c2'+q+'-'+x);if(e)e.className='wide-opt wide-opt2';});
+  var e=cel('c2'+q+'-'+v);if(e)e.classList.add('sel-conc2');
+}
+function m2Submit(){
+  var q1=m2S.conc.q1,q2=m2S.conc.q2,q3=m2S.conc.q3,q4=m2S.conc.q4;
+  if(!q1||!q2||!q3||!q4){cel('m2-conc-warn').style.display='block';return;}
+  cel('m2-conc-warn').style.display='none';
+  var avgs=m2Pots.map(function(p){return{p:p,avg:m2Maps.reduce(function(s,m){return s+(m2S.grid[m]&&m2S.grid[m][p]?m2S.grid[m][p]:0);},0)/m2Maps.length};});
+  avgs.sort(function(a,b){return a.avg-b.avg;});
+  var best=avgs[0].p,rankStr=avgs.map(function(x,i){return '第'+(i+1)+'名：藥水'+x.p+'（平均'+x.avg.toFixed(1)+'分）';}).join('　');
+  var q1ok=q1===best,q2ok=(q2==='time'||q2==='avg'),q3ok=(q3==='map'),q4ok=(q4==='two');
+  var score=(q1ok?25:0)+(q2ok?25:0)+(q3ok?25:0)+(q4ok?25:0);
+  var bc=score===100?'#c77dff':score>=60?'#ffe066':'#ff6b6b';
+  var stars=score===100?'⭐⭐⭐':score>=60?'⭐⭐':'⭐';
+  var badge=score===100?'🏆 闖關成功！':score>=60?'🌟 差一點！':'❌ 再觀察一次表格！';
+  var fb=cel('m2-feedback');fb.style.display='block';fb.style.borderColor=bc;fb.style.background=score===100?'rgba(199,125,255,0.12)':score>=60?'rgba(255,224,102,0.08)':'rgba(255,107,107,0.1)';
+  fb.innerHTML='<div style="text-align:center;margin-bottom:14px;"><div style="font-size:36px;">'+stars+'</div><div style="font-size:22px;font-weight:900;color:'+bc+';margin:6px 0;">'+badge+'</div><div style="font-size:30px;font-weight:900;">得分：'+score+' / 100</div></div>'
+    +'<div style="display:flex;flex-direction:column;gap:8px;">'
+    +'<div style="padding:12px;border-radius:10px;background:rgba(255,255,255,0.06);">'+(q1ok?'✅':'❌')+' <b>Q1：</b>'+(q1ok?'藥水 '+best+' 答對！（'+rankStr+'）':'正確答案是藥水 '+best+'。'+rankStr)+'</div>'
+    +'<div style="padding:12px;border-radius:10px;background:rgba(255,255,255,0.06);">'+(q2ok?'✅':'❌')+' <b>Q2：</b>'+(q2ok?'正確！用數字大小來比較，這才是科學推論！':'應依據數字判斷，不能憑感覺！')+'</div>'
+    +'<div style="padding:12px;border-radius:10px;background:rgba(255,255,255,0.06);">'+(q3ok?'✅':'❌')+' <b>Q3：</b>'+(q3ok?'正確！固定打怪地區，三種藥水才能公平比較！':'控制變因是打怪地區，固定它才能排除干擾！')+'</div>'
+    +'<div style="padding:12px;border-radius:10px;background:rgba(255,255,255,0.06);">'+(q4ok?'✅':'❌')+' <b>Q4：</b>'+(q4ok?'正確！同時改變藥水和地區，違反單一變因原則！':'正確答案：同時改變了藥水品牌和打怪地區兩個變因！')+'</div>'
+    +'</div>'+(score===100?'<div style="text-align:center;margin-top:12px;font-size:16px;color:#c77dff;">🎓 你已掌握「單一變因原則」！</div>':'<button onclick="m2Retry()" style="width:100%;margin-top:14px;padding:12px;border-radius:12px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);color:#fff;font-size:17px;font-weight:700;cursor:pointer;">🔄 再試一次</button>');
+  m2S.xp+=score;cel('m2-xp-total').textContent=m2S.xp;
+}
+function m2Retry(){
+  m2S.conc={q1:null,q2:null,q3:null,q4:null};
+  ['A','B','C'].forEach(function(x){var e=cel('c2q1-'+x);if(e)e.className='wide-opt wide-opt2';});
+  ['time','avg','feel'].forEach(function(x){var e=cel('c2q2-'+x);if(e)e.className='wide-opt wide-opt2';});
+  ['map','pot','lv'].forEach(function(x){var e=cel('c2q3-'+x);if(e)e.className='wide-opt wide-opt2';});
+  ['two','lv','ok'].forEach(function(x){var e=cel('c2q4-'+x);if(e)e.className='wide-opt wide-opt2';});
+  cel('m2-feedback').style.display='none';
+}
+function m2Reset(){
+  m2S={map:null,pot:null,grid:{},xp:m2S?m2S.xp:0,lv:1,lvXp:0,conc:{q1:null,q2:null,q3:null,q4:null}};
+  m2Maps.forEach(function(x){var e=cel(m2MapBtn[x]);if(e)e.className='opt-btn';});
+  m2Pots.forEach(function(x){var e=cel('m2-pot'+x);if(e)e.className='opt-btn';});
+  cel('m2-start-btn').disabled=true;cel('m2-warn').classList.remove('show');cel('m2-exp-res').classList.remove('show');
+  cel('m2-exp-phase').style.display='block';cel('m2-conc-phase').style.display='none';
+  cel('m2-feedback').style.display='none';cel('m2-conc-warn').style.display='none';
+  cel('m2-progress').textContent='已完成：0 / 9';
+  cel('hero-lv').textContent='Lv.1';cel('hero-xp-bar').textContent='0%';cel('hero-emoji').textContent='🧙';
+  m2Maps.forEach(function(m){m2Pots.forEach(function(p){var e=cel('g2-'+m+'-'+p);if(e){e.textContent='—';e.className='';}});});
+  m2Retry();
+}
+
+// ===== MODULE 3 =====
+var m3Qs=[
+  {
+    ctx:'小軒使用相同裝置進行兩次鹽酸與金屬反應。第二次氣泡速率明顯比第一次慢，若只改變了一個條件。',
+    q:'下列何者最可能是第二次實驗的改變？',
+    opts:['(A) 提高了反應溫度','(B) 把鎂帶換成大小相同但活性較小的鐵片','(C) 使用顆粒較小的鎂粉','(D) 換成較濃的鹽酸'],
+    ans:1,
+    exp:'鐵片活性較鎂小，反應速率較慢。(A)(C)(D)都會加快反應速率，不符合「只改變一個條件且讓速率變慢」的條件。'
+  },
+  {
+    ctx:'實驗次數1~4：Na₂S₂O₃濃度1M、體積30mL、HCl濃度0.5M、體積5mL均相同，只改變溫度（30→40→50→60°C）。',
+    q:'下列何者為此實驗的控制變因？',
+    opts:['(A) Na₂S₂O₃濃度、HCl濃度','(B) Na₂S₂O₃濃度、Na₂S₂O₃溫度','(C) Na₂S₂O₃濃度、遮住十字的時間','(D) Na₂S₂O₃溫度、遮住十字的時間'],
+    ans:0,
+    exp:'Na₂S₂O₃濃度與HCl濃度是控制變因（固定不變）；Na₂S₂O₃溫度是操縱變因（主動改變）；遮住十字的時間是應變變因（測量結果）。'
+  },
+  {
+    ctx:'實驗甲：25°C，10g完整蛋殼，10mL食用醋（5%）\n實驗乙：25°C，20g敲碎蛋殼，10mL食用醋（5%）',
+    q:'小軒發現實驗設計不好。阿康建議改成「10g敲碎蛋殼」，小雯建議改成「20g完整蛋殼」。誰的建議是對的？',
+    opts:['(A) 只有阿康的修正建議是對的','(B) 只有小雯的修正建議是對的','(C) 兩人的修正建議都是錯的','(D) 兩人的修正建議都是對的'],
+    ans:3,
+    exp:'原本同時改變了蛋殼質量和狀態兩個變因。阿康的修正只改變狀態（質量固定10g），小雯的修正只改變質量（狀態固定完整），兩者都符合單一變因原則，故兩人都對。'
+  },
+  {
+    ctx:'實驗甲：25°C，10g完整蛋殼，食用醋5%（10mL）\n實驗丙：25°C，10g完整蛋殼，食用醋2.5%（10mL，稀釋一半）',
+    q:'若把實驗丙跟實驗甲互相比較，主要實驗目的應該是什麼？',
+    opts:['(A) 探討環境溫度對反應速率的影響','(B) 探討食用醋的濃度對反應速率的影響','(C) 探討食用醋的體積對反應速率的影響','(D) 探討催化劑對反應速率的影響'],
+    ans:1,
+    exp:'實驗甲與丙唯一的差異是食用醋的濃度（5% vs 2.5%），其他條件（溫度、蛋殼質量與狀態、體積）皆相同，符合單一變因原則，故目的是探討濃度的影響。'
+  },
+  {
+    ctx:null,
+    q:'下列關於「單一變因原則」的說明，何者正確？',
+    opts:['(A) 每次實驗可以同時改變多個條件，只要記錄清楚就好','(B) 操縱變因是每次實驗主動改變的那一個條件','(C) 控制變因是實驗中會自動變化的結果','(D) 應變變因是每次都需要固定不動的條件'],
+    ans:1,
+    exp:'操縱變因是實驗者主動改變的條件；控制變因是固定不變的條件；應變變因是受操縱變因影響而改變的結果。每次只能改變一個操縱變因才符合單一變因原則。'
+  }
+];
+
+var m3State={cur:0,score:0,correct:0,answered:[],done:false};
+function initMod3(){m3Restart();}
+function m3Restart(){
+  m3State={cur:0,score:0,correct:0,answered:[],done:false};
+  cel('m3-result').style.display='none';cel('m3-card').style.display='block';
+  cel('m3-score-disp').textContent='0';cel('m3-correct-disp').textContent='0';
+  m3BuildDots();m3ShowQ(0);
+}
+function m3BuildDots(){
+  var d=cel('m3-dots');d.innerHTML='';
+  for(var i=0;i<m3Qs.length;i++){
+    var dot=document.createElement('div');dot.id='m3-dot-'+i;
+    dot.style.cssText='width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.2);font-size:12px;display:flex;align-items:center;justify-content:center;color:#aaa;font-weight:700;flex-shrink:0;';
+    dot.textContent=i+1;d.appendChild(dot);
+  }
+}
+function m3ShowQ(idx){
+  var q=m3Qs[idx];
+  cel('m3-prog').textContent=(idx+1)+' / '+m3Qs.length;
+  var ctxEl=cel('m3-ctx');
+  if(q.ctx){ctxEl.style.display='block';ctxEl.innerHTML='📋 '+q.ctx.replace(/\n/g,'<br>');}else{ctxEl.style.display='none';}
+  cel('m3-qnum').textContent='第 '+(idx+1)+' 題';
+  cel('m3-qtext').textContent=q.q;
+  var optsEl=cel('m3-opts');optsEl.innerHTML='';
+  q.opts.forEach(function(opt,i){
+    var btn=document.createElement('button');
+    btn.style.cssText='width:100%;text-align:left;padding:14px 16px;border-radius:14px;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:#fff;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:0;display:block;transition:all 0.2s;';
+    btn.textContent=opt;btn.id='m3-opt-'+i;
+    btn.onmouseover=function(){if(this.style.cursor!=='default'){this.style.borderColor='#ffe066';this.style.background='rgba(255,224,102,0.1)';}};
+    btn.onmouseout=function(){if(this.style.cursor!=='default'&&this.style.borderColor==='rgb(255, 224, 102)'){this.style.borderColor='rgba(255,255,255,0.2)';this.style.background='rgba(255,255,255,0.07)';}};
+    btn.onclick=(function(ii){return function(){m3Answer(ii);};})(i);
+    optsEl.appendChild(btn);
+  });
+  cel('m3-fb').style.display='none';cel('m3-next-btn').style.display='none';
+}
+function m3Answer(chosen){
+  var q=m3Qs[m3State.cur];var correct=chosen===q.ans;
+  for(var i=0;i<q.opts.length;i++){
+    var btn=cel('m3-opt-'+i);btn.onclick=null;btn.style.cursor='default';
+    if(i===q.ans){btn.style.borderColor='#64dfdf';btn.style.background='rgba(100,223,223,0.2)';btn.style.color='#64dfdf';}
+    else if(i===chosen&&!correct){btn.style.borderColor='#ff6b6b';btn.style.background='rgba(255,107,107,0.15)';btn.style.color='#ff6b6b';}
+  }
+  var pts=correct?7:0;m3State.score+=pts;if(correct)m3State.correct++;
+  m3State.answered.push({q:m3State.cur,chosen:chosen,correct:correct});
+  var dot=cel('m3-dot-'+m3State.cur);
+  dot.style.background=correct?'#64dfdf':'#ff6b6b';dot.style.borderColor=correct?'#64dfdf':'#ff6b6b';dot.style.color='#000';
+  var fb=cel('m3-fb');fb.style.display='block';
+  fb.style.background=correct?'rgba(100,223,223,0.1)':'rgba(255,107,107,0.1)';
+  fb.style.border='1.5px solid '+(correct?'#64dfdf':'#ff6b6b');
+  fb.innerHTML=(correct?'✅ <b>答對了！+7分</b>':'❌ <b>答錯了！</b>正確答案是 '+q.opts[q.ans])+'<br><span style="color:#ccc;font-size:14px;">💡 '+q.exp+'</span>';
+  cel('m3-score-disp').textContent=m3State.score;cel('m3-correct-disp').textContent=m3State.correct;
+  var nb=cel('m3-next-btn');nb.style.display='block';
+  nb.textContent=(m3State.cur===m3Qs.length-1)?'📊 查看成績':'下一題 →';
+}
+function m3Next(){
+  if(m3State.cur===m3Qs.length-1){m3ShowResult();return;}
+  m3State.cur++;m3ShowQ(m3State.cur);
+}
+function m3ShowResult(){
+  cel('m3-card').style.display='none';
+  var res=cel('m3-result');res.style.display='block';
+  var s=m3State.score,c=m3State.correct,t=m3Qs.length,pct=Math.round(s/35*100);
+  var stars=pct>=90?'⭐⭐⭐':pct>=60?'⭐⭐':'⭐';
+  var badge=pct>=90?'🏆 科學變因大師！':pct>=60?'🌟 表現不錯，繼續加油！':'📖 再多練習一次吧！';
+  var bc=pct>=90?'#64dfdf':pct>=60?'#ffe066':'#ff6b6b';
+  cel('m3-final-stars').textContent=stars;
+  cel('m3-final-badge').style.color=bc;cel('m3-final-badge').textContent=badge;
+  cel('m3-final-score').textContent='答對 '+c+' / '+t+' 題　得分 '+s+' / 35';
+  var wrongs=m3State.answered.filter(function(a){return !a.correct;});
+  var wl=cel('m3-wrong-list');
+  if(wrongs.length===0){wl.innerHTML='<div style="text-align:center;color:#64dfdf;font-size:17px;">🎉 全部答對！完美表現！</div>';}
+  else{wl.innerHTML='<div style="font-size:16px;color:#aaa;margin-bottom:8px;">❌ 答錯的題目：</div>'+wrongs.map(function(a){var q=m3Qs[a.q];return '<div style="background:rgba(255,107,107,0.08);border:1px solid #ff6b6b44;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:14px;color:#ccc;line-height:1.7;"><b style="color:#ff6b6b">第'+(a.q+1)+'題</b>　'+q.q+'<br>✅ 正確答案：<span style="color:#64dfdf">'+q.opts[q.ans]+'</span></div>';}).join('');}
+}
+</script>
+</body>
+</html>
