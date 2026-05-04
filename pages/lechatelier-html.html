@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>勒沙特列原理互動學習</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;background:#f8f7f4;color:#1a1a18;min-height:100vh;}
+:root{
+  --bg1:#ffffff;--bg2:#f1efe8;--bg3:#e6f1fb;
+  --tx1:#1a1a18;--tx2:#5f5e5a;--tx3:#888780;--txi:#185fa5;
+  --bd1:rgba(0,0,0,0.32);--bd2:rgba(0,0,0,0.22);--bd3:rgba(0,0,0,0.12);--bdi:#378add;
+  --r1:8px;--r2:12px;
+  --mono:"SF Mono","Fira Code","Consolas",monospace;
+}
+button{font-family:inherit;transition:opacity .2s;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {useState,useRef,createElement:h}=React;
+
+const scenarios=[
+  {id:"A",title:"情境 A：鉻酸根的變色",subtitle:"濃度變因",
+   eq:[
+     {text:"2CrO\u2084\u00b2\u207b",side:"left",cl:"黃色",cd:"#e8c800"},
+     {text:" + 2H\u207a",side:"left",marker:"H"},
+     {text:"  \u21cc  "},
+     {text:"Cr\u2082O\u2087\u00b2\u207b",side:"right",cl:"橘紅色",cd:"#c84000"},
+     {text:" + H\u2082O",side:"right"},
+   ],
+   lLabel:"CrO\u2084\u00b2\u207b（黃色）",rLabel:"Cr\u2082O\u2087\u00b2\u207b（橘紅色）",
+   lColor:"#f5d800",rColor:"#c84000",shape:"beaker",
+   actions:[
+     {label:"加入酸液",sub:"H\u207a 增加",dir:"right",color:"#c04040"},
+     {label:"加入鹼液",sub:"OH\u207b 中和 H\u207a",dir:"left",color:"#2060a0"},
+   ],
+   fb:{
+     right:"你給我更多 H\u207a，我可不甘心！我要把它消耗掉，往右移，生成更多橘紅色 Cr\u2082O\u2087\u00b2\u207b！",
+     left:"你把 H\u207a 奪走了，我要自己補回來！往左移，把 Cr\u2082O\u2087\u00b2\u207b 分解回黃色 CrO\u2084\u00b2\u207b！",
+   }},
+  {id:"B",title:"情境 B：二氧化氮的變色",subtitle:"溫度變因",
+   eq:[
+     {text:"N\u2082O\u2084",side:"left",cl:"無色",cd:"#c8d8e8"},
+     {text:" + 熱",side:"left",marker:"heat"},
+     {text:"  \u21cc  "},
+     {text:"2NO\u2082",side:"right",cl:"紅棕色",cd:"#7a1800"},
+   ],
+   lLabel:"N\u2082O\u2084（無色）",rLabel:"NO\u2082（紅棕色）",
+   lColor:"#c8d8e8",rColor:"#7a1800",shape:"flask",
+   actions:[
+     {label:"加熱",sub:"溫度升高",dir:"right",color:"#b05010"},
+     {label:"冷卻",sub:"溫度降低",dir:"left",color:"#2060a0"},
+   ],
+   fb:{
+     right:"溫度升高？我來把多餘的熱吸掉！往右移，分解更多 N\u2082O\u2084 變成紅棕色 NO\u2082！",
+     left:"溫度降低？我要自己放熱補回來！往左移，讓 NO\u2082 結合回無色 N\u2082O\u2084！",
+   }}
+];
+
+const quizPool=[
+  {sid:"A",type:"op",q:"想讓溶液從黃色變成橘紅色，應該加入什麼？",correct:"right",hint:"橘紅色 = Cr₂O₇²⁻ 增加 → 平衡右移 → 需要增加 H⁺（加酸）"},
+  {sid:"A",type:"op",q:"想讓溶液從橘紅色變回黃色，應該加入什麼？",correct:"left",hint:"黃色 = CrO₄²⁻ 增加 → 平衡左移 → 需要減少 H⁺（加鹼）"},
+  {sid:"B",type:"op",q:"想讓瓶中顏色變深（紅棕色），應該如何操作？",correct:"right",hint:"NO₂ 增加 = 正反應吸熱 → 平衡右移 → 需要升溫（加熱）"},
+  {sid:"B",type:"op",q:"想讓瓶中顏色變淺（接近無色），應該如何操作？",correct:"left",hint:"N₂O₄ 增加 = 逆反應放熱 → 平衡左移 → 需要降溫（冷卻）"},
+  {sid:"B",type:"mc",q:"密閉容器中的可逆反應達到平衡時，下列敘述何者正確？",
+   opts:["正反應停止，逆反應速率為零","正反應速率大於逆反應速率","正反應速率等於逆反應速率，且不為零","反應物全部轉化為生成物"],
+   ci:2,hint:"平衡是動態平衡，正逆反應速率相等但不為零，反應仍持續進行。"},
+  {sid:"A",type:"mc",q:"在平衡狀態下，改變下列哪一項「無法」造成平衡變動？",
+   opts:["溫度","容器形狀","反應物濃度","生成物濃度"],
+   ci:1,hint:"容器形狀屬於反應系統外的因素，不影響濃度，因此不影響平衡。"},
+];
+
+const TQ=quizPool.length,PQ=Math.round(100/TQ);
+
+function lerpC(a,b,t){
+  const p=s=>[parseInt(s.slice(1,3),16),parseInt(s.slice(3,5),16),parseInt(s.slice(5,7),16)];
+  const [ar,ag,ab]=p(a),[br,bg,bb]=p(b);
+  return`rgb(${Math.round(ar+(br-ar)*t)},${Math.round(ag+(bg-ag)*t)},${Math.round(ab+(bb-ab)*t)})`;
+}
+
+function Beaker({color}){
+  return h('svg',{width:140,height:185,viewBox:"0 0 120 160"},
+    h('defs',null,h('clipPath',{id:"bc"},h('path',{d:"M28 18 L28 118 Q28 142 60 142 Q92 142 92 118 L92 18 Z"}))),
+    h('rect',{x:28,y:30,width:64,height:88,fill:color,clipPath:"url(#bc)",style:{transition:"fill 0.6s"}}),
+    h('path',{d:"M28 118 Q28 142 60 142 Q92 142 92 118",fill:color,style:{transition:"fill 0.6s"}}),
+    h('path',{d:"M28 18 L28 118 Q28 142 60 142 Q92 142 92 118 L92 18",fill:"none",stroke:"#888",strokeWidth:2.5}),
+    h('line',{x1:28,y1:18,x2:92,y2:18,stroke:"#aaa",strokeWidth:2}),
+    h('line',{x1:22,y1:14,x2:98,y2:14,stroke:"#888",strokeWidth:2.5,strokeLinecap:"round"}),
+    ...[50,75,100].map(y=>h('line',{key:y,x1:80,y1:y,x2:90,y2:y,stroke:"#bbb",strokeWidth:1.2}))
+  );
+}
+
+function Flask({color}){
+  return h('svg',{width:140,height:195,viewBox:"0 0 120 170"},
+    h('defs',null,h('clipPath',{id:"fc"},h('path',{d:"M44 70 L20 130 Q14 150 60 150 Q106 150 100 130 L76 70 Z"}))),
+    h('rect',{x:14,y:90,width:92,height:60,fill:color,clipPath:"url(#fc)",style:{transition:"fill 0.6s"}}),
+    h('path',{d:"M44 70 L20 130 Q14 150 60 150 Q106 150 100 130 L76 70",fill:color,clipPath:"url(#fc)",style:{transition:"fill 0.6s"}}),
+    h('path',{d:"M44 70 L20 130 Q14 150 60 150 Q106 150 100 130 L76 70",fill:"none",stroke:"#888",strokeWidth:2.5}),
+    h('rect',{x:50,y:10,width:20,height:62,rx:3,fill:"#e8e8e0",stroke:"#aaa",strokeWidth:1.8}),
+    h('line',{x1:46,y1:10,x2:74,y2:10,stroke:"#888",strokeWidth:2.5,strokeLinecap:"round"})
+  );
+}
+
+function EqDisplay({parts,shiftDir,fontSize}){
+  return h('div',{style:{display:"flex",alignItems:"center",flexWrap:"wrap",gap:6,fontFamily:"var(--mono)",fontSize,justifyContent:"center"}},
+    parts.map((p,i)=>{
+      const active=(shiftDir==="left"&&p.side==="left")||(shiftDir==="right"&&p.side==="right");
+      const col=p.side==="left"?(shiftDir==="left"?"#1a7acc":"var(--tx1)"):p.side==="right"?(shiftDir==="right"?"#c04040":"var(--tx1)"):"var(--tx2)";
+      const rawText=p.marker==="H"?" + 2H⁺":p.marker==="heat"?" + 熱":p.text;
+      const arrow=(p.marker==="H"||p.marker==="heat")?(shiftDir==="right"?"↑":shiftDir==="left"?"↓":null):null;
+      const aCol=shiftDir==="right"?"#c04040":"#1a7acc";
+      return h('span',{key:i,style:{color:col,fontWeight:active?500:400,transition:"color 0.4s",display:"inline-flex",alignItems:"baseline",gap:3}},
+        p.cl
+          ? h('span',{style:{display:"inline-flex",alignItems:"baseline",gap:4}},
+              h('span',{style:{display:"inline-flex",alignItems:"center",gap:3}},
+                h('span',{style:{width:10,height:10,borderRadius:2,background:p.cd,border:"0.5px solid #aaa",display:"inline-block",flexShrink:0,verticalAlign:"middle"}}),
+                h('span',null,p.text)
+              ),
+              h('span',{style:{fontSize:fontSize*0.72,background:"var(--bg1)",color:"var(--tx2)",padding:"1px 5px",borderRadius:3,border:"0.5px solid var(--bd3)",fontFamily:"sans-serif"}},p.cl)
+            )
+          : h('span',null,rawText),
+        arrow&&h('span',{style:{fontSize:fontSize*0.85,fontWeight:700,color:aCol,marginLeft:1,verticalAlign:"super",lineHeight:1}},arrow)
+      );
+    })
+  );
+}
+
+function App(){
+  const [tab,setTab]=useState("learn");
+  const [sIdx,setSIdx]=useState(0);
+  const [eq,setEq]=useState(0.5);
+  const [shiftDir,setShiftDir]=useState(null);
+  const [feedback,setFeedback]=useState(null);
+  const [anim,setAnim]=useState(false);
+  const eqRef=useRef(0.5);
+  const [started,setStarted]=useState(false);
+  const [order,setOrder]=useState(()=>[...quizPool.keys()].sort(()=>Math.random()-0.5));
+  const [qi,setQi]=useState(0);
+  const [answers,setAnswers]=useState([]);
+  const [qr,setQr]=useState(null);
+  const [mcs,setMcs]=useState(null);
+  const [done,setDone]=useState(false);
+
+  const sc=scenarios[sIdx];
+  const col=lerpC(sc.lColor,sc.rColor,eq);
+  const quiz=quizPool[order[qi]];
+  const qSc=scenarios.find(s=>s.id===quiz?.sid)||scenarios[0];
+
+  function doAction(a){
+    if(anim)return;
+    setAnim(true);setShiftDir(a.dir);setFeedback(sc.fb[a.dir]);
+    const s=eqRef.current,e=Math.min(0.95,Math.max(0.05,s+(a.dir==="right"?0.22:-0.22)));
+    let t=0;
+    const step=()=>{t+=0.04;const v=s+(e-s)*Math.min(1,t);eqRef.current=v;setEq(v);if(t<1)requestAnimationFrame(step);else{eqRef.current=e;setEq(e);setAnim(false);}};
+    requestAnimationFrame(step);
+  }
+  function reset(){eqRef.current=0.5;setEq(0.5);setShiftDir(null);setFeedback(null);}
+  function swSc(i){setSIdx(i);eqRef.current=0.5;setEq(0.5);setShiftDir(null);setFeedback(null);}
+
+  function startQ(){
+    setOrder([...quizPool.keys()].sort(()=>Math.random()-0.5));
+    setStarted(true);setQi(0);setAnswers([]);setQr(null);setMcs(null);setDone(false);
+  }
+  function next(c){
+    const na=[...answers,{c}];setAnswers(na);
+    if(qi+1>=TQ)setDone(true);
+    else{setQi(i=>i+1);setQr(null);setMcs(null);}
+  }
+  function ansOp(a){if(qr)return;const c=a.dir===quiz.correct;setQr({c,hint:quiz.hint});}
+  function ansMc(idx){if(qr)return;setMcs(idx);setQr({c:idx===quiz.ci,hint:quiz.hint});}
+
+  const fScore=answers.filter(a=>a.c).length*PQ;
+  const fCorrect=answers.filter(a=>a.c).length;
+
+  const tabBar=h('div',{style:{display:"flex",borderBottom:"0.5px solid var(--bd3)",background:"var(--bg1)",position:"sticky",top:0,zIndex:10}},
+    [["learn","📚 學習模式"],["quiz","🎯 挑戰模式"]].map(([t,l])=>
+      h('button',{key:t,onClick:()=>setTab(t),style:{flex:1,padding:"14px 0",fontSize:15,fontWeight:tab===t?500:400,background:"transparent",color:tab===t?"var(--txi)":"var(--tx2)",border:"none",borderBottom:tab===t?"2px solid var(--txi)":"2px solid transparent",cursor:"pointer"}},l)
+    )
+  );
+
+  const learnTab=h('div',{style:{maxWidth:900,margin:"0 auto",padding:"clamp(1rem,3vw,2.5rem) clamp(1rem,3vw,2rem)"}},
+    // scenario buttons
+    h('div',{style:{display:"flex",gap:10,marginBottom:"clamp(1rem,2.5vw,1.75rem)"}},
+      scenarios.map((s,i)=>h('button',{key:s.id,onClick:()=>swSc(i),style:{flex:1,padding:"clamp(8px,1.5vw,14px) 12px",borderRadius:"var(--r2)",textAlign:"left",background:sIdx===i?"var(--bg2)":"transparent",border:sIdx===i?"1px solid var(--bd1)":"0.5px solid var(--bd3)",cursor:"pointer",color:"var(--tx1)"}},
+        h('div',{style:{fontWeight:500,fontSize:"clamp(13px,1.6vw,16px)"}},s.title),
+        h('div',{style:{fontSize:"clamp(11px,1.2vw,13px)",color:"var(--tx2)",marginTop:2}},s.subtitle)
+      ))
+    ),
+    // equation box
+    h('div',{style:{background:"var(--bg2)",borderRadius:"var(--r2)",border:"0.5px solid var(--bd3)",padding:"clamp(16px,3vw,28px)",marginBottom:"clamp(1rem,2.5vw,1.75rem)"}},
+      h('div',{style:{fontSize:"clamp(11px,1.2vw,13px)",color:"var(--tx2)",marginBottom:10,fontWeight:500,textAlign:"center",letterSpacing:0.3}},"化學反應式"),
+      h(EqDisplay,{parts:sc.eq,shiftDir,fontSize:20}),
+      shiftDir&&h('div',{style:{marginTop:14,display:"flex",alignItems:"center",gap:8,justifyContent:"center"}},
+        h('div',{style:{height:3,width:120,background:"var(--bd3)",borderRadius:2,position:"relative"}},
+          h('div',{style:{position:"absolute",top:-2.5,height:8,width:"45%",background:shiftDir==="right"?"#c04040":"#1a7acc",borderRadius:2,left:shiftDir==="right"?"55%":"0%",transition:"all 0.5s"}})
+        ),
+        h('span',{style:{fontSize:"clamp(12px,1.4vw,15px)",fontWeight:500,color:shiftDir==="right"?"#c04040":"#1a7acc"}},
+          shiftDir==="right"?"→ 平衡右移（正反應）":"← 平衡左移（逆反應）"
+        )
+      )
+    ),
+    // vessel + controls
+    h('div',{style:{display:"flex",alignItems:"flex-start",gap:"clamp(1rem,4vw,3rem)",flexWrap:"wrap",justifyContent:"center"}},
+      // vessel
+      h('div',{style:{display:"flex",flexDirection:"column",alignItems:"center",gap:10,minWidth:160}},
+        h('div',{style:{fontSize:"clamp(11px,1.2vw,13px)",color:"var(--tx2)",height:18}},eq<0.38?sc.lLabel:eq>0.62?sc.rLabel:"中間混合"),
+        sc.shape==="beaker"?h(Beaker,{color:col}):h(Flask,{color:col}),
+        h('div',{style:{display:"flex",gap:14,fontSize:"clamp(11px,1.2vw,13px)",color:"var(--tx2)",flexWrap:"wrap",justifyContent:"center"}},
+          [{c:sc.lColor,l:sc.lLabel},{c:sc.rColor,l:sc.rLabel}].map(({c,l})=>
+            h('span',{key:l,style:{display:"flex",alignItems:"center",gap:5}},
+              h('span',{style:{width:13,height:13,borderRadius:2,background:c,display:"inline-block",border:"0.5px solid #bbb"}}),l
+            )
+          )
+        )
+      ),
+      // controls
+      h('div',{style:{flex:1,minWidth:220,display:"flex",flexDirection:"column",gap:12,justifyContent:"center",paddingTop:32}},
+        h('div',{style:{display:"flex",gap:10,flexWrap:"wrap"}},
+          ...sc.actions.map(a=>h('button',{key:a.label,onClick:()=>doAction(a),disabled:anim,style:{flex:1,minWidth:120,padding:"clamp(10px,1.5vw,16px) 16px",borderRadius:"var(--r2)",fontSize:"clamp(13px,1.5vw,16px)",fontWeight:500,background:"transparent",border:`2px solid ${a.color}`,color:a.color,cursor:anim?"not-allowed":"pointer",opacity:anim?0.5:1,textAlign:"center"}},
+            h('div',null,a.label),h('div',{style:{fontSize:"clamp(11px,1.1vw,13px)",fontWeight:400,opacity:0.75,marginTop:2}},a.sub)
+          )),
+          h('button',{onClick:reset,style:{padding:"clamp(10px,1.5vw,16px) 18px",borderRadius:"var(--r2)",fontSize:"clamp(12px,1.3vw,14px)",background:"transparent",border:"0.5px solid var(--bd3)",color:"var(--tx2)",cursor:"pointer"}},"重置")
+        ),
+        feedback
+          ? h('div',{style:{background:"var(--bg1)",borderRadius:"var(--r2)",border:"0.5px solid var(--bd2)",padding:"clamp(12px,2vw,18px)",display:"flex",gap:12,alignItems:"flex-start"}},
+              h('div',{style:{fontSize:"clamp(18px,2.5vw,26px)",flexShrink:0}},"🧪"),
+              h('div',null,
+                h('div',{style:{fontSize:"clamp(11px,1.1vw,12px)",fontWeight:500,color:"var(--tx2)",marginBottom:4}},"反應的叛逆宣言"),
+                h('div',{style:{fontSize:"clamp(13px,1.5vw,16px)",color:"var(--tx1)",lineHeight:1.8}},feedback)
+              )
+            )
+          : h('div',{style:{background:"var(--bg2)",borderRadius:"var(--r2)",border:"0.5px solid var(--bd3)",padding:"clamp(12px,2vw,18px)"}},
+              h('div',{style:{fontSize:"clamp(11px,1.2vw,13px)",color:"var(--tx2)",fontWeight:500,marginBottom:6}},"勒沙特列原理"),
+              h('div',{style:{fontSize:"clamp(13px,1.4vw,15px)",color:"var(--tx1)",lineHeight:1.9}},
+                "當外界改變某一因素，平衡會朝著",h('strong',{style:{fontWeight:500}},"減少該改變"),"的方向移動。",h('br'),
+                "增加某物 → 反應消耗它 ｜ 減少某物 → 反應補充它"
+              )
+            )
+      )
+    )
+  );
+
+  const quizTab=h('div',{style:{maxWidth:700,margin:"0 auto",padding:"clamp(1rem,3vw,2rem) clamp(1rem,3vw,1.5rem)"}},
+    !started&&h('div',{style:{textAlign:"center",padding:"3rem 1rem"}},
+      h('div',{style:{fontSize:48,marginBottom:16}},"🎯"),
+      h('h3',{style:{fontSize:22,fontWeight:500,margin:"0 0 10px",color:"var(--tx1)"}},"挑戰模式"),
+      h('p',{style:{fontSize:14,color:"var(--tx2)",margin:"0 0 2rem",lineHeight:1.8}},`共 ${TQ} 題，每題 ${PQ} 分，滿分 100 分。`,h('br'),"測試你對勒沙特列原理的掌握程度！"),
+      h('button',{onClick:startQ,style:{padding:"14px 48px",borderRadius:"var(--r2)",fontSize:16,fontWeight:500,background:"var(--bg3)",color:"var(--txi)",border:"1px solid var(--bdi)",cursor:"pointer"}},"開始挑戰")
+    ),
+
+    started&&!done&&quiz&&h('div',null,
+      // progress
+      h('div',{style:{display:"flex",alignItems:"center",gap:12,marginBottom:"1.25rem"}},
+        h('div',{style:{flex:1,height:6,background:"var(--bg2)",borderRadius:3,overflow:"hidden",border:"0.5px solid var(--bd3)"}},
+          h('div',{style:{height:"100%",width:`${(qi/TQ)*100}%`,background:"var(--txi)",borderRadius:3,transition:"width 0.4s"}})
+        ),
+        h('span',{style:{fontSize:13,color:"var(--tx2)",whiteSpace:"nowrap"}},`${qi+1} / ${TQ}`)
+      ),
+      // question
+      h('div',{style:{background:"var(--bg2)",borderRadius:"var(--r2)",padding:"16px 20px",marginBottom:"1.25rem",border:"0.5px solid var(--bd2)"}},
+        h('div',{style:{fontSize:11,color:"var(--tx2)",marginBottom:8}},
+          `情境：${qSc.title}  `,
+          ...qSc.eq.map((p,i)=>h('span',{key:i,style:{fontFamily:"var(--mono)"}},
+            p.cd&&h('span',{style:{width:8,height:8,borderRadius:2,background:p.cd,border:"0.5px solid #aaa",display:"inline-block",verticalAlign:"middle",margin:"0 2px"}}),
+            p.marker==="H"?" + 2H⁺":p.marker==="heat"?" + 熱":p.text
+          ))
+        ),
+        h('div',{style:{fontSize:16,fontWeight:500,color:"var(--tx1)",lineHeight:1.65}},`❓ ${quiz.q}`)
+      ),
+      // operation type
+      quiz.type==="op"&&h('div',{style:{display:"flex",gap:10,marginBottom:"1.25rem",justifyContent:"center"}},
+        qSc.actions.map(a=>{
+          const ok=a.dir===quiz.correct;
+          return h('button',{key:a.label,onClick:()=>ansOp(a),disabled:!!qr,style:{flex:1,maxWidth:200,padding:"14px 16px",borderRadius:"var(--r2)",fontSize:14,fontWeight:500,background:qr?(ok?"#e8fdf0":"transparent"):"transparent",border:qr?(ok?"2px solid #2a8":"0.5px solid var(--bd3)"):`2px solid ${a.color}`,color:qr?(ok?"#1a7":"var(--tx3)"):a.color,cursor:qr?"default":"pointer",opacity:qr&&!ok?0.35:1,textAlign:"center"}},
+            h('div',null,a.label),h('div',{style:{fontSize:11,fontWeight:400,opacity:0.75,marginTop:2}},a.sub)
+          );
+        })
+      ),
+      // mc type
+      quiz.type==="mc"&&h('div',{style:{display:"flex",flexDirection:"column",gap:8,marginBottom:"1.25rem"}},
+        quiz.opts.map((opt,idx)=>{
+          const ok=idx===quiz.ci,sel=mcs===idx;
+          let bg="transparent",border="0.5px solid var(--bd3)",co="var(--tx1)",op=1;
+          if(qr){if(ok){bg="#e8fdf0";border="2px solid #2a8";co="#1a7";}else if(sel){bg="#fdf2f2";border="1px solid #c44";co="#b33";op=0.85;}else op=0.35;}
+          return h('button',{key:idx,onClick:()=>ansMc(idx),disabled:!!qr,style:{padding:"12px 16px",borderRadius:"var(--r1)",fontSize:14,textAlign:"left",background:bg,border,color:co,cursor:qr?"default":"pointer",opacity:op,display:"flex",alignItems:"center",gap:10}},
+            h('span',{style:{width:26,height:26,borderRadius:"50%",border:`1px solid ${qr&&ok?"#2a8":qr&&sel?"#c44":"var(--bd2)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:13,fontWeight:500,background:qr&&ok?"#d0f5e0":qr&&sel&&!ok?"#fde0e0":"transparent"}},
+              qr&&ok?"✓":qr&&sel&&!ok?"✗":String.fromCharCode(65+idx)
+            ),opt
+          );
+        })
+      ),
+      // result feedback
+      qr&&h('div',null,
+        h('div',{style:{background:qr.c?"#f0fdf4":"#fdf2f2",borderRadius:"var(--r2)",border:`0.5px solid ${qr.c?"#2a8":"#c44"}`,padding:"12px 16px",marginBottom:"1rem",display:"flex",gap:12}},
+          h('div',{style:{fontSize:20}},qr.c?"✅":"❌"),
+          h('div',null,
+            h('div',{style:{fontSize:13,fontWeight:500,color:qr.c?"#1a7":"#b33",marginBottom:3}},qr.c?"答對了！":"答錯了！"),
+            h('div',{style:{fontSize:13,color:"var(--tx2)",lineHeight:1.7}},qr.hint)
+          )
+        ),
+        h('div',{style:{textAlign:"center"}},
+          h('button',{onClick:()=>next(qr.c),style:{padding:"11px 36px",borderRadius:"var(--r2)",fontSize:14,fontWeight:500,background:"var(--bg3)",color:"var(--txi)",border:"1px solid var(--bdi)",cursor:"pointer"}},
+            qi+1<TQ?"下一題 →":"查看成績 →"
+          )
+        )
+      )
+    ),
+
+    done&&h('div',{style:{textAlign:"center",padding:"2rem 1rem"}},
+      h('div',{style:{fontSize:56,marginBottom:12}},fScore>=80?"🏆":fScore>=60?"👍":"💪"),
+      h('div',{style:{fontSize:64,fontWeight:500,color:fScore>=80?"#2a8":fScore>=60?"#c84":"#c44",lineHeight:1,marginBottom:8}},fScore),
+      h('div',{style:{fontSize:16,color:"var(--tx2)",marginBottom:"2rem"}},`滿分 100 分　｜　答對 ${fCorrect} / ${TQ} 題`),
+      h('div',{style:{display:"flex",flexDirection:"column",gap:8,maxWidth:420,margin:"0 auto 2rem",textAlign:"left"}},
+        order.slice(0,TQ).map((qi2,i)=>{
+          const q=quizPool[qi2],ans=answers[i];
+          if(!ans)return null;
+          return h('div',{key:i,style:{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 14px",borderRadius:"var(--r1)",background:ans.c?"#f0fdf4":"#fdf2f2",border:`0.5px solid ${ans.c?"#2a8":"#c44"}`}},
+            h('span',{style:{fontSize:16,flexShrink:0}},ans.c?"✅":"❌"),
+            h('div',null,
+              h('div',{style:{fontSize:13,color:"var(--tx1)",fontWeight:500,marginBottom:2}},`Q${i+1}. ${q.q}`),
+              !ans.c&&h('div',{style:{fontSize:12,color:"var(--tx2)",lineHeight:1.6}},q.hint)
+            )
+          );
+        })
+      ),
+      h('button',{onClick:startQ,style:{padding:"13px 40px",borderRadius:"var(--r2)",fontSize:15,fontWeight:500,background:"var(--bg3)",color:"var(--txi)",border:"1px solid var(--bdi)",cursor:"pointer"}},"再挑戰一次")
+    )
+  );
+
+  return h('div',{style:{fontFamily:"sans-serif",width:"100%",minHeight:"100vh"}},
+    tabBar,
+    tab==="learn"?learnTab:quizTab
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
