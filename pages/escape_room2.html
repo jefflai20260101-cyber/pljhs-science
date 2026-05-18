@@ -9,72 +9,58 @@
 body{font-family:'Noto Sans TC',sans-serif;background:#0d0a08;color:#e8d9c0;min-height:100vh;overflow-x:hidden}
 .page{display:none;min-height:100vh;padding:16px;flex-direction:column;align-items:center;justify-content:flex-start}
 .page.active{display:flex}
-
-/* backgrounds per page */
-#p0{background:linear-gradient(160deg,#1a0f07 0%,#0d0a08 60%,#120808 100%)}
-#p1{background:linear-gradient(160deg,#0f1008 0%,#0d0a08 60%,#100e06 100%)}
-#p2{background:linear-gradient(160deg,#071008 0%,#0d0a08 60%,#06100a 100%)}
-#p3{background:linear-gradient(160deg,#070a10 0%,#0d0a08 60%,#08060f 100%)}
-#p4{background:linear-gradient(160deg,#100707 0%,#0d0a08 60%,#100505 100%)}
-#p5{background:linear-gradient(160deg,#080710 0%,#0d0a08 60%,#060a10 100%)}
-#p6{background:linear-gradient(160deg,#0a0f07 0%,#0d0a08 60%,#100f05 100%)}
+#p0{background:linear-gradient(160deg,#1a0f07,#0d0a08 60%,#120808)}
+#p1{background:linear-gradient(160deg,#0f1008,#0d0a08 60%,#100e06)}
+#p2{background:linear-gradient(160deg,#071008,#0d0a08 60%,#06100a)}
+#p3{background:linear-gradient(160deg,#070a10,#0d0a08 60%,#08060f)}
+#p4{background:linear-gradient(160deg,#100707,#0d0a08 60%,#100505)}
+#p5{background:linear-gradient(160deg,#080710,#0d0a08 60%,#060a10)}
+#p6{background:linear-gradient(160deg,#0a0f07,#0d0a08 60%,#100f05)}
 
 .title-bar{width:100%;text-align:center;padding:20px 0 10px;border-bottom:1px solid #3a2a15}
 .game-title{font-size:22px;font-weight:700;color:#d4a84b;letter-spacing:2px}
 .stage-label{font-size:13px;color:#8a7050;margin-top:4px;letter-spacing:1px}
-
 .story-box{background:rgba(20,14,8,0.85);border:1px solid #3a2a15;border-radius:12px;padding:16px;margin:16px 0;width:100%;font-size:14px;line-height:1.8;color:#c8b89a}
 .story-box .char{font-size:13px;color:#d4a84b;font-weight:700;margin-bottom:6px}
 .story-em{color:#e8c870;font-weight:700}
-
 .puzzle-box{background:rgba(10,7,4,0.9);border:1px solid #5a3a15;border-radius:12px;padding:16px;width:100%;margin-bottom:12px}
 .puzzle-title{font-size:13px;color:#d4a84b;font-weight:700;margin-bottom:12px;letter-spacing:1px}
-
-/* choice buttons */
 .choice-row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .choice-btn{background:rgba(40,30,15,0.8);border:1px solid #5a4020;border-radius:8px;color:#c8b89a;font-size:14px;padding:10px 14px;cursor:pointer;flex:1;min-width:80px;text-align:center;transition:all 0.15s}
 .choice-btn:active{transform:scale(0.96)}
 .choice-btn.selected{background:rgba(80,60,20,0.9);border-color:#d4a84b;color:#e8c870}
 .choice-btn.correct{background:rgba(20,60,20,0.9);border-color:#4aaa44;color:#7fff70}
 .choice-btn.wrong{background:rgba(60,10,10,0.9);border-color:#aa2222;color:#ff7070}
-
 .q-label{font-size:13px;color:#8a7050;margin:12px 0 6px}
 .q-text{font-size:14px;color:#c8b89a;margin-bottom:8px}
-
-/* text input */
 .ans-input{width:100%;background:rgba(20,14,8,0.9);border:1px solid #5a4020;border-radius:8px;color:#e8c870;font-size:16px;padding:12px;outline:none;font-family:inherit;margin:8px 0}
 .ans-input:focus{border-color:#d4a84b}
-
 .submit-btn{width:100%;background:rgba(90,60,15,0.8);border:1px solid #d4a84b;border-radius:10px;color:#e8c870;font-size:16px;font-weight:700;padding:14px;cursor:pointer;margin-top:10px;letter-spacing:1px;transition:all 0.15s}
 .submit-btn:active{transform:scale(0.97);background:rgba(120,80,15,0.9)}
-.submit-btn:disabled{opacity:0.4;cursor:not-allowed}
-
 .hint-btn{background:rgba(20,14,8,0.7);border:1px solid #3a2a15;border-radius:8px;color:#8a7050;font-size:13px;padding:8px 14px;cursor:pointer;margin-top:6px;width:100%;text-align:left}
-.hint-btn:active{background:rgba(40,28,10,0.8)}
-
-/* feedback */
 .feedback{border-radius:10px;padding:12px 14px;margin:8px 0;font-size:14px;line-height:1.6;display:none}
 .feedback.show{display:block}
 .feedback.ok{background:rgba(20,60,20,0.4);border:1px solid #4aaa44;color:#90ee90}
 .feedback.err{background:rgba(60,10,10,0.4);border:1px solid #aa4444;color:#ffaaaa}
-
-/* hint overlay */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;padding:20px}
 .overlay.show{display:flex}
 .hint-card{background:#1a1208;border:1px solid #5a4020;border-radius:14px;padding:20px;max-width:340px;width:100%;font-size:14px;line-height:1.8;color:#c8b89a}
 .hint-card h3{color:#d4a84b;font-size:15px;margin-bottom:10px}
 .close-btn{width:100%;background:rgba(60,40,10,0.8);border:1px solid #d4a84b;border-radius:8px;color:#e8c870;font-size:14px;padding:10px;cursor:pointer;margin-top:14px}
-
-/* next btn */
 .next-btn{width:100%;background:rgba(180,130,20,0.3);border:2px solid #d4a84b;border-radius:12px;color:#e8c870;font-size:17px;font-weight:700;padding:16px;cursor:pointer;margin-top:12px;letter-spacing:2px;display:none}
 .next-btn.show{display:block}
 .next-btn:active{transform:scale(0.97)}
-
-/* number pad for p4 */
-.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
-.numpad .choice-btn{font-size:18px;font-weight:700;padding:14px 8px}
-
-/* classify buttons p5 */
+.cover-icon{font-size:56px;margin:24px 0 10px;text-align:center}
+.cover-main{font-size:26px;font-weight:900;color:#d4a84b;text-align:center;letter-spacing:3px;margin-bottom:6px}
+.cover-sub{font-size:14px;color:#8a7050;text-align:center;letter-spacing:1px;margin-bottom:20px}
+.trophy{font-size:60px;text-align:center;margin:20px 0}
+.ending-title{font-size:22px;font-weight:900;color:#d4a84b;text-align:center;letter-spacing:2px;margin-bottom:10px}
+.summary-box{background:rgba(20,14,8,0.9);border:1px solid #3a2a15;border-radius:12px;padding:14px;margin:12px 0;width:100%}
+.summary-box h3{color:#d4a84b;font-size:14px;margin-bottom:10px}
+.summary-item{font-size:13px;color:#c8b89a;padding:4px 0;border-bottom:1px solid rgba(58,42,21,0.4);line-height:1.6}
+.summary-item:last-child{border-bottom:none}
+.replay-btn{width:100%;background:rgba(40,30,10,0.7);border:1px solid #d4a84b;border-radius:10px;color:#e8c870;font-size:16px;font-weight:700;padding:14px;cursor:pointer;margin-top:10px;letter-spacing:1px}
+.replay-btn:active{transform:scale(0.97)}
 .classify-grid{display:flex;flex-direction:column;gap:6px;margin:8px 0}
 .citem{display:flex;align-items:center;gap:8px;background:rgba(20,14,8,0.7);border:1px solid #3a2a15;border-radius:8px;padding:8px 12px}
 .citem-name{flex:1;font-size:14px;color:#c8b89a}
@@ -84,27 +70,14 @@ body{font-family:'Noto Sans TC',sans-serif;background:#0d0a08;color:#e8d9c0;min-
 .ctype-btn.sel-org{background:rgba(20,70,20,0.8);border-color:#4aaa44;color:#90ee90}
 .ctype-btn.sel-inorg{background:rgba(70,20,20,0.8);border-color:#aa4444;color:#ffaaaa}
 .ctype-btn:active{transform:scale(0.95)}
-
-/* cover */
-.cover-icon{font-size:56px;margin:24px 0 10px;text-align:center}
-.cover-main{font-size:26px;font-weight:900;color:#d4a84b;text-align:center;letter-spacing:3px;margin-bottom:6px}
-.cover-sub{font-size:14px;color:#8a7050;text-align:center;letter-spacing:1px;margin-bottom:20px}
-
-/* ending */
-.trophy{font-size:60px;text-align:center;margin:20px 0}
-.ending-title{font-size:22px;font-weight:900;color:#d4a84b;text-align:center;letter-spacing:2px;margin-bottom:10px}
-.summary-box{background:rgba(20,14,8,0.9);border:1px solid #3a2a15;border-radius:12px;padding:14px;margin:12px 0;width:100%}
-.summary-box h3{color:#d4a84b;font-size:14px;margin-bottom:10px}
-.summary-item{font-size:13px;color:#c8b89a;padding:4px 0;border-bottom:1px solid rgba(58,42,21,0.4);line-height:1.6}
-.summary-item:last-child{border-bottom:none}
-
-.replay-btn{width:100%;background:rgba(40,30,10,0.7);border:1px solid #d4a84b;border-radius:10px;color:#e8c870;font-size:16px;font-weight:700;padding:14px;cursor:pointer;margin-top:10px;letter-spacing:1px}
-.replay-btn:active{transform:scale(0.97)}
+.stat-box{background:rgba(10,7,4,0.9);border:1px solid #5a3a15;border-radius:12px;padding:18px;width:100%;margin:10px 0;text-align:center}
+.stat-label{font-size:13px;color:#8a7050;margin-bottom:6px}
+.stat-value{font-size:32px;font-weight:900;color:#d4a84b}
+.stat-sub{font-size:13px;color:#8a7050;margin-top:4px}
 </style>
 </head>
 <body>
 
-<!-- OVERLAY / HINT -->
 <div class="overlay" id="overlay">
   <div class="hint-card">
     <h3 id="hint-title">💡 提示</h3>
@@ -128,10 +101,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:#0d0a08;color:#e8d9c0;min-
     今天，那個人就是你。<br><br>
     <span class="story-em">五關、五把鑰匙、一個真相——準備好了嗎？</span>
   </div>
-  <button class="submit-btn" onclick="goTo('p1')">🚪 進入實驗室</button>
+  <button class="submit-btn" onclick="startGame()">🚪 進入實驗室</button>
 </div>
 
-<!-- PAGE 1: 拉瓦節 -->
+<!-- PAGE 1 -->
 <div class="page" id="p1">
   <div class="title-bar">
     <div class="game-title">🕯️ 第一關</div>
@@ -139,49 +112,43 @@ body{font-family:'Noto Sans TC',sans-serif;background:#0d0a08;color:#e8d9c0;min-
   </div>
   <div class="story-box">
     <div class="char">A. Lavoisier，法國，1784年</div>
-    你推開第一道鐵門，走進一間佈滿灰塵的古老實驗室。<br>
-    桌上的實驗記錄冊寫著一行被遮住的字——<br><br>
+    你推開第一道鐵門，走進一間佈滿灰塵的古老實驗室。桌上的實驗記錄冊寫著——<br><br>
     <span class="story-em">「我將有機物隔絕空氣加熱，得到了兩種產物……」</span><br><br>
     密碼鎖亮起紅燈，你只有三個問題要回答，才能拿到第一把鑰匙。
   </div>
-
   <div class="puzzle-box">
     <div class="puzzle-title">🔒 解鎖任務：回答三題</div>
-
     <div class="q-label">問題一</div>
     <div class="q-text">拉瓦節將有機物「隔絕空氣加熱」的方法叫做？</div>
     <div class="choice-row" id="p1q1">
-      <button class="choice-btn" onclick="p1select(this,1,'乾')">乾餾</button>
-      <button class="choice-btn" onclick="p1select(this,1,'溼')">溼餾</button>
-      <button class="choice-btn" onclick="p1select(this,1,'燃')">燃燒法</button>
-      <button class="choice-btn" onclick="p1select(this,1,'蒸')">蒸餾</button>
+      <button class="choice-btn" onclick="p1sel(this,1,'乾')">乾餾</button>
+      <button class="choice-btn" onclick="p1sel(this,1,'溼')">溼餾</button>
+      <button class="choice-btn" onclick="p1sel(this,1,'燃')">燃燒法</button>
+      <button class="choice-btn" onclick="p1sel(this,1,'蒸')">蒸餾</button>
     </div>
-
     <div class="q-label">問題二</div>
     <div class="q-text">加熱後的產物一（含碳的氣體）？</div>
     <div class="choice-row" id="p1q2">
-      <button class="choice-btn" onclick="p1select(this,2,'一')">一氧化碳</button>
-      <button class="choice-btn" onclick="p1select(this,2,'二')">二氧化碳</button>
-      <button class="choice-btn" onclick="p1select(this,2,'氧')">氧氣</button>
-      <button class="choice-btn" onclick="p1select(this,2,'氮')">氮氣</button>
+      <button class="choice-btn" onclick="p1sel(this,2,'一')">一氧化碳</button>
+      <button class="choice-btn" onclick="p1sel(this,2,'二')">二氧化碳</button>
+      <button class="choice-btn" onclick="p1sel(this,2,'氧')">氧氣</button>
+      <button class="choice-btn" onclick="p1sel(this,2,'氮')">氮氣</button>
     </div>
-
     <div class="q-label">問題三</div>
     <div class="q-text">加熱後的產物二（含氫的液體）？</div>
     <div class="choice-row" id="p1q3">
-      <button class="choice-btn" onclick="p1select(this,3,'酒')">酒精</button>
-      <button class="choice-btn" onclick="p1select(this,3,'鹽')">鹽水</button>
-      <button class="choice-btn" onclick="p1select(this,3,'水')">水</button>
-      <button class="choice-btn" onclick="p1select(this,3,'油')">油脂</button>
+      <button class="choice-btn" onclick="p1sel(this,3,'酒')">酒精</button>
+      <button class="choice-btn" onclick="p1sel(this,3,'鹽')">鹽水</button>
+      <button class="choice-btn" onclick="p1sel(this,3,'水')">水</button>
+      <button class="choice-btn" onclick="p1sel(this,3,'油')">油脂</button>
     </div>
-
     <div class="feedback" id="p1fb"></div>
-    <button class="hint-btn" onclick="showHint('第一關提示','乾餾：拉瓦節的加熱方式是「<b>乾</b>餾」。<br>有機物燃燒或加熱後必定生成：<br>・含碳的氣體 → <b>二氧化碳（CO₂）</b><br>・含氫的液體 → <b>水（H₂O）</b>')">💡 提示</button>
+    <button class="hint-btn" onclick="showHint('第一關提示','拉瓦節的加熱方式是「<b>乾</b>餾」。<br>有機物加熱後必定生成：<br>・含碳的氣體 → <b>二氧化碳（CO₂）</b><br>・含氫的液體 → <b>水（H₂O）</b>')">💡 提示</button>
     <button class="next-btn" id="p1next" onclick="goTo('p2')">🔑 第一把鑰匙到手！前往第二關 →</button>
   </div>
 </div>
 
-<!-- PAGE 2: 貝才利烏斯 -->
+<!-- PAGE 2 -->
 <div class="page" id="p2">
   <div class="title-bar">
     <div class="game-title">🧪 第二關</div>
@@ -189,27 +156,27 @@ body{font-family:'Noto Sans TC',sans-serif;background:#0d0a08;color:#e8d9c0;min-
   </div>
   <div class="story-box">
     <div class="char">J.J. Berzelius，瑞典，1807年</div>
-    廊盡頭，一間典雅的標本室。<br>
-    他相信：<span class="story-em">「有機物只能由有生命的東西製造——這就是生命力學說！」</span><br><br>
+    廊盡頭，一間典雅的標本室。他相信：<br>
+    <span class="story-em">「有機物只能由有生命的東西製造——這就是生命力學說！」</span><br><br>
     展示櫃中央有一個上鎖的鐵盒，謎語是：<br>
-    <span class="story-em">「有機物裡藏著兩位必定出現的元素好夥伴，找出它們的原子序，相加後輸入，鐵盒即開。」</span>
+    <span class="story-em">「有機物裡藏著兩位必定出現的元素好夥伴，找出它們，輸入元素符號，鐵盒即開。」</span>
   </div>
   <div class="puzzle-box">
-    <div class="puzzle-title">🔒 有機物必定含有哪兩種元素？輸入元素符號</div>
-    <div class="q-text" style="margin-bottom:10px">把兩種必定出現的元素符號填入鐵盒的兩個格子，鐵盒即開。</div>
+    <div class="puzzle-title">🔒 輸入有機物必定含有的兩種元素符號</div>
+    <div class="q-text">把兩種必定出現的元素符號填入鐵盒的兩個格子。</div>
     <div style="display:flex;gap:10px;align-items:center;margin:8px 0">
       <input class="ans-input" id="p2e1" type="text" placeholder="元素一" style="text-align:center;font-size:20px;font-weight:700;flex:1">
       <span style="color:#8a7050;font-size:20px">＋</span>
       <input class="ans-input" id="p2e2" type="text" placeholder="元素二" style="text-align:center;font-size:20px;font-weight:700;flex:1">
     </div>
     <div class="feedback" id="p2fb"></div>
-    <button class="hint-btn" onclick="showHint('第二關提示','所有有機物必定含有這兩種元素：<br>・一種是生命中最重要的骨架元素，符號一個字母<br>・另一種是最輕的元素，符號也是一個字母<br>（輸入大寫英文字母）')">💡 提示</button>
+    <button class="hint-btn" onclick="showHint('第二關提示','所有有機物必定含有這兩種元素：<br>・一種是生命中最重要的骨架元素<br>・另一種是最輕的元素<br>（輸入大寫英文字母）')">💡 提示</button>
     <button class="submit-btn" onclick="checkP2()">確認答案</button>
     <button class="next-btn" id="p2next" onclick="goTo('p3')">🔑 鐵盒開啟！前往第三關 →</button>
   </div>
 </div>
 
-<!-- PAGE 3: 維勒 -->
+<!-- PAGE 3 -->
 <div class="page" id="p3">
   <div class="title-bar">
     <div class="game-title">⚡ 第三關</div>
@@ -225,7 +192,6 @@ body{font-family:'Noto Sans TC',sans-serif;background:#0d0a08;color:#e8d9c0;min-
   </div>
   <div class="puzzle-box">
     <div class="puzzle-title">🔒 輸入有機物名稱</div>
-    <div class="q-text">氰酸銨（NH₄OCN）加熱後，維勒合成了什麼？</div>
     <div class="story-box" style="margin:0 0 10px;padding:10px 12px;font-size:13px">
       📜 維勒致貝才利烏斯的信：<br>
       「親愛的教授，我不需要腎臟，也合成了它！<br>生命力學說，也許需要重新思考了。<br>化學式：<b>CO(NH₂)₂</b>」
@@ -238,33 +204,28 @@ body{font-family:'Noto Sans TC',sans-serif;background:#0d0a08;color:#e8d9c0;min-
   </div>
 </div>
 
-<!-- PAGE 4: 例外 -->
+<!-- PAGE 4 -->
 <div class="page" id="p4">
   <div class="title-bar">
     <div class="game-title">🚨 第四關</div>
     <div class="stage-label">反轉密碼——例外者！</div>
   </div>
   <div class="story-box">
-    警報大響：<br>
-    <span class="story-em">「⚠️ 系統偵測到例外狀況！」</span><br><br>
-    <span class="story-em">「並非所有含碳的物質都是有機物！<br>
-    找出清單中『含碳卻是無機物』的例外者，輸入它們的數量！」</span><br><br>
-    清單中哪些<span class="story-em">不屬於有機化合物</span>？點出來，警報才能解除！<br><br>
-    CO₂、CH₄、NaHCO₃、CO、C₆H₁₂O₆、CaCO₃、鑽石（C）、Na₂CO₃、H₂CO₃
+    警報大響：<span class="story-em">「⚠️ 系統偵測到例外狀況！」</span><br><br>
+    <span class="story-em">「並非所有含碳的物質都是有機物！找出清單中不屬於有機化合物的物質，全部點出來，警報才能解除！」</span>
   </div>
   <div class="puzzle-box">
-    <div class="puzzle-title">🔒 點出清單中「不屬於有機化合物」的物質</div>
-    <div class="q-text" style="margin-bottom:8px">點擊選取，再按確認。（可多選）</div>
+    <div class="puzzle-title">🔒 點出不屬於有機化合物的物質（可多選）</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0">
-      <button class="choice-btn" id="p4c0" onclick="p4tog(this,0)">CO₂</button>
-      <button class="choice-btn" id="p4c1" onclick="p4tog(this,1)">CH₄</button>
-      <button class="choice-btn" id="p4c2" onclick="p4tog(this,2)">NaHCO₃</button>
-      <button class="choice-btn" id="p4c3" onclick="p4tog(this,3)">CO</button>
-      <button class="choice-btn" id="p4c4" onclick="p4tog(this,4)">C₆H₁₂O₆</button>
-      <button class="choice-btn" id="p4c5" onclick="p4tog(this,5)">CaCO₃</button>
-      <button class="choice-btn" id="p4c6" onclick="p4tog(this,6)">鑽石（C）</button>
-      <button class="choice-btn" id="p4c7" onclick="p4tog(this,7)">Na₂CO₃</button>
-      <button class="choice-btn" id="p4c8" onclick="p4tog(this,8)">H₂CO₃</button>
+      <button class="choice-btn" id="p4c0" onclick="p4tog(this,0)" style="flex:0 0 auto">CO₂</button>
+      <button class="choice-btn" id="p4c1" onclick="p4tog(this,1)" style="flex:0 0 auto">CH₄</button>
+      <button class="choice-btn" id="p4c2" onclick="p4tog(this,2)" style="flex:0 0 auto">NaHCO₃</button>
+      <button class="choice-btn" id="p4c3" onclick="p4tog(this,3)" style="flex:0 0 auto">CO</button>
+      <button class="choice-btn" id="p4c4" onclick="p4tog(this,4)" style="flex:0 0 auto">C₆H₁₂O₆</button>
+      <button class="choice-btn" id="p4c5" onclick="p4tog(this,5)" style="flex:0 0 auto">CaCO₃</button>
+      <button class="choice-btn" id="p4c6" onclick="p4tog(this,6)" style="flex:0 0 auto">鑽石（C）</button>
+      <button class="choice-btn" id="p4c7" onclick="p4tog(this,7)" style="flex:0 0 auto">Na₂CO₃</button>
+      <button class="choice-btn" id="p4c8" onclick="p4tog(this,8)" style="flex:0 0 auto">H₂CO₃</button>
     </div>
     <div class="feedback" id="p4fb"></div>
     <button class="hint-btn" onclick="showHint('第四關提示','含碳無機物的三大家族：<br>1. <b>碳的氧化物</b>：CO、CO₂<br>2. <b>碳酸及碳酸鹽</b>：H₂CO₃、NaHCO₃、CaCO₃、Na₂CO₃<br>3. <b>碳的單質</b>：鑽石（C）<br><br>CH₄（甲烷）和 C₆H₁₂O₆（葡萄糖）是有機物，不要選到喔！')">💡 提示</button>
@@ -273,7 +234,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:#0d0a08;color:#e8d9c0;min-
   </div>
 </div>
 
-<!-- PAGE 5: 分類大師 -->
+<!-- PAGE 5 -->
 <div class="page" id="p5">
   <div class="title-bar">
     <div class="game-title">🏛️ 第五關</div>
@@ -281,14 +242,14 @@ body{font-family:'Noto Sans TC',sans-serif;background:#0d0a08;color:#e8d9c0;min-
   </div>
   <div class="story-box">
     最後一道門，矗立在你面前，已等待三百年。<br><br>
-    <span class="story-em">「將所有有機物標為『有機』，無機物標為『無機』。<br>全部分類正確，大門自動開啟。」</span>
+    <span class="story-em">「將所有有機物標為『有機』，無機物標為『無機』。全部標記完畢後按確認，只有一次機會！」</span>
   </div>
   <div class="puzzle-box">
-    <div class="puzzle-title">🔒 點擊每個物質，選擇有機或無機</div>
+    <div class="puzzle-title">🔒 點擊每個物質，選擇有機或無機（只能提交一次！）</div>
     <div class="classify-grid" id="p5grid"></div>
     <div class="feedback" id="p5fb"></div>
-    <button class="hint-btn" onclick="showHint('第五關提示','有機物 = 含碳的化合物（但以下例外是無機物）：<br>・碳的氧化物：CO、CO₂<br>・碳酸鹽：NaHCO₃、CaCO₃、Na₂CO₃<br>・碳酸：H₂CO₃<br>・碳的單質：鑽石<br><br>食鹽不含碳 → 無機物<br>大理石含碳但是碳酸鹽 → 無機物')">💡 提示</button>
-    <button class="submit-btn" onclick="checkP5()">✅ 確認全部分類</button>
+    <button class="hint-btn" onclick="showHint('第五關提示','有機物 = 含碳的化合物（但以下是無機物例外）：<br>・碳的氧化物：CO、CO₂<br>・碳酸鹽：NaHCO₃、CaCO₃、Na₂CO₃<br>・碳酸：H₂CO₃<br>・碳的單質：鑽石<br><br>食鹽不含碳 → 無機物<br>大理石含碳但是碳酸鹽 → 無機物')">💡 提示</button>
+    <button class="submit-btn" id="p5submit" onclick="checkP5()">✅ 確認全部分類（只能提交一次）</button>
     <button class="next-btn" id="p5next" onclick="goTo('p6')">🏆 大門開啟！前往結局 →</button>
   </div>
 </div>
@@ -303,8 +264,22 @@ body{font-family:'Noto Sans TC',sans-serif;background:#0d0a08;color:#e8d9c0;min-
   <div class="story-box">
     轟——！三百年的封印解除，金色的光芒從大門縫隙中湧入整個大廳。<br><br>
     從拉瓦節的乾餾實驗，到貝才利烏斯的生命力學說，再到維勒意外合成尿素打破百年信念，最後你識破了「含碳不一定是有機物」的陷阱——<br><br>
-    <span class="story-em">科學的進步，靠的就是不斷挑戰舊有觀念。</span><br>
-    而今天，那個勇敢挑戰的人，就是你。🔬
+    <span class="story-em">科學的進步，靠的就是不斷挑戰舊有觀念。而今天，那個勇敢挑戰的人，就是你。🔬</span>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-label">⏱️ 完成時間</div>
+    <div class="stat-value" id="p6time">--</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">🎯 第五關得分（滿分 100，錯一個扣 8 分）</div>
+    <div class="stat-value" id="p6score">--</div>
+    <div class="stat-sub">答錯 <span id="p6errors">0</span> 個&emsp;<span id="p6grade"></span></div>
+  </div>
+
+  <div class="summary-box" id="p6review">
+    <h3>📋 第五關作答狀況</h3>
+    <div id="p6reviewlist"></div>
   </div>
   <div class="summary-box">
     <h3>📚 本關卡你學到了</h3>
@@ -319,220 +294,248 @@ body{font-family:'Noto Sans TC',sans-serif;background:#0d0a08;color:#e8d9c0;min-
 </div>
 
 <script>
-// page nav
-function goTo(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0,0);
+var gameStartTime = null;
+
+function startGame() {
+  gameStartTime = Date.now();
+  goTo('p1');
 }
 
-// hint
-function showHint(t,b){
-  document.getElementById('hint-title').textContent='💡 '+t;
-  document.getElementById('hint-body').innerHTML=b;
+function goTo(id) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showHint(t, b) {
+  document.getElementById('hint-title').textContent = '💡 ' + t;
+  document.getElementById('hint-body').innerHTML = b;
   document.getElementById('overlay').classList.add('show');
 }
-function closeHint(){document.getElementById('overlay').classList.remove('show')}
+function closeHint() { document.getElementById('overlay').classList.remove('show'); }
 
 // ===== P1 =====
-var p1ans={1:null,2:null,3:null};
-var p1correct={1:'乾',2:'二',3:'水'};
-function p1select(btn,q,val){
-  var row=document.getElementById('p1q'+q);
-  row.querySelectorAll('.choice-btn').forEach(b=>{b.className='choice-btn'});
+var p1ans = {1:null, 2:null, 3:null};
+function p1sel(btn, q, val) {
+  document.getElementById('p1q'+q).querySelectorAll('.choice-btn').forEach(function(b){ b.className='choice-btn'; });
   btn.classList.add('selected');
-  p1ans[q]=val;
-  // check all
-  if(p1ans[1]&&p1ans[2]&&p1ans[3]) checkP1();
+  p1ans[q] = val;
+  if (p1ans[1] && p1ans[2] && p1ans[3]) checkP1();
 }
-function checkP1(){
-  var ok=p1ans[1]==='乾'&&p1ans[2]==='二'&&p1ans[3]==='水';
-  var fb=document.getElementById('p1fb');
-  if(ok){
-    // mark all correct
-    ['p1q1','p1q2','p1q3'].forEach((id,i)=>{
-      var q=i+1;
-      document.getElementById(id).querySelectorAll('.choice-btn').forEach(b=>{
-        if(b.textContent.includes(p1correct[q+0])||b.dataset.ok){
-          // highlight selected ones
-        }
-      });
-      var sel=document.querySelector('#'+id+' .selected');
-      if(sel) sel.classList.replace('selected','correct');
+function checkP1() {
+  var ok = p1ans[1]==='乾' && p1ans[2]==='二' && p1ans[3]==='水';
+  var fb = document.getElementById('p1fb');
+  if (ok) {
+    [1,2,3].forEach(function(q){
+      document.getElementById('p1q'+q).querySelectorAll('.choice-btn.selected').forEach(function(b){ b.classList.replace('selected','correct'); });
     });
-    fb.className='feedback ok show';
-    fb.textContent='🔑 密碼：乾二水 —— 正確！第一把鑰匙到手！';
+    fb.className = 'feedback ok show';
+    fb.textContent = '🔑 密碼：乾二水 —— 正確！第一把鑰匙到手！';
     document.getElementById('p1next').classList.add('show');
   } else {
-    fb.className='feedback err show';
-    var msg='❌ 答案有誤：';
-    if(p1ans[1]&&p1ans[1]!=='乾') msg+='加熱法不對（提示：乾餾）；';
-    if(p1ans[2]&&p1ans[2]!=='二') msg+='產物一不對（提示：二氧化碳）；';
-    if(p1ans[3]&&p1ans[3]!=='水') msg+='產物二不對（提示：水）；';
-    fb.textContent=msg+'請重新選擇。';
-    // reset
-    setTimeout(()=>{
-      ['p1q1','p1q2','p1q3'].forEach(id=>{
-        document.getElementById(id).querySelectorAll('.choice-btn').forEach(b=>b.className='choice-btn');
+    fb.className = 'feedback err show';
+    var msg = '❌ 答案有誤：';
+    if (p1ans[1]!=='乾') msg += '加熱法不對；';
+    if (p1ans[2]!=='二') msg += '產物一不對；';
+    if (p1ans[3]!=='水') msg += '產物二不對；';
+    fb.textContent = msg + '請重新選擇。';
+    setTimeout(function(){
+      [1,2,3].forEach(function(q){
+        document.getElementById('p1q'+q).querySelectorAll('.choice-btn').forEach(function(b){ b.className='choice-btn'; });
       });
-      p1ans={1:null,2:null,3:null};
-      fb.className='feedback err show';
-    },1400);
+      p1ans = {1:null,2:null,3:null};
+    }, 1400);
   }
 }
 
 // ===== P2 =====
-function checkP2(){
-  var v1=document.getElementById('p2e1').value.trim().toUpperCase();
-  var v2=document.getElementById('p2e2').value.trim().toUpperCase();
-  var fb=document.getElementById('p2fb');
-  var set=new Set([v1,v2]);
-  if(set.has('C')&&set.has('H')){
-    fb.className='feedback ok show';
-    fb.textContent='🔑 C（碳）＋ H（氫）—— 正確！鐵盒開啟！';
+function checkP2() {
+  var v1 = document.getElementById('p2e1').value.trim().toUpperCase();
+  var v2 = document.getElementById('p2e2').value.trim().toUpperCase();
+  var fb = document.getElementById('p2fb');
+  if ((v1==='C'&&v2==='H') || (v1==='H'&&v2==='C')) {
+    fb.className = 'feedback ok show';
+    fb.textContent = '🔑 C（碳）＋ H（氫）—— 正確！鐵盒開啟！';
     document.getElementById('p2next').classList.add('show');
   } else {
-    fb.className='feedback err show';
-    fb.textContent='❌ 不對喔，想想所有有機物必定含有哪兩種元素？';
+    fb.className = 'feedback err show';
+    fb.textContent = '❌ 不對喔，想想所有有機物必定含有哪兩種元素？';
   }
 }
 
 // ===== P3 =====
-function checkP3(){
-  var v=document.getElementById('p3ans').value.trim().replace(/\s/g,'');
-  var fb=document.getElementById('p3fb');
-  var ok=['尿素','CO(NH₂)₂','CO(NH2)2'].includes(v);
-  if(ok){
-    fb.className='feedback ok show';
-    fb.textContent='🔑 尿素 —— 正確！生命力學說開始動搖！';
+function checkP3() {
+  var v = document.getElementById('p3ans').value.trim().replace(/\s/g,'');
+  var fb = document.getElementById('p3fb');
+  if (['尿素','CO(NH₂)₂','CO(NH2)2'].indexOf(v) >= 0) {
+    fb.className = 'feedback ok show';
+    fb.textContent = '🔑 尿素 —— 正確！生命力學說開始動搖！';
     document.getElementById('p3next').classList.add('show');
   } else {
-    fb.className='feedback err show';
-    fb.textContent='❌ 不對喔，這個有機物農業上常見、人體也會產生，用中文兩個字輸入。';
+    fb.className = 'feedback err show';
+    fb.textContent = '❌ 不對喔，這個有機物農業上常見、人體也會產生，用中文兩個字輸入。';
   }
 }
 
 // ===== P4 =====
-var p4data=[
-  {inorg:true},{inorg:false},{inorg:true},{inorg:true},
-  {inorg:false},{inorg:true},{inorg:true},{inorg:true},{inorg:true}
-];
-var p4names=['CO₂','CH₄','NaHCO₃','CO','C₆H₁₂O₆','CaCO₃','鑽石（C）','Na₂CO₃','H₂CO₃'];
-var p4sel=new Set();
+var p4inorg = [true, false, true, true, false, true, true, true, true];
+var p4names = ['CO₂','CH₄','NaHCO₃','CO','C₆H₁₂O₆','CaCO₃','鑽石（C）','Na₂CO₃','H₂CO₃'];
+var p4sel = new Set();
 
-function p4tog(btn,i){
-  if(p4sel.has(i)){p4sel.delete(i);btn.className='choice-btn';}
-  else{p4sel.add(i);btn.className='choice-btn selected';}
+function p4tog(btn, i) {
+  if (p4sel.has(i)) { p4sel.delete(i); btn.className='choice-btn'; }
+  else { p4sel.add(i); btn.className='choice-btn selected'; }
 }
 
-function checkP4(){
-  var fb=document.getElementById('p4fb');
-  var wrong=[],missed=[];
-  p4data.forEach((d,i)=>{
-    if(p4sel.has(i)&&!d.inorg) wrong.push(p4names[i]);
-    if(!p4sel.has(i)&&d.inorg) missed.push(p4names[i]);
+function checkP4() {
+  var fb = document.getElementById('p4fb');
+  var wrong=[], missed=[];
+  p4inorg.forEach(function(isInorg, i){
+    if (p4sel.has(i) && !isInorg) wrong.push(p4names[i]);
+    if (!p4sel.has(i) && isInorg) missed.push(p4names[i]);
   });
-  if(wrong.length===0&&missed.length===0){
-    p4data.forEach((d,i)=>{
-      if(d.inorg) document.getElementById('p4c'+i).className='choice-btn correct';
+  if (wrong.length===0 && missed.length===0) {
+    p4inorg.forEach(function(isInorg, i){
+      if (isInorg) document.getElementById('p4c'+i).className='choice-btn correct';
     });
-    fb.className='feedback ok show';
-    fb.textContent='🔑 全部找到了！CO₂、CO、NaHCO₃、CaCO₃、Na₂CO₃、H₂CO₃、鑽石——共 7 個。警報解除！';
+    fb.className = 'feedback ok show';
+    fb.textContent = '🔑 全部找到了！CO₂、CO、NaHCO₃、CaCO₃、Na₂CO₃、H₂CO₃、鑽石——共 7 個。警報解除！';
     document.getElementById('p4next').classList.add('show');
   } else {
-    fb.className='feedback err show';
-    var msg='❌ 還不對！';
-    if(wrong.length&&missed.length) msg+='有選錯的，也有漏選的。';
-    else if(wrong.length) msg+='有選到不該選的（有機物）。';
-    else if(missed.length) msg+='還有漏選的（含碳無機物）。';
-    msg+='提示：含碳無機物包括碳的氧化物、碳酸及碳酸鹽、碳的單質。';
-    fb.textContent=msg;
+    fb.className = 'feedback err show';
+    var msg = '❌ 還不對！';
+    if (wrong.length && missed.length) msg += '有選錯的，也有漏選的。';
+    else if (wrong.length) msg += '有選到不該選的（有機物）。';
+    else msg += '還有漏選的（含碳無機物）。';
+    msg += ' 提示：含碳無機物包括碳的氧化物、碳酸及碳酸鹽、碳的單質。';
+    fb.textContent = msg;
   }
-}
-
-function restartP4(){
-  p4sel=new Set();
-  for(var i=0;i<9;i++) document.getElementById('p4c'+i).className='choice-btn';
-  document.getElementById('p4fb').className='feedback';
-  document.getElementById('p4next').classList.remove('show');
 }
 
 // ===== P5 =====
-var p5data=[
-  {name:'食醋（醋酸）',formula:'CH₃COOH',ans:'org'},
-  {name:'酒精（乙醇）',formula:'C₂H₅OH',ans:'org'},
-  {name:'蔗糖',formula:'C₁₂H₂₂O₁₁',ans:'org'},
-  {name:'葡萄糖',formula:'C₆H₁₂O₆',ans:'org'},
-  {name:'甲烷',formula:'CH₄',ans:'org'},
-  {name:'丙烷',formula:'C₃H₈',ans:'org'},
-  {name:'蛋白質',formula:'含 C-H-N-O-S',ans:'org'},
-  {name:'澱粉',formula:'(C₆H₁₀O₅)ₙ',ans:'org'},
-  {name:'食鹽',formula:'NaCl',ans:'inorg'},
-  {name:'水',formula:'H₂O',ans:'inorg'},
-  {name:'大理石',formula:'CaCO₃',ans:'inorg'},
-  {name:'二氧化碳',formula:'CO₂',ans:'inorg'},
+var p5data = [
+  {name:'食醋（醋酸）', formula:'CH₃COOH', ans:'org'},
+  {name:'酒精（乙醇）', formula:'C₂H₅OH', ans:'org'},
+  {name:'蔗糖', formula:'C₁₂H₂₂O₁₁', ans:'org'},
+  {name:'葡萄糖', formula:'C₆H₁₂O₆', ans:'org'},
+  {name:'甲烷', formula:'CH₄', ans:'org'},
+  {name:'丙烷', formula:'C₃H₈', ans:'org'},
+  {name:'蛋白質', formula:'含 C-H-N-O-S', ans:'org'},
+  {name:'澱粉', formula:'(C₆H₁₀O₅)ₙ', ans:'org'},
+  {name:'食鹽', formula:'NaCl', ans:'inorg'},
+  {name:'水', formula:'H₂O', ans:'inorg'},
+  {name:'大理石', formula:'CaCO₃', ans:'inorg'},
+  {name:'二氧化碳', formula:'CO₂', ans:'inorg'},
 ];
-var p5sel={};
+var p5sel = {};
+var p5order = [];
 
-function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function shuffle(a) {
+  var arr = a.slice();
+  for (var i=arr.length-1; i>0; i--) {
+    var j = Math.floor(Math.random()*(i+1));
+    var t = arr[i]; arr[i]=arr[j]; arr[j]=t;
+  }
+  return arr;
+}
 
-function buildP5(){
-  var g=document.getElementById('p5grid');
-  g.innerHTML='';
-  p5sel={};
-  var order=shuffle(p5data.map((_,i)=>i));
-  order.forEach(i=>{
-    var d=p5data[i];
-    var row=document.createElement('div');
-    row.className='citem';
-    row.innerHTML='<div class="citem-name">'+d.name+'<span class="citem-formula">'+d.formula+'</span></div>'+
+function buildP5() {
+  p5sel = {};
+  p5order = shuffle(p5data.map(function(_,i){ return i; }));
+  var g = document.getElementById('p5grid');
+  g.innerHTML = '';
+  p5order.forEach(function(i){
+    var d = p5data[i];
+    var row = document.createElement('div');
+    row.className = 'citem';
+    row.innerHTML =
+      '<div class="citem-name">'+d.name+'<span class="citem-formula">'+d.formula+'</span></div>'+
       '<div class="ctype">'+
-      '<button class="ctype-btn" id="p5o'+i+'" onclick="p5pick('+i+',\'org\')">有機</button>'+
-      '<button class="ctype-btn" id="p5n'+i+'" onclick="p5pick('+i+',\'inorg\')">無機</button>'+
+        '<button class="ctype-btn" id="p5o'+i+'" onclick="p5pick('+i+',\'org\')">有機</button>'+
+        '<button class="ctype-btn" id="p5n'+i+'" onclick="p5pick('+i+',\'inorg\')">無機</button>'+
       '</div>';
     g.appendChild(row);
   });
+  document.getElementById('p5submit').disabled = false;
+  document.getElementById('p5submit').style.opacity = '1';
+  document.getElementById('p5fb').className = 'feedback';
+  document.getElementById('p5next').classList.remove('show');
 }
 
-function p5pick(i,val){
-  p5sel[i]=val;
-  var ob=document.getElementById('p5o'+i);
-  var nb=document.getElementById('p5n'+i);
-  ob.className='ctype-btn'+(val==='org'?' sel-org':'');
-  nb.className='ctype-btn'+(val==='inorg'?' sel-inorg':'');
+function p5pick(i, val) {
+  p5sel[i] = val;
+  document.getElementById('p5o'+i).className = 'ctype-btn' + (val==='org' ? ' sel-org' : '');
+  document.getElementById('p5n'+i).className = 'ctype-btn' + (val==='inorg' ? ' sel-inorg' : '');
 }
 
-function checkP5(){
-  var fb=document.getElementById('p5fb');
-  if(Object.keys(p5sel).length<12){
-    fb.className='feedback err show';
-    fb.textContent='⚠️ 還有物質未分類！請把 12 種物質全部標記完畢。';
+function checkP5() {
+  var fb = document.getElementById('p5fb');
+  if (Object.keys(p5sel).length < 12) {
+    fb.className = 'feedback err show';
+    fb.textContent = '⚠️ 還有物質未分類！請把 12 種物質全部標記完畢。';
     return;
   }
-  var wrong=[];
-  p5data.forEach((d,i)=>{
-    if(p5sel[i]!==d.ans) wrong.push(d.name);
+  // lock buttons
+  document.querySelectorAll('.ctype-btn').forEach(function(b){ b.style.pointerEvents='none'; });
+  document.getElementById('p5submit').disabled = true;
+  document.getElementById('p5submit').style.opacity = '0.4';
+
+  var errors = 0;
+  p5data.forEach(function(d, i){ if (p5sel[i] !== d.ans) errors++; });
+  var score = Math.max(0, 100 - errors * 8);
+
+  // record time
+  var elapsed = gameStartTime ? Math.floor((Date.now()-gameStartTime)/1000) : 0;
+  var mins = Math.floor(elapsed/60), secs = elapsed % 60;
+  var timeStr = mins + '分' + (secs < 10 ? '0' : '') + secs + '秒';
+
+  // write to p6
+  document.getElementById('p6time').textContent = timeStr;
+  document.getElementById('p6score').textContent = score;
+  document.getElementById('p6errors').textContent = errors;
+  document.getElementById('p6grade').textContent = score===100 ? '🥇 完美通關！' : score>=60 ? '👍 不錯喔！' : '💪 繼續加油！';
+
+  // build review list
+  var list = document.getElementById('p6reviewlist');
+  list.innerHTML = '';
+  var orgLabel = {org:'有機物', inorg:'無機物'};
+  p5order.forEach(function(i){
+    var d = p5data[i];
+    var userAns = p5sel[i];
+    var correct = userAns === d.ans;
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(58,42,21,0.4);font-size:13px';
+    var icon = correct ? '✅' : '❌';
+    var ansColor = correct ? '#90ee90' : '#ffaaaa';
+    var correctLabel = orgLabel[d.ans];
+    var userLabel = orgLabel[userAns] || '未作答';
+    row.innerHTML =
+      '<span style="font-size:15px">'+icon+'</span>'+
+      '<span style="flex:1;color:#c8b89a">'+d.name+'<br><span style="font-size:11px;color:#8a7050">'+d.formula+'</span></span>'+
+      '<span style="text-align:right;color:'+ansColor+'">'+
+        (correct
+          ? '<span>'+correctLabel+'</span>'
+          : '<span style="color:#ffaaaa;text-decoration:line-through">'+userLabel+'</span><br><span style="color:#90ee90;font-size:12px">▶ '+correctLabel+'</span>')+
+      '</span>';
+    list.appendChild(row);
   });
-  if(wrong.length===0){
-    fb.className='feedback ok show';
-    fb.textContent='🏆 全部正確！有機物 8 種，無機物 4 種——大門開啟！';
-    document.getElementById('p5next').classList.add('show');
-  } else {
-    fb.className='feedback err show';
-    fb.textContent='❌ 以下分類有誤：'+wrong.join('、')+'。請重新思考，記得碳的例外規則！';
-  }
+
+  fb.className = 'feedback ok show';
+  fb.textContent = '✅ 提交完成！答錯 '+errors+' 個，得分 '+score+' 分。';
+  document.getElementById('p5next').classList.add('show');
 }
 
-function restart(){
-  p1ans={1:null,2:null,3:null};
-  p5sel={};
-  ['p1q1','p1q2','p1q3'].forEach(id=>{
-    document.getElementById(id).querySelectorAll('.choice-btn').forEach(b=>b.className='choice-btn');
+// ===== RESTART =====
+function restart() {
+  p1ans = {1:null,2:null,3:null};
+  p4sel = new Set();
+  [1,2,3].forEach(function(q){
+    document.getElementById('p1q'+q).querySelectorAll('.choice-btn').forEach(function(b){ b.className='choice-btn'; });
   });
-  ['p2e1','p2e2','p3ans'].forEach(id=>{document.getElementById(id).value='';});
-  ['p1fb','p2fb','p3fb','p4fb','p5fb'].forEach(id=>{document.getElementById(id).className='feedback';});
-  ['p1next','p2next','p3next','p4next','p5next'].forEach(id=>{document.getElementById(id).classList.remove('show');});
-  restartP4();
+  ['p2e1','p2e2','p3ans'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['p1fb','p2fb','p3fb','p4fb'].forEach(function(id){ document.getElementById(id).className='feedback'; });
+  ['p1next','p2next','p3next','p4next'].forEach(function(id){ document.getElementById(id).classList.remove('show'); });
+  for (var i=0; i<9; i++) document.getElementById('p4c'+i).className='choice-btn';
   buildP5();
   goTo('p0');
 }
