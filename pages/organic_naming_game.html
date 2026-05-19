@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>有機化合物命名大冒險</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans TC',sans-serif;background:#f0f7ec;color:#1a3d0a;min-height:100vh}
+.hud{position:sticky;top:0;z-index:100;background:#2d7a1f;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;font-size:15px;font-weight:500}
+.hud-score{background:#1a5c0f;border-radius:20px;padding:4px 14px}
+.screen{display:none;max-width:720px;margin:0 auto;padding:20px}
+.screen.active{display:block}
+.card{background:#fff;border-radius:16px;padding:24px;margin-bottom:16px;border:1px solid #b8dba8}
+h1{font-size:24px;color:#1a5c0f;margin-bottom:8px}
+h2{font-size:19px;color:#2d7a1f;margin-bottom:12px}
+.subtitle{color:#4a7a3a;font-size:14px;margin-bottom:16px;line-height:1.7}
+.btn{display:inline-block;background:#2d7a1f;color:#fff;border:none;border-radius:10px;padding:11px 22px;font-size:15px;cursor:pointer;font-family:inherit;transition:transform .1s,background .1s}
+.btn:hover{background:#3a9a28}
+.btn:active{transform:scale(0.97)}
+.rule-box{background:#eaf3de;border-left:4px solid #2d7a1f;border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:14px;font-size:14px;line-height:1.8}
+.rule-box table{width:100%;border-collapse:collapse;margin-top:6px}
+.rule-box td,.rule-box th{padding:5px 10px;font-size:13px;text-align:center}
+.rule-box tr:nth-child(even){background:rgba(255,255,255,.5)}
+.formula-pill{display:inline-block;background:#1a5c0f;color:#fff;border-radius:8px;padding:3px 10px;font-size:13px;font-family:monospace;margin:2px}
+.match-arena{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}
+.match-col h3{text-align:center;font-size:13px;color:#4a7a3a;margin-bottom:8px;font-weight:500}
+.match-item{background:#fff;border:2px solid #b8dba8;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;text-align:center;font-size:14px;transition:border-color .2s,background .2s;user-select:none;line-height:1.4}
+.match-item:hover{border-color:#2d7a1f;background:#eaf3de}
+.match-item.selected{border-color:#2d7a1f;background:#d0ecba}
+.match-item.matched{border-color:#1a9a50;background:#d0f0e0;cursor:default;color:#0a5a30}
+.match-item.error{border-color:#c0392b;background:#fde8e8;animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.match-feedback{text-align:center;font-size:14px;min-height:22px;margin:6px 0;color:#2d7a1f}
+.question-counter{font-size:13px;color:#4a7a3a;margin-bottom:6px}
+.question-stem{font-size:20px;font-weight:500;margin:10px 0 16px;text-align:center;background:#f0f7ec;border-radius:10px;padding:14px;letter-spacing:1px}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.opt-btn{background:#fff;border:2px solid #b8dba8;border-radius:10px;padding:12px;font-size:15px;cursor:pointer;font-family:inherit;transition:.15s;text-align:center}
+.opt-btn:hover:not(:disabled){border-color:#2d7a1f;background:#eaf3de}
+.opt-btn.correct{border-color:#1a9a50;background:#d0f0e0;color:#0a5a30}
+.opt-btn.wrong{border-color:#c0392b;background:#fde8e8;color:#8b0000}
+.feedback-box{border-radius:10px;padding:11px 14px;margin:8px 0;font-size:13px;line-height:1.6;min-height:44px}
+.feedback-box.correct{background:#d0f0e0;border:1px solid #1a9a50;color:#0a5a30}
+.feedback-box.wrong{background:#fde8e8;border:1px solid #c0392b;color:#8b0000}
+.progress-bar{background:#b8dba8;border-radius:10px;height:7px;margin:8px 0}
+.progress-fill{background:#2d7a1f;border-radius:10px;height:100%;transition:width .3s}
+.s3-prompt{text-align:center;margin:14px 0}
+.s3-name{font-size:26px;font-weight:600;color:#1a5c0f;margin-bottom:6px}
+.s3-type{font-size:14px;color:#4a7a3a}
+.f-part{display:flex;flex-direction:column;align-items:center;gap:4px}
+.f-label{font-size:11px;color:#4a7a3a}
+.f-select{font-size:16px;padding:8px 4px;border:2px solid #b8dba8;border-radius:8px;font-family:inherit;text-align:center;width:100%;background:#fff;cursor:pointer;outline:none}
+.f-select:focus{border-color:#2d7a1f}
+.f-select.correct{border-color:#1a9a50;background:#d0f0e0}
+.f-select.wrong{border-color:#c0392b;background:#fde8e8}
+.formula-display{text-align:center;font-size:22px;font-weight:500;letter-spacing:1px;background:#f0f7ec;border-radius:10px;padding:12px;margin:10px 0;min-height:52px;color:#1a5c0f}
+.s3-feedback{text-align:center;font-size:14px;min-height:22px;margin:6px 0}
+.score-big{font-size:44px;font-weight:700;color:#1a5c0f;text-align:center;margin:12px 0}
+.review-item{border-left:3px solid #c0392b;padding:8px 12px;margin-bottom:8px;background:#fff9f9;border-radius:0 8px 8px 0;font-size:13px}
+.stars{font-size:30px;text-align:center;margin:6px 0}
+.fade-in{animation:fadein .4s}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="hud">
+  <span id="hud-stage">🌿 有機化合物命名大冒險</span>
+  <span class="hud-score">總分：<span id="hud-score">0</span></span>
+</div>
+
+<div id="screen-start" class="screen active">
+<div class="card fade-in" style="text-align:center;padding:36px 24px">
+  <div style="font-size:56px">🧪</div>
+  <h1>有機化合物命名大冒險</h1>
+  <p class="subtitle">三種命名通式，一次學會！挑戰三關成為命名大師 🏆</p>
+  <div class="rule-box" style="text-align:left">
+    <strong>📐 四類有機物通式與官能基</strong>
+    <table>
+      <tr><th>類別</th><th>通式</th><th>官能基</th><th>舉例</th></tr>
+      <tr><td>烷類</td><td>CₙH₂ₙ₊₂</td><td>— H</td><td>甲烷 CH₄、乙烷 C₂H₆</td></tr>
+      <tr><td>醇類</td><td>CₙH₂ₙ₊₁OH</td><td>—OH</td><td>甲醇 CH₃OH、乙醇 C₂H₅OH</td></tr>
+      <tr><td>酸類</td><td>CₙH₂ₙ₊₁COOH</td><td>—COOH</td><td>甲酸 HCOOH、乙酸 CH₃COOH</td></tr>
+      <tr><td>酯類</td><td>酸＋醇 → 酯＋水</td><td>—COO—</td><td>乙酸乙酯 CH₃COOC₂H₅</td></tr>
+    </table>
+    <div style="margin-top:8px">碳數字頭：<span class="formula-pill">1→甲</span><span class="formula-pill">2→乙</span><span class="formula-pill">3→丙</span><span class="formula-pill">4→丁</span></div>
+  </div>
+  <button class="btn" onclick="startStage1()">🚀 開始第一關！</button>
+</div>
+</div>
+
+<div id="screen-s1" class="screen">
+<div class="card fade-in">
+  <h2>第一關 🔗 官能基配對（練習關）</h2>
+  <p class="subtitle">點左欄官能基，再點右欄類別完成配對。此關不計分，全部配對完成即可過關！</p>
+  <div class="match-arena">
+    <div class="match-col"><h3>官能基 / 通式特徵</h3><div id="left-items"></div></div>
+    <div class="match-col"><h3>有機物類別</h3><div id="right-items"></div></div>
+  </div>
+  <div class="match-feedback" id="match-feedback"></div>
+  <div style="text-align:center">
+    <button class="btn" id="s1-next" style="display:none" onclick="showS1Result()">查看結果 ✅</button>
+  </div>
+</div>
+</div>
+
+<div id="screen-s1-result" class="screen">
+<div class="card fade-in" style="text-align:center">
+  <h2>第一關完成！🎉</h2>
+  <div style="font-size:52px;margin:8px 0">🌟</div>
+  <p style="font-size:15px;margin:10px 0">官能基配對全部正確！繼續挑戰第二關吧！</p>
+  <div class="rule-box" style="text-align:left">
+    <strong>✅ 配對整理：</strong><br>
+    CₙH₂ₙ₊₂（只有 C—H 鍵）→ <strong>烷類</strong><br>
+    CₙH₂ₙ₊₁<strong>OH</strong>（—OH 羥基）→ <strong>醇類</strong><br>
+    CₙH₂ₙ₊₁<strong>COOH</strong>（—COOH 羧基）→ <strong>酸類</strong><br>
+    酸 + 醇脫水（<strong>—COO—</strong> 酯基）→ <strong>酯類</strong>（如乙酸乙酯 CH₃COOC₂H₅）
+  </div>
+  <button class="btn" onclick="startStage2()">前往第二關 ➡️</button>
+</div>
+</div>
+
+<div id="screen-s2" class="screen">
+<div class="card fade-in">
+  <h2>第二關 📝 命名闖關（共 50 分）</h2>
+  <div class="question-counter">第 <span id="q-num">1</span> / 10 題，每題 5 分</div>
+  <div class="progress-bar"><div class="progress-fill" id="q-progress" style="width:10%"></div></div>
+  <div class="question-stem" id="q-stem"></div>
+  <div class="options" id="q-options"></div>
+  <div class="feedback-box" id="q-feedback" style="display:none"></div>
+  <div style="text-align:center;margin-top:8px">
+    <button class="btn" id="q-next" style="display:none" onclick="nextQuestion()">下一題 ➡️</button>
+  </div>
+</div>
+</div>
+
+<div id="screen-s2-result" class="screen">
+<div class="card fade-in" style="text-align:center">
+  <h2>第二關完成！🎉</h2>
+  <div class="score-big" id="s2-score-display"></div>
+  <p style="font-size:14px;color:#4a7a3a;margin-bottom:14px" id="s2-rank"></p>
+  <button class="btn" onclick="startStage3()">前往第三關 ➡️</button>
+</div>
+</div>
+
+<div id="screen-s3" class="screen">
+<div class="card fade-in">
+  <h2>第三關 ⚗️ 寫出化學式（共 50 分）</h2>
+  <p class="subtitle">看到化合物名稱，從下拉選單選出正確的化學式各部分！</p>
+  <div class="rule-box" style="font-size:13px">
+    💡 回想通式：烷 CₙH<strong>2n+2</strong> ／ 醇 CₙH<strong>2n+1</strong>OH ／ 酸 CₙH<strong>2n+1</strong>COOH（n 為碳數）
+  </div>
+  <div class="question-counter">第 <span id="s3-num">1</span> / 10 題，每題 5 分</div>
+  <div class="progress-bar"><div class="progress-fill" id="s3-progress" style="width:10%"></div></div>
+  <div class="s3-prompt">
+    <div class="s3-name" id="s3-name"></div>
+    <div class="s3-type" id="s3-type-hint"></div>
+  </div>
+  <div class="formula-display" id="s3-display">請選擇下方各部分 ↓</div>
+  <div id="s3-selectors"></div>
+  <div style="text-align:center;margin-top:10px">
+    <button class="btn" onclick="checkS3()">確認答案 ✔</button>
+  </div>
+  <div class="s3-feedback" id="s3-feedback"></div>
+  <div style="text-align:center;margin-top:6px">
+    <button class="btn" id="s3-next" style="display:none" onclick="nextS3()">下一題 ➡️</button>
+  </div>
+</div>
+</div>
+
+<div id="screen-final" class="screen">
+<div class="card fade-in" style="text-align:center">
+  <h2>🏆 全部完成！</h2>
+  <div class="score-big" id="final-score"></div>
+  <div class="stars" id="final-stars"></div>
+  <p style="font-size:15px;color:#2d7a1f;margin-bottom:16px" id="final-rank"></p>
+</div>
+<div class="card fade-in" id="review-panel">
+  <h2>📋 錯題複習</h2>
+  <div id="review-list"></div>
+</div>
+<div style="text-align:center;padding:16px">
+  <button class="btn" onclick="restartGame()">🔄 再玩一次</button>
+</div>
+</div>
+
+<script>
+var totalScore=0, s2Score=0, s3Score=0, wrongItems=[];
+
+/* ===== STAGE 1 ===== */
+var matchPairs=[
+  {left:'CₙH₂ₙ₊₂（只有 C—H 鍵）', right:'烷類', id:'alkane'},
+  {left:'—COOH（羧基）',            right:'酸類', id:'acid'},
+  {left:'—OH（羥基）',              right:'醇類', id:'alcohol'},
+  {left:'—COO—（酯基）',           right:'酯類', id:'ester'}
+];
+var mState={sel:null, matched:{}};
+
+function startStage1(){
+  showScreen('s1');
+  updateHud('第一關：官能基配對', totalScore);
+  mState={sel:null, matched:{}};
+  var ll=document.getElementById('left-items');
+  var rl=document.getElementById('right-items');
+  ll.innerHTML=''; rl.innerHTML='';
+  var shL=[...matchPairs].sort(function(){return Math.random()-.5;});
+  var shR=[...matchPairs].sort(function(){return Math.random()-.5;});
+  shL.forEach(function(p){
+    var d=document.createElement('div');
+    d.className='match-item'; d.id='L-'+p.id; d.textContent=p.left;
+    d.onclick=function(){selLeft(p.id,this);}; ll.appendChild(d);
+  });
+  shR.forEach(function(p){
+    var d=document.createElement('div');
+    d.className='match-item'; d.id='R-'+p.id; d.textContent=p.right;
+    d.onclick=function(){selRight(p.id,this);}; rl.appendChild(d);
+  });
+  document.getElementById('s1-next').style.display='none';
+  document.getElementById('match-feedback').textContent='';
+}
+
+function selLeft(id,el){
+  if(mState.matched[id]) return;
+  document.querySelectorAll('#left-items .match-item').forEach(function(e){e.classList.remove('selected');});
+  el.classList.add('selected');
+  mState.sel=id;
+}
+
+function selRight(id,el){
+  if(!mState.sel) return;
+  if(Object.values(mState.matched).indexOf(id)>=0) return;
+  if(mState.sel===id){
+    mState.matched[id]=id;
+    document.getElementById('L-'+id).classList.remove('selected');
+    document.getElementById('L-'+id).classList.add('matched');
+    el.classList.add('matched');
+    mState.sel=null;
+    var count=Object.keys(mState.matched).length;
+    if(count===4){
+      document.getElementById('match-feedback').textContent='🎊 全部配對完成！';
+      document.getElementById('s1-next').style.display='inline-block';
+    } else {
+      document.getElementById('match-feedback').textContent='✅ 配對正確！還有 '+(4-count)+' 組～';
+    }
+  } else {
+    var le=document.getElementById('L-'+mState.sel);
+    le.classList.add('error'); el.classList.add('error');
+    setTimeout(function(){le.classList.remove('error','selected'); el.classList.remove('error');}, 600);
+    mState.sel=null;
+    document.getElementById('match-feedback').textContent='❌ 配對錯誤，再試試！';
+  }
+}
+
+function showS1Result(){
+  showScreen('s1-result');
+  updateHud('第一關完成', totalScore);
+}
+
+/* ===== STAGE 2 ===== */
+var q2Bank=[
+  {stem:'CH₄',         ans:'甲烷',     opts:['甲烷','乙烷','甲醇','甲酸'],     hint:'CH₄ → n=1，代入 CₙH₂ₙ₊₂ = C₁H₄，字頭「甲」＋烷類 → 甲烷。'},
+  {stem:'C₂H₆',        ans:'乙烷',     opts:['甲烷','乙烷','乙醇','乙酸'],     hint:'C₂H₆ → n=2，2×2+2=6 符合烷類通式，字頭「乙」→ 乙烷。'},
+  {stem:'C₃H₈',        ans:'丙烷',     opts:['乙烷','丙烷','丁烷','丙醇'],     hint:'C₃H₈ → n=3，2×3+2=8，字頭「丙」→ 丙烷。'},
+  {stem:'C₄H₁₀',       ans:'丁烷',     opts:['丙烷','丁烷','丁醇','丁酸'],     hint:'C₄H₁₀ → n=4，2×4+2=10，字頭「丁」→ 丁烷。'},
+  {stem:'HCOOH',        ans:'甲酸',     opts:['乙酸','甲酸','甲醇','甲烷'],     hint:'HCOOH 含 —COOH，總碳=1（字頭「甲」）→ 甲酸。'},
+  {stem:'CH₃COOH',      ans:'乙酸',     opts:['甲酸','丙酸','乙酸','乙醇'],     hint:'CH₃COOH → 總碳2（字頭「乙」），含 —COOH → 乙酸（醋酸）。'},
+  {stem:'C₂H₅COOH',     ans:'丙酸',     opts:['乙酸','丙酸','丁酸','丙醇'],     hint:'C₂H₅COOH → 總碳3，字頭「丙」，含 —COOH → 丙酸。'},
+  {stem:'C₃H₇COOH',     ans:'丁酸',     opts:['丙酸','丁酸','丁醇','丁烷'],     hint:'C₃H₇COOH → 總碳4，字頭「丁」，含 —COOH → 丁酸。'},
+  {stem:'CH₃OH',        ans:'甲醇',     opts:['乙醇','甲烷','甲醇','甲酸'],     hint:'CH₃OH → n=1，含 —OH，字頭「甲」→ 甲醇。'},
+  {stem:'C₂H₅OH',       ans:'乙醇',     opts:['甲醇','丙醇','乙醇','乙酸'],     hint:'C₂H₅OH → n=2，含 —OH，字頭「乙」→ 乙醇（酒精）。'},
+  {stem:'C₃H₇OH',       ans:'丙醇',     opts:['乙醇','丙醇','丁醇','丙酸'],     hint:'C₃H₇OH → n=3，含 —OH，字頭「丙」→ 丙醇。'},
+  {stem:'C₄H₉OH',       ans:'丁醇',     opts:['丙醇','丁醇','丁酸','丁烷'],     hint:'C₄H₉OH → n=4，含 —OH，字頭「丁」→ 丁醇。'},
+  {stem:'CH₃COOC₂H₅',   ans:'乙酸乙酯', opts:['甲酸乙酯','乙酸乙酯','乙酸甲酯','丙酸乙酯'], hint:'CH₃COO— 為乙酸部分（2C），—C₂H₅ 為乙醇部分（2C）→ 乙酸乙酯。'},
+  {stem:'HCOOC₂H₅',     ans:'甲酸乙酯', opts:['甲酸甲酯','甲酸乙酯','乙酸乙酯','乙酸甲酯'], hint:'HCOO— 為甲酸部分（1C），—C₂H₅ 為乙醇部分（2C）→ 甲酸乙酯。'},
+  {stem:'CH₃COOCH₃',    ans:'乙酸甲酯', opts:['甲酸甲酯','乙酸乙酯','乙酸甲酯','丙酸甲酯'], hint:'CH₃COO— 為乙酸（2C），—CH₃ 為甲醇部分（1C）→ 乙酸甲酯。'},
+];
+var s2Qs=[], curQ=0, s2Ans=false;
+
+function startStage2(){
+  s2Qs=[...q2Bank].sort(function(){return Math.random()-.5;}).slice(0,10);
+  curQ=0; s2Score=0;
+  showScreen('s2');
+  updateHud('第二關：命名闖關', totalScore);
+  renderQ2();
+}
+
+function renderQ2(){
+  var q=s2Qs[curQ]; s2Ans=false;
+  document.getElementById('q-num').textContent=curQ+1;
+  document.getElementById('q-progress').style.width=((curQ+1)/10*100)+'%';
+  document.getElementById('q-stem').textContent=q.stem;
+  document.getElementById('q-feedback').style.display='none';
+  document.getElementById('q-next').style.display='none';
+  var opts=[...q.opts].sort(function(){return Math.random()-.5;});
+  document.getElementById('q-options').innerHTML=opts.map(function(o){
+    return '<button class="opt-btn" onclick="ansQ(\''+o+'\')">'+o+'</button>';
+  }).join('');
+}
+
+function ansQ(chosen){
+  if(s2Ans) return;
+  s2Ans=true;
+  var q=s2Qs[curQ];
+  document.querySelectorAll('.opt-btn').forEach(function(b){
+    b.disabled=true;
+    if(b.textContent===q.ans) b.classList.add('correct');
+    if(b.textContent===chosen && chosen!==q.ans) b.classList.add('wrong');
+  });
+  var fb=document.getElementById('q-feedback');
+  fb.style.display='block';
+  if(chosen===q.ans){
+    s2Score+=5; totalScore+=5;
+    updateHud('第二關：命名闖關', totalScore);
+    fb.className='feedback-box correct';
+    fb.innerHTML='✅ <strong>答對！</strong> '+q.hint;
+  } else {
+    fb.className='feedback-box wrong';
+    fb.innerHTML='❌ 正確答案：<strong>'+q.ans+'</strong>。 '+q.hint;
+    wrongItems.push({stage:'第二關', q:q.stem, ans:q.ans, chosen:chosen});
+  }
+  if(curQ<9){
+    document.getElementById('q-next').style.display='inline-block';
+  } else {
+    setTimeout(showS2Result, 1200);
+  }
+}
+
+function nextQuestion(){ curQ++; renderQ2(); }
+
+function showS2Result(){
+  showScreen('s2-result');
+  document.getElementById('s2-score-display').textContent=s2Score+' / 50 分';
+  var r=s2Score>=45?'🏆 命名大師！':s2Score>=35?'🎖️ 表現優秀！':s2Score>=25?'💪 繼續練習！':'📚 再複習通式吧！';
+  document.getElementById('s2-rank').textContent=r;
+  updateHud('第二關完成', totalScore);
+}
+
+/* ===== STAGE 3 ===== */
+var s3Bank=[
+  {name:'甲烷',  type:'alkane',  n:1},
+  {name:'乙烷',  type:'alkane',  n:2},
+  {name:'丙烷',  type:'alkane',  n:3},
+  {name:'丁烷',  type:'alkane',  n:4},
+  {name:'甲醇',  type:'alcohol', n:1},
+  {name:'乙醇',  type:'alcohol', n:2},
+  {name:'丙醇',  type:'alcohol', n:3},
+  {name:'丁醇',  type:'alcohol', n:4},
+  {name:'甲酸',  type:'acid',    n:0},
+  {name:'乙酸',  type:'acid',    n:1},
+  {name:'丙酸',  type:'acid',    n:2},
+  {name:'丁酸',  type:'acid',    n:3},
+];
+
+function sub(n){
+  var s=['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉','₁₀'];
+  return n<=10 ? s[n] : String(n);
+}
+
+function getFormula(type,n){
+  if(type==='alkane'){
+    var h=2*n+2;
+    return {display:'C'+sub(n)+'H'+sub(h), C:n, H:h};
+  } else if(type==='alcohol'){
+    var h2=2*n+1;
+    return {display:'C'+sub(n)+'H'+sub(h2)+'OH', C:n, H:h2};
+  } else {
+    var h3=2*n+1;
+    if(n===0) return {display:'HCOOH', C:0, H:1};
+    return {display:'C'+sub(n)+'H'+sub(h3)+'COOH', C:n, H:h3};
+  }
+}
+
+var s3Qs=[], curS3=0, s3Answered=false;
+
+function startStage3(){
+  s3Qs=[...s3Bank].sort(function(){return Math.random()-.5;}).slice(0,10);
+  curS3=0; s3Score=0;
+  showScreen('s3');
+  updateHud('第三關：寫出化學式', totalScore);
+  renderS3();
+}
+
+function renderS3(){
+  var q=s3Qs[curS3]; s3Answered=false;
+  var f=getFormula(q.type, q.n);
+  document.getElementById('s3-num').textContent=curS3+1;
+  document.getElementById('s3-progress').style.width=((curS3+1)/10*100)+'%';
+  document.getElementById('s3-name').textContent=q.name;
+  var typeLabel={alkane:'烷類（通式：CₙH₂ₙ₊₂）', alcohol:'醇類（通式：CₙH₂ₙ₊₁OH）', acid:'酸類（通式：CₙH₂ₙ₊₁COOH）'};
+  document.getElementById('s3-type-hint').textContent=typeLabel[q.type];
+  document.getElementById('s3-display').textContent='請選擇下方各部分 ↓';
+  document.getElementById('s3-display').style.color='#1a5c0f';
+  document.getElementById('s3-feedback').textContent='';
+  document.getElementById('s3-next').style.display='none';
+
+  var cOpts=[1,2,3,4];
+  var sel='';
+
+  if(q.type==='alkane'){
+    var hOpts=[4,6,8,10];
+    sel='<div style="display:grid;grid-template-columns:1fr 24px 1fr;gap:8px;align-items:end;margin:10px 0">'
+      +'<div class="f-part"><div class="f-label">碳數 n</div>'
+      +'<select class="f-select" id="sel-C" onchange="previewFormula()">'
+      +'<option value="">選碳數</option>'
+      +cOpts.map(function(v){return '<option value="'+v+'">n = '+v+'</option>';}).join('')
+      +'</select></div>'
+      +'<div style="font-size:20px;text-align:center;padding-bottom:8px;color:#2d7a1f">H</div>'
+      +'<div class="f-part"><div class="f-label">氫數（2n+2）</div>'
+      +'<select class="f-select" id="sel-H" onchange="previewFormula()">'
+      +'<option value="">選氫數</option>'
+      +hOpts.map(function(v){return '<option value="'+v+'">'+v+'</option>';}).join('')
+      +'</select></div>'
+      +'</div>';
+
+  } else if(q.type==='alcohol'){
+    var hOpts2=[3,5,7,9];
+    sel='<div style="display:grid;grid-template-columns:1fr 24px 1fr 40px;gap:8px;align-items:end;margin:10px 0">'
+      +'<div class="f-part"><div class="f-label">碳數 n</div>'
+      +'<select class="f-select" id="sel-C" onchange="previewFormula()">'
+      +'<option value="">選碳數</option>'
+      +cOpts.map(function(v){return '<option value="'+v+'">n = '+v+'</option>';}).join('')
+      +'</select></div>'
+      +'<div style="font-size:20px;text-align:center;padding-bottom:8px;color:#2d7a1f">H</div>'
+      +'<div class="f-part"><div class="f-label">氫數（2n+1）</div>'
+      +'<select class="f-select" id="sel-H" onchange="previewFormula()">'
+      +'<option value="">選氫數</option>'
+      +hOpts2.map(function(v){return '<option value="'+v+'">'+v+'</option>';}).join('')
+      +'</select></div>'
+      +'<div style="font-size:16px;font-weight:500;color:#1a5c0f;padding-bottom:10px">OH</div>'
+      +'</div>';
+
+  } else {
+    if(q.n===0){
+      sel='<div style="background:#f0f7ec;border-radius:10px;padding:12px;font-size:14px;color:#4a7a3a;margin:8px 0;text-align:center">'
+        +'甲酸（n=0）烷基只有一個 H，即 <strong>HCOOH</strong><br>烷基氫數 = 2×0+1 = <strong>1</strong></div>'
+        +'<div style="display:grid;grid-template-columns:1fr 50px;gap:8px;align-items:end;margin:10px 0">'
+        +'<div class="f-part"><div class="f-label">烷基氫數（2n+1，n=0）</div>'
+        +'<select class="f-select" id="sel-H" onchange="previewFormula()">'
+        +'<option value="">選氫數</option>'
+        +[1,3,5,7].map(function(v){return '<option value="'+v+'">'+v+'</option>';}).join('')
+        +'</select></div>'
+        +'<div style="font-size:16px;font-weight:500;color:#1a5c0f;padding-bottom:10px">COOH</div>'
+        +'</div>';
+    } else {
+      var hOpts3=[3,5,7];
+      sel='<div style="display:grid;grid-template-columns:1fr 24px 1fr 60px;gap:8px;align-items:end;margin:10px 0">'
+        +'<div class="f-part"><div class="f-label">烷基碳數 n</div>'
+        +'<select class="f-select" id="sel-C" onchange="previewFormula()">'
+        +'<option value="">選碳數</option>'
+        +[1,2,3].map(function(v){return '<option value="'+v+'">n = '+v+'</option>';}).join('')
+        +'</select></div>'
+        +'<div style="font-size:20px;text-align:center;padding-bottom:8px;color:#2d7a1f">H</div>'
+        +'<div class="f-part"><div class="f-label">氫數（2n+1）</div>'
+        +'<select class="f-select" id="sel-H" onchange="previewFormula()">'
+        +'<option value="">選氫數</option>'
+        +hOpts3.map(function(v){return '<option value="'+v+'">'+v+'</option>';}).join('')
+        +'</select></div>'
+        +'<div style="font-size:16px;font-weight:500;color:#1a5c0f;padding-bottom:10px">COOH</div>'
+        +'</div>';
+    }
+  }
+  document.getElementById('s3-selectors').innerHTML=sel;
+}
+
+function previewFormula(){
+  var q=s3Qs[curS3];
+  var selC=document.getElementById('sel-C');
+  var selH=document.getElementById('sel-H');
+  var c=selC ? selC.value : '';
+  var h=selH ? selH.value : '';
+  var preview='';
+  if(q.type==='alkane'){
+    preview=(c&&h)?'C'+sub(parseInt(c))+'H'+sub(parseInt(h)):c?'C'+sub(parseInt(c))+'H?':h?'C?H'+sub(parseInt(h)):'請選擇下方各部分 ↓';
+  } else if(q.type==='alcohol'){
+    preview=(c&&h)?'C'+sub(parseInt(c))+'H'+sub(parseInt(h))+'OH':c?'C'+sub(parseInt(c))+'H?OH':h?'C?H'+sub(parseInt(h))+'OH':'請選擇下方各部分 ↓';
+  } else {
+    if(q.n===0){
+      preview=h?'H'+sub(parseInt(h))+'COOH':'H?COOH';
+    } else {
+      preview=(c&&h)?'C'+sub(parseInt(c))+'H'+sub(parseInt(h))+'COOH':c?'C'+sub(parseInt(c))+'H?COOH':h?'C?H'+sub(parseInt(h))+'COOH':'請選擇下方各部分 ↓';
+    }
+  }
+  document.getElementById('s3-display').textContent=preview;
+}
+
+function checkS3(){
+  if(s3Answered) return;
+  var q=s3Qs[curS3];
+  var selC=document.getElementById('sel-C');
+  var selH=document.getElementById('sel-H');
+  var cVal=selC ? parseInt(selC.value) : null;
+  var hVal=selH ? parseInt(selH.value) : null;
+  var needC=(q.type!=='acid'||q.n!==0);
+  if(needC && (!cVal || !hVal)){
+    document.getElementById('s3-feedback').textContent='💬 請選擇全部欄位！'; return;
+  }
+  if(!needC && !hVal){
+    document.getElementById('s3-feedback').textContent='💬 請選擇氫數！'; return;
+  }
+  s3Answered=true;
+  var correct=getFormula(q.type, q.n);
+  var cOk=needC ? (cVal===correct.C) : true;
+  var hOk=(hVal===correct.H);
+  if(selC) selC.classList.add(cOk?'correct':'wrong');
+  if(selH) selH.classList.add(hOk?'correct':'wrong');
+  var fb=document.getElementById('s3-feedback');
+  if(cOk && hOk){
+    s3Score+=5; totalScore+=5;
+    updateHud('第三關：寫出化學式', totalScore);
+    fb.style.color='#0a5a30';
+    fb.textContent='✅ 完全正確！+5分 正確化學式：'+correct.display;
+    document.getElementById('s3-display').style.color='#0a5a30';
+  } else {
+    fb.style.color='#8b0000';
+    fb.textContent='❌ 正確化學式是：'+correct.display+'（n='+q.n+'，代入通式計算）';
+    document.getElementById('s3-display').textContent=correct.display;
+    document.getElementById('s3-display').style.color='#0a5a30';
+    wrongItems.push({stage:'第三關', q:q.name, ans:correct.display, chosen:'選錯了'});
+  }
+  if(curS3<9){
+    document.getElementById('s3-next').style.display='inline-block';
+  } else {
+    setTimeout(showFinal, 1400);
+  }
+}
+
+function nextS3(){ curS3++; renderS3(); }
+
+/* ===== FINAL ===== */
+function showFinal(){
+  showScreen('final');
+  document.getElementById('final-score').textContent=totalScore+' / 100 分';
+  var pct=totalScore;
+  var stars=pct>=90?'⭐⭐⭐⭐⭐':pct>=75?'⭐⭐⭐⭐':pct>=60?'⭐⭐⭐':pct>=40?'⭐⭐':'⭐';
+  document.getElementById('final-stars').textContent=stars;
+  var rank=pct>=90?'🏆 有機化學命名大師！':pct>=75?'🎖️ 非常優秀！':pct>=60?'💪 不錯，繼續加油！':'📚 多練習幾次就會更好！';
+  document.getElementById('final-rank').textContent=rank;
+  updateHud('挑戰完成！', totalScore);
+  var list=document.getElementById('review-list');
+  if(!wrongItems.length){
+    list.innerHTML='<p style="color:#1a9a50;text-align:center;padding:14px">🎉 全部答對！太厲害了！</p>';
+  } else {
+    list.innerHTML=wrongItems.map(function(w){
+      return '<div class="review-item"><strong>'+w.stage+'：'+w.q+'</strong><br>'
+        +'你的答案：<span style="color:#c0392b">'+w.chosen+'</span> → '
+        +'正確答案：<span style="color:#0a5a30;font-weight:500">'+w.ans+'</span></div>';
+    }).join('');
+  }
+}
+
+/* ===== UTILS ===== */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('screen-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function updateHud(stage,score){
+  document.getElementById('hud-stage').textContent='🌿 '+stage;
+  document.getElementById('hud-score').textContent=score;
+}
+function restartGame(){
+  totalScore=0; s2Score=0; s3Score=0; wrongItems=[];
+  updateHud('有機化合物命名大冒險', 0);
+  showScreen('start');
+}
+</script>
+</body>
+</html>
