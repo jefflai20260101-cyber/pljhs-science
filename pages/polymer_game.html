@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>生活中的聚合物獵人</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#eef2ff;--bd:#d4d9f5;
+  --p:#4558d4;--pd:#3244b0;
+  --chain:#1565c0;--chain-lt:#e3f2fd;--chain-bd:#90caf9;
+  --net:#bf360c;--net-lt:#fbe9e7;--net-bd:#ff8a65;
+  --nat:#2e7d32;--nat-lt:#e8f5e9;--nat-bd:#81c784;
+  --syn:#6a1b9a;--syn-lt:#f3e5f5;--syn-bd:#ce93d8;
+  --txt:#1a1e3a;--muted:#5c6bc0;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:'Noto Sans TC',sans-serif;}
+.screen{position:fixed;inset:0;overflow-y:auto;display:flex;flex-direction:column;}
+.screen.off{display:none;}
+
+/* TOPBAR */
+.topbar{background:#fff;border-bottom:2px solid var(--bd);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:200;flex-shrink:0;}
+.tb-t{font-size:clamp(13px,2.5vw,16px);font-weight:900;color:var(--p);}
+.tb-r{display:flex;gap:8px;align-items:center;}
+.stat{background:var(--bg);border-radius:20px;padding:4px 14px;font-size:14px;font-weight:700;color:var(--p);border:1.5px solid var(--bd);}
+.pw{height:7px;background:var(--bd);border-radius:99px;width:110px;overflow:hidden;}
+.pf{height:100%;background:linear-gradient(90deg,var(--p),#9c27b0);border-radius:99px;transition:width .4s;}
+
+/* START */
+#scr-start{align-items:center;justify-content:center;background:linear-gradient(150deg,#e8edff,#f3e5f5);}
+.sbox{background:#fff;border-radius:22px;border:2px solid var(--bd);padding:30px 26px;max-width:520px;width:92%;text-align:center;box-shadow:0 8px 36px rgba(69,88,212,.12);}
+.si{font-size:58px;margin-bottom:10px;}
+.stitle{font-size:clamp(22px,5vw,32px);font-weight:900;color:var(--p);margin-bottom:6px;}
+.ssub{font-size:15px;color:var(--muted);margin-bottom:16px;line-height:1.8;}
+.sconcept{background:var(--bg);border-radius:12px;padding:14px 16px;text-align:left;font-size:15px;line-height:2;color:var(--txt);margin-bottom:18px;border:1.5px solid var(--bd);}
+.sconcept b{color:var(--p);}
+.phase-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
+.pc{padding:6px 16px;border-radius:20px;font-size:14px;font-weight:700;border:2px solid;}
+.pc1{background:var(--nat-lt);color:var(--nat);border-color:var(--nat);}
+.pc2{background:var(--syn-lt);color:var(--syn);border-color:var(--syn);}
+.pc3{background:var(--chain-lt);color:var(--chain);border-color:var(--chain);}
+.pc4{background:var(--net-lt);color:var(--net);border-color:var(--net);}
+.btn{background:var(--p);color:#fff;border:none;border-radius:14px;padding:14px 32px;font-size:17px;font-weight:900;cursor:pointer;font-family:inherit;transition:background .18s;width:100%;}
+.btn:hover{background:var(--pd);}
+.back-to-portal {display:inline-block;margin-top:14px;color:var(--muted);text-decoration:none;font-size:14px;font-weight:700;transition:color .18s;}
+.back-to-portal:hover {color:var(--p);}
+.tb-l-wrap {display:flex;align-items:center;gap:10px;}
+.tb-home-btn {text-decoration:none;font-size:18px;color:var(--muted);font-weight:700;transition:color .18s;}
+.tb-home-btn:hover {color:var(--p);}
+
+/* SCENE */
+#scr-scene{background:var(--bg);}
+.shdr{padding:12px 18px 6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;}
+.shdr-l{font-size:15px;font-weight:700;color:var(--txt);}
+.starget{color:#fff;border-radius:20px;padding:5px 14px;font-size:14px;font-weight:700;}
+.swrap{padding:0 14px 10px;}
+.scanvas{background:#fff;border:2px solid var(--bd);border-radius:18px;position:relative;overflow:hidden;width:100%;aspect-ratio:16/8;max-height:310px;}
+.scanvas.kitchen  {background:linear-gradient(170deg,#fffde7,#fff8e1);}
+.scanvas.classroom{background:linear-gradient(170deg,#e8eaf6,#e3f2fd);}
+.scanvas.home     {background:linear-gradient(170deg,#fce4ec,#f8bbd0);}
+.sf{position:absolute;bottom:0;left:0;right:0;height:25%;}
+.scanvas.kitchen   .sf{background:#d7ccc8;border-top:2px solid #bcaaa4;}
+.scanvas.classroom .sf{background:#b0bec5;border-top:2px solid #90a4ae;}
+.scanvas.home      .sf{background:#f48fb1;border-top:2px solid #f06292;opacity:.35;}
+/* wall deco */
+.scanvas.kitchen::before{content:'';position:absolute;top:0;left:0;right:0;height:45%;
+  background:repeating-linear-gradient(90deg,transparent,transparent 56px,rgba(0,0,0,.03) 56px,rgba(0,0,0,.03) 58px),
+             repeating-linear-gradient(0deg,transparent,transparent 56px,rgba(0,0,0,.03) 56px,rgba(0,0,0,.03) 58px);}
+.scanvas.classroom::before{content:'';position:absolute;top:8px;right:14px;width:130px;height:85px;
+  background:rgba(255,255,255,.55);border:2px solid #90caf9;border-radius:4px;}
+.ibtn{position:absolute;background:rgba(255,255,255,.93);border:2.5px solid rgba(69,88,212,.2);border-radius:14px;
+  cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  padding:7px 10px;transform:translateX(-50%);transition:all .2s;}
+.ibtn:hover,.ibtn:focus{transform:translateX(-50%) scale(1.1);border-color:var(--p);box-shadow:0 4px 16px rgba(69,88,212,.22);outline:none;}
+.ibtn.found{border-color:var(--nat);background:var(--nat-lt);}
+.ibtn.target{border-color:var(--p);animation:tPulse 1.4s ease-in-out infinite;}
+.iem{font-size:clamp(22px,4vw,34px);line-height:1;}
+.ilbl{font-size:clamp(10px,1.8vw,13px);font-weight:700;color:var(--txt);white-space:nowrap;}
+@keyframes tPulse{0%,100%{box-shadow:0 0 0 3px rgba(69,88,212,.25)}50%{box-shadow:0 0 0 9px rgba(69,88,212,.08)}}
+.sinstr{text-align:center;padding:7px;font-size:14px;color:var(--muted);font-weight:700;}
+
+/* SCOPE */
+#scr-scope{align-items:center;justify-content:center;background:rgba(15,18,50,.55);backdrop-filter:blur(4px);}
+.scope-box{background:#fff;border-radius:22px;max-width:660px;width:95%;max-height:92vh;overflow-y:auto;padding:22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.22);animation:popIn .22s ease-out;}
+@keyframes popIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+.sc-top{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+.sc-em{font-size:52px;flex-shrink:0;}
+.sc-name{font-size:clamp(20px,4vw,26px);font-weight:900;color:var(--txt);}
+.sc-sub{font-size:14px;color:var(--muted);margin-top:2px;}
+.cvs-wrap{border-radius:14px;border:2px solid var(--bd);overflow:hidden;margin-bottom:14px;background:#0d1117;position:relative;}
+.cvs-wrap canvas{display:block;width:100%;height:160px;}
+.cvs-lbl{position:absolute;top:8px;left:12px;font-size:12px;font-weight:700;letter-spacing:.05em;}
+.sc-desc{font-size:15px;line-height:1.9;color:var(--txt);background:var(--bg);border-radius:12px;padding:13px 16px;margin-bottom:16px;border:1.5px solid var(--bd);}
+.quiz-q{font-size:18px;font-weight:900;color:var(--txt);margin-bottom:12px;}
+.qopts{display:flex;gap:10px;flex-wrap:wrap;}
+.qbtn{flex:1;min-width:130px;padding:14px 12px;border-radius:12px;border:2px solid var(--bd);background:#fff;
+  font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:all .18s;color:var(--txt);}
+.qbtn:hover{border-color:var(--p);background:var(--bg);}
+.qbtn.correct{background:var(--nat-lt);border-color:var(--nat);color:var(--nat);}
+.qbtn.wrong{background:#fff0f3;border-color:#f87171;color:#dc2626;}
+.qbtn:disabled{cursor:default;}
+.qfb{margin-top:12px;font-size:15px;line-height:1.85;padding:12px 16px;border-radius:10px;display:none;}
+.qfb.ok{display:block;background:var(--nat-lt);color:#1b5e20;border:1.5px solid #81c784;}
+.qfb.er{display:block;background:#fff0f3;color:#b71c1c;border:1.5px solid #ef9a9a;}
+.btn-sm{background:var(--p);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:12px;transition:background .18s;}
+.btn-sm:hover{background:var(--pd);}
+
+/* KNOWLEDGE CARD */
+#scr-card{align-items:center;justify-content:center;background:rgba(15,18,50,.55);backdrop-filter:blur(4px);}
+.kcard{background:#fff;border-radius:22px;max-width:640px;width:95%;max-height:92vh;overflow-y:auto;padding:22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.2);animation:popIn .22s ease-out;}
+.kcard-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.kcard-em{font-size:50px;}
+.kcard-name{font-size:clamp(18px,4vw,24px);font-weight:900;}
+.tags-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.tag{padding:5px 14px;border-radius:20px;font-size:14px;font-weight:700;border:2px solid;}
+.tag-nat  {background:var(--nat-lt);color:var(--nat);border-color:var(--nat-bd);}
+.tag-syn  {background:var(--syn-lt);color:var(--syn);border-color:var(--syn-bd);}
+.tag-chain{background:var(--chain-lt);color:var(--chain);border-color:var(--chain-bd);}
+.tag-net  {background:var(--net-lt);color:var(--net);border-color:var(--net-bd);}
+.tag-thp  {background:#e3f2fd;color:#0277bd;border-color:#81d4fa;}
+.tag-ths  {background:#fbe9e7;color:#bf360c;border-color:#ff8a65;}
+.kcard-desc{font-size:15px;line-height:1.9;color:var(--txt);margin-bottom:14px;}
+.concept-box{border-radius:14px;padding:16px 18px;border:2px solid;margin-bottom:14px;}
+.concept-box.nat  {background:var(--nat-lt);border-color:var(--nat-bd);}
+.concept-box.chain{background:var(--chain-lt);border-color:var(--chain-bd);}
+.concept-box.net  {background:var(--net-lt);border-color:var(--net-bd);}
+.concept-title{font-size:16px;font-weight:900;margin-bottom:8px;}
+.concept-title.nat  {color:var(--nat);}
+.concept-title.chain{color:var(--chain);}
+.concept-title.net  {color:var(--net);}
+.concept-body{font-size:15px;line-height:1.9;color:var(--txt);}
+.kpts{background:var(--bg);border-radius:12px;padding:13px 16px;border:1.5px solid var(--bd);}
+.kpts h4{font-size:14px;font-weight:900;color:var(--p);margin-bottom:6px;}
+.kpts ul{padding-left:18px;font-size:14px;line-height:2.1;color:var(--txt);}
+
+/* PHASE TRANSITION */
+#scr-trans{align-items:center;justify-content:center;background:linear-gradient(150deg,#e8edff,#f3e5f5);}
+.trans-box{background:#fff;border-radius:22px;border:2px solid var(--bd);padding:30px 26px;max-width:500px;width:92%;text-align:center;box-shadow:0 8px 36px rgba(69,88,212,.12);}
+.trans-icon{font-size:56px;margin-bottom:10px;}
+.trans-title{font-size:clamp(20px,5vw,28px);font-weight:900;color:var(--p);margin-bottom:8px;}
+.trans-desc{font-size:15px;color:var(--muted);line-height:1.9;margin-bottom:18px;}
+.cmp-tbl{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:14px;text-align:left;}
+.cmp-tbl th{padding:10px 10px;font-weight:900;border-bottom:2px solid var(--bd);color:var(--txt);}
+.cmp-tbl td{padding:9px 10px;border-bottom:1px solid var(--bd);line-height:1.65;vertical-align:top;}
+.cmp-tbl tr:last-child td{border-bottom:none;}
+.h-chain{color:var(--chain);background:var(--chain-lt);}
+.h-net  {color:var(--net);background:var(--net-lt);}
+
+/* RESULT */
+#scr-result{align-items:center;justify-content:center;background:linear-gradient(150deg,#e8edff,#f3e5f5);}
+.rbox{background:#fff;border-radius:22px;border:2px solid var(--bd);padding:28px 24px;max-width:540px;width:92%;text-align:center;box-shadow:0 8px 36px rgba(69,88,212,.1);}
+.r-icon{font-size:58px;margin-bottom:8px;}
+.r-title{font-size:clamp(20px,5vw,30px);font-weight:900;color:var(--p);margin-bottom:4px;}
+.r-score{font-size:68px;font-weight:900;color:var(--p);line-height:1;}
+.r-pts{font-size:13px;color:var(--muted);margin-bottom:14px;}
+.found-grid{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-bottom:16px;}
+.fc{background:var(--bg);border:1.5px solid var(--bd);border-radius:10px;padding:5px 12px;font-size:13px;font-weight:700;}
+.eco{background:var(--nat-lt);border:1.5px solid var(--nat-bd);border-radius:12px;padding:13px 15px;text-align:left;font-size:14px;line-height:1.85;color:#1b5e20;margin-bottom:14px;}
+
+@keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-55px)}}
+.floater{position:fixed;pointer-events:none;z-index:9999;font-size:18px;font-weight:900;animation:floatUp .9s forwards;}
+@keyframes cFall{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- START -->
+<div class="screen" id="scr-start">
+  <div class="sbox">
+    <div class="si">🔬</div>
+    <div class="stitle">生活中的聚合物獵人</div>
+    <div class="ssub">探索廚房、教室、家中場景，找出藏在生活裡的有機聚合物！</div>
+    <div class="sconcept">
+      有機聚合物分成兩大類：<b>天然聚合物</b>（生物體製造）和<b>合成聚合物</b>（人工合成）。<br>
+      合成聚合物還分成<b>鏈狀（熱塑性）</b>與<b>網狀（熱固性）</b>兩種結構，遇熱行為完全不同！<br>
+      共 <b>10 題</b>，每題 <b>10 分</b>，滿分 <b>100 分</b>！
+    </div>
+    <div class="phase-row">
+      <div class="pc pc1">🌿 天然聚合物</div>
+      <div class="pc pc2">🏭 合成聚合物</div>
+      <div class="pc pc3">🔗 鏈狀・熱塑性</div>
+      <div class="pc pc4">🕸️ 網狀・熱固性</div>
+    </div>
+    <button class="btn" id="btn-start">開始探索 🔍</button>
+    <a href="../index.html" class="back-to-portal">← 返回首頁</a>
+  </div>
+</div>
+
+<!-- SCENE -->
+<div class="screen off" id="scr-scene">
+  <div class="topbar">
+    <div class="tb-l-wrap">
+      <a href="../index.html" class="tb-home-btn" title="返回首頁">🏠</a>
+      <div class="tb-t" id="tb-title">🔍 廚房場景</div>
+    </div>
+    <div class="tb-r">
+      <div class="stat">⭐ <span id="tb-score">0</span> / 100</div>
+      <div class="stat" id="tb-prog">0 / 10</div>
+      <div class="pw"><div class="pf" id="tb-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div class="shdr">
+    <div class="shdr-l" id="sh-text">點擊閃爍的物品！</div>
+    <div class="starget" id="sh-target">🎯 —</div>
+  </div>
+  <div class="swrap">
+    <div class="scanvas kitchen" id="scene-canvas"><div class="sf"></div></div>
+    <div class="sinstr" id="sinstr">👆 點擊場景中閃爍的物品進行分析</div>
+  </div>
+</div>
+
+<!-- SCOPE -->
+<div class="screen off" id="scr-scope">
+  <div class="scope-box">
+    <div class="sc-top">
+      <div class="sc-em" id="sc-em">🧫</div>
+      <div>
+        <div class="sc-name" id="sc-name">—</div>
+        <div class="sc-sub"  id="sc-sub">—</div>
+      </div>
+    </div>
+    <div class="cvs-wrap">
+      <canvas id="scope-cvs" height="160"></canvas>
+      <div class="cvs-lbl" id="cvs-lbl">分子顯微鏡</div>
+    </div>
+    <div class="sc-desc" id="sc-desc"></div>
+    <div class="quiz-q" id="qq"></div>
+    <div class="qopts"  id="qopts"></div>
+    <div class="qfb"    id="qfb"></div>
+    <button class="btn-sm" id="btn-nq" style="display:none">看知識卡 →</button>
+  </div>
+</div>
+
+<!-- KNOWLEDGE CARD -->
+<div class="screen off" id="scr-card">
+  <div class="kcard">
+    <div class="kcard-top">
+      <div class="kcard-em" id="kc-em">📋</div>
+      <div class="kcard-name" id="kc-name">知識卡</div>
+    </div>
+    <div class="tags-row"  id="kc-tags"></div>
+    <div class="kcard-desc" id="kc-desc"></div>
+    <div class="concept-box nat" id="kc-cbox">
+      <div class="concept-title nat" id="kc-ctitle"></div>
+      <div class="concept-body"     id="kc-cbody"></div>
+    </div>
+    <div class="kpts">
+      <h4>🔑 課本重點</h4>
+      <ul id="kc-ul"></ul>
+    </div>
+    <button class="btn" style="margin-top:16px" id="btn-card-ok">了解了！繼續探索 🔍</button>
+  </div>
+</div>
+
+<!-- PHASE TRANSITION -->
+<div class="screen off" id="scr-trans">
+  <div class="trans-box">
+    <div class="trans-icon">🎉</div>
+    <div class="trans-title">第一關完成！</div>
+    <div class="trans-desc">
+      天然聚合物 5 題全部找到了！<br>
+      進入第二關，專注分辨<b>合成聚合物</b>的結構差異。
+    </div>
+    <table class="cmp-tbl">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="h-chain">🔗 鏈狀聚合物</th>
+          <th class="h-net">🕸️ 網狀聚合物</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><b>分子連接</b></td><td>分子間力（可滑動）</td><td>共價鍵交聯（固定）</td></tr>
+        <tr><td><b>加熱後</b></td><td>軟化或熔化</td><td>不軟化、不熔化</td></tr>
+        <tr><td><b>又稱</b></td><td>熱塑性聚合物</td><td>熱固性聚合物</td></tr>
+        <tr><td><b>可回收？</b></td><td>✅ 可熔化回收再製</td><td>❌ 無法熔化回收</td></tr>
+        <tr><td><b>課本例子</b></td><td>寶特瓶、聚乙烯、聚丙烯</td><td>環氧樹脂、酚醛樹脂</td></tr>
+      </tbody>
+    </table>
+    <button class="btn" id="btn-trans">進入第二關 ⚗️</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="screen off" id="scr-result">
+  <div class="rbox">
+    <div class="r-icon"  id="r-icon">🏆</div>
+    <div class="r-title">探索完成！</div>
+    <div class="r-score" id="r-score">0</div>
+    <div class="r-pts">/ 100 分</div>
+    <div class="found-grid" id="r-found"></div>
+    <div class="eco">
+      🌏 <b>課本提醒：</b>鏈狀聚合物（熱塑性）加熱可熔化，<b>可回收再製</b>；
+      網狀聚合物（熱固性）一旦固化就永遠無法熔化，<b>無法回收</b>。
+      認識結構，才能做出更好的環保選擇！
+    </div>
+    <button class="btn" id="btn-restart">再探索一次 🔄</button>
+    <a href="../index.html" class="back-to-portal">← 返回首頁</a>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────
+const ITEMS = [
+  // ══ 第一關：天然 vs 合成（5 題，各 10 分）══
+
+  { id:'starch', em:'🍚', name:'米飯（澱粉）', scene:'kitchen',
+    pos:{l:'14%',t:'20%'}, phase:1,
+    sub:'天然多醣聚合物',
+    desc:'米飯的主成分是澱粉，由葡萄糖單體串連聚合而成。植物利用光合作用製造葡萄糖，再聚合成澱粉儲存於種子中。澱粉是天然聚合物，可被消化酶分解為葡萄糖。',
+    q:{q:'澱粉是天然聚合物還是合成聚合物？',
+       opts:['🌿 天然聚合物','🏭 合成聚合物'], ans:0,
+       ok:'✅ 正確！澱粉是植物天然合成的聚合物，由葡萄糖單體聚合而成！',
+       er:'❌ 不對！澱粉是植物自己製造的，不是工廠人工合成的。'},
+    concept:{type:'nat', title:'🌿 天然聚合物',
+      body:'天然聚合物是生物體內由酵素催化所產生的。課本例子：澱粉、纖維素、蛋白質、天然橡膠。它們可以被生物分解，對環境友善。'},
+    keyPts:['澱粉由葡萄糖單體組成，屬天然聚合物','米、小麥等種子含大量澱粉（課本 p.138）','可被消化酶分解成葡萄糖，是重要能量來源'] },
+
+  { id:'cellulose', em:'🌿', name:'棉 T 恤（纖維素）', scene:'home',
+    pos:{l:'14%',t:'18%'}, phase:1,
+    sub:'天然植物纖維聚合物',
+    desc:'棉花的主成分是纖維素，由葡萄糖聚合而成，是植物細胞壁的主要成分。課本 p.138 說明纖維素存在於樹木、青草和蔬果中，與澱粉同由葡萄糖組成，但連接方式不同，所以性質不一樣。',
+    q:{q:'棉 T 恤的纖維素，是天然聚合物還是合成聚合物？',
+       opts:['🌿 天然聚合物','🏭 合成聚合物'], ans:0,
+       ok:'✅ 正確！纖維素是植物細胞壁的天然聚合物！',
+       er:'❌ 不對！棉花纖維素是植物天然合成的，不是工廠製造的。'},
+    concept:{type:'nat', title:'🌿 天然聚合物',
+      body:'纖維素由葡萄糖聚合而成，是植物細胞壁的主要成分（課本 p.138）。棉花、木材的主要成分都是纖維素，是天然植物纖維。'},
+    keyPts:['纖維素是植物細胞壁的主要成分（課本 p.138）','棉花屬植物纖維，主成分為纖維素（課本 p.139）','與澱粉同由葡萄糖組成，但連接方式不同'] },
+
+  { id:'protein', em:'🥚', name:'雞蛋（蛋白質）', scene:'kitchen',
+    pos:{l:'46%',t:'18%'}, phase:1,
+    sub:'天然蛋白質聚合物',
+    desc:'雞蛋蛋白的主成分是蛋白質，由胺基酸單體聚合而成。組成蛋白質的胺基酸約有 20 種，分子量可達一萬至數千萬。加熱後蛋白質會「變性」凝固，是不可逆的化學變化。',
+    q:{q:'蛋白質是天然聚合物還是合成聚合物？',
+       opts:['🌿 天然聚合物','🏭 合成聚合物'], ans:0,
+       ok:'✅ 正確！蛋白質是生物體用胺基酸天然聚合而成的！',
+       er:'❌ 不對！蛋白質是生物體天然合成的，不是石油工廠製造的。'},
+    concept:{type:'nat', title:'🌿 天然聚合物',
+      body:'蛋白質由胺基酸單體組成，是構成細胞的必要物質（課本 p.138）。蛋白質容易受熱、光 and 酸的影響而「變性」——雞蛋加熱後凝固就是例子，這是不可逆的變化。'},
+    keyPts:['蛋白質由約 20 種胺基酸單體組成（課本 p.138）','加熱後「變性」凝固，不可逆','分子量約一萬到數千萬，是複雜的天然聚合物'] },
+
+  { id:'rubber', em:'🪀', name:'橡皮擦（天然橡膠）', scene:'classroom',
+    pos:{l:'54%',t:'46%'}, phase:1,
+    sub:'天然橡膠聚合物',
+    desc:'橡皮擦的主成分是天然橡膠，來自橡膠樹的乳汁。天然橡膠是天然聚合物，經加工後可製成各種橡膠製品。課本圖5-21 以橡膠樹汁液作為天然聚合物的代表圖示。',
+    q:{q:'天然橡膠是天然聚合物還是合成聚合物？',
+       opts:['🌿 天然聚合物','🏭 合成聚合物'], ans:0,
+       ok:'✅ 正確！天然橡膠來自橡膠樹的乳汁，是天然聚合物！',
+       er:'❌ 不對！天然橡膠從橡膠樹採集而來，不是石油工廠製造的。'},
+    concept:{type:'nat', title:'🌿 天然聚合物',
+      body:'天然橡膠由橡膠樹汁液（乳膠）採集，是天然聚合物（課本圖5-21）。天然橡膠具有彈性，經加工後可製成橡皮擦、手套、橡膠管等產品。'},
+    keyPts:['天然橡膠來自橡膠樹乳汁（課本圖5-21）','屬天然聚合物，具有彈性','可生物分解，比合成橡膠更環保'] },
+
+  { id:'silk', em:'🧣', name:'蠶絲圍巾（蛋白質）', scene:'home',
+    pos:{l:'46%',t:'20%'}, phase:1,
+    sub:'天然動物纖維聚合物',
+    desc:'蠶絲是蠶吐絲結繭所產生的天然纖維，主成分是蛋白質，屬天然聚合物。課本 p.139 說明動物纖維（蠶絲、羊毛）的主要成分是蛋白質，與棉花（纖維素）來源不同，但同屬天然聚合物。',
+    q:{q:'蠶絲（動物纖維）的主成分蛋白質，是天然聚合物還是合成聚合物？',
+       opts:['🌿 天然聚合物','🏭 合成聚合物'], ans:0,
+       ok:'✅ 正確！蠶絲的主成分蛋白質是天然聚合物，由生物體合成！',
+       er:'❌ 不對！蠶絲是蠶天然吐出的，蛋白質是天然聚合物，不是工廠合成的。'},
+    concept:{type:'nat', title:'🌿 天然聚合物',
+      body:'課本 p.139 說明天然纖維包括植物纖維和動物纖維。動物纖維（蠶絲、羊毛）的主要成分是蛋白質；植物纖維（棉花）的主要成分是纖維素。兩者都是天然聚合物。'},
+    keyPts:['動物纖維（蠶絲、羊毛）主成分為蛋白質（課本 p.139）','蛋白質是天然聚合物，由生物體合成','與植物纖維的纖維素同屬天然聚合物，但成分不同'] },
+
+  // ══ 第二關：鏈狀 vs 網狀（5 題，各 10 分）══
+
+  { id:'pet', em:'🥤', name:'寶特瓶（PET）', scene:'kitchen',
+    pos:{l:'76%',t:'20%'}, phase:2, structure:'chain',
+    sub:'合成聚合物・鏈狀（熱塑性）',
+    desc:'寶特瓶由 PET（聚對苯二甲酸乙二酯）製成，是石油化工的合成聚合物。PET 的分子是鏈狀排列——分子鏈靠分子間力連接。加熱後分子鏈可以相對滑動，材料軟化熔化，這就是熱塑性。因此寶特瓶可以回收熔化再製成新產品！',
+    q:{q:'寶特瓶（PET）是鏈狀聚合物還是網狀聚合物？',
+       opts:['🔗 鏈狀聚合物（熱塑性）','🕸️ 網狀聚合物（熱固性）'], ans:0,
+       ok:'✅ 正確！PET 是鏈狀聚合物——加熱後分子鏈滑動軟化，所以可以熔化回收再製！',
+       er:'❌ 不對！PET 是鏈狀聚合物，加熱後可以熔化，不是固定不動的網狀。'},
+    concept:{type:'chain', title:'🔗 鏈狀聚合物（熱塑性聚合物）',
+      body:'鏈狀聚合物的分子鏈靠分子間力連接。加熱後，分子鏈可以相對滑動，材料軟化或熔化（熱塑性）。冷卻後再度硬化。可以反覆加熱塑形，因此可熔化回收再製成新產品。'},
+    keyPts:['課本例子：寶特瓶（PET）（課本 p.136、137）','鏈狀結構 → 加熱後熔化或軟化（熱塑性）','可回收再生為新產品'] },
+
+  { id:'ldpe', em:'🛍️', name:'塑膠袋（聚乙烯）', scene:'kitchen',
+    pos:{l:'38%',t:'52%'}, phase:2, structure:'chain',
+    sub:'合成聚合物・鏈狀（熱塑性）',
+    desc:'塑膠袋由 LDPE（低密度聚乙烯）製成，是合成的鏈狀聚合物。課本 p.136 列舉「聚乙烯」為鏈狀聚合物的代表，加熱後分子鏈可以滑動軟化（熱塑性）。大量廢棄後難以在自然環境中分解，是海洋汙染的主要來源之一。',
+    q:{q:'塑膠袋（聚乙烯 LDPE）是鏈狀聚合物還是網狀聚合物？',
+       opts:['🔗 鏈狀聚合物（熱塑性）','🕸️ 網狀聚合物（熱固性）'], ans:0,
+       ok:'✅ 正確！聚乙烯是鏈狀聚合物，加熱後可以軟化熔化，是熱塑性聚合物！',
+       er:'❌ 不對！聚乙烯是鏈狀聚合物，分子鏈加熱後可以滑動軟化，不是固定的網狀。'},
+    concept:{type:'chain', title:'🔗 鏈狀聚合物（熱塑性聚合物）',
+      body:'課本 p.136 明確列舉聚乙烯為鏈狀聚合物的代表例子。鏈狀聚合物加熱後通常會熔化或軟化（熱塑性），具可塑性，可回收再生為新產品。'},
+    keyPts:['課本例子：聚乙烯（課本 p.136）','鏈狀結構 → 加熱後熔化或軟化（熱塑性）','可回收再生，但大量廢棄會汙染海洋'] },
+
+  { id:'pp', em:'🍱', name:'免洗餐具（聚丙烯）', scene:'classroom',
+    pos:{l:'20%',t:'55%'}, phase:2, structure:'chain',
+    sub:'合成聚合物・鏈狀（熱塑性）',
+    desc:'聚丙烯（PP）製成的免洗餐具，是合成聚合物。PP 是鏈狀聚合物，加熱後分子鏈滑動軟化，可以熔化再製。課本圖5-21 用免洗餐具作為鏈狀聚合物的代表圖示。請勿將 PP 容器靠近明火，以免軟化變形！',
+    q:{q:'聚丙烯免洗餐具是鏈狀聚合物還是網狀聚合物？',
+       opts:['🔗 鏈狀聚合物（熱塑性）','🕸️ 網狀聚合物（熱固性）'], ans:0,
+       ok:'✅ 正確！聚丙烯是鏈狀聚合物，加熱後可以熔化，具有熱塑性，可以回收！',
+       er:'❌ 不對！聚丙烯是鏈狀聚合物，加熱後軟化熔化，不是熱固性的網狀。'},
+    concept:{type:'chain', title:'🔗 鏈狀聚合物（熱塑性聚合物）',
+      body:'聚丙烯（PP）是課本圖5-21 的代表例子之一。鏈狀聚合物加熱後通常會熔化或軟化，具可塑性，可回收再生為新產品，又稱為熱塑性聚合物。'},
+    keyPts:['課本圖5-21：聚丙烯免洗餐具為鏈狀代表','鏈狀結構，加熱後軟化熔化（熱塑性）','可回收再製，但勿靠近明火'] },
+
+  { id:'epoxy', em:'🖥️', name:'電路板（環氧樹脂）', scene:'classroom',
+    pos:{l:'68%',t:'22%'}, phase:2, structure:'network',
+    sub:'合成聚合物・網狀（熱固性）',
+    desc:'電路板的基材是環氧樹脂，是合成聚合物。環氧樹脂固化後，分子鏈之間形成共價鍵的「交聯鍵」，固定成三維網狀。加熱後交聯鍵不斷裂，無法流動——這就是熱固性。電路板因此可以承受銲錫高溫（約250°C）而不變形。',
+    q:{q:'環氧樹脂（電路板）是鏈狀聚合物還是網狀聚合物？',
+       opts:['🔗 鏈狀聚合物（熱塑性）','🕸️ 網狀聚合物（熱固性）'], ans:1,
+       ok:'✅ 正確！環氧樹脂是網狀聚合物——交聯鍵把分子鏈固定成三維網狀，加熱永遠不軟化！',
+       er:'❌ 不對！環氧樹脂是三維網狀結構，加熱不會熔化，是熱固性聚合物。'},
+    concept:{type:'net', title:'🕸️ 網狀聚合物（熱固性聚合物）',
+      body:'網狀聚合物的分子鏈之間有共價鍵形成的交聯鍵，固定成三維網狀。加熱後交聯鍵不斷裂，整體無法流動（熱固性）。一旦固化就永遠不可逆，無法熔化回收。電路板須承受銲錫高溫，正是因為使用了熱固性聚合物。'},
+    keyPts:['課本例子：環氧樹脂，常作電路板材料（課本 p.136）','網狀結構，在高溫時不易軟化變形（熱固性）','一旦固化不可逆，無法熔化回收'] },
+
+  { id:'bakelite', em:'🔌', name:'鍋具把手（酚醛樹脂）', scene:'home',
+    pos:{l:'68%',t:'44%'}, phase:2, structure:'network',
+    sub:'合成聚合物・網狀（熱固性）',
+    desc:'鍋具把手使用酚醛樹脂（電木）製成，是合成的網狀聚合物。分子鏈在加熱下形成三維交聯網狀結構，一旦成形就永遠固化，高溫也不會軟化。課本自然暖身操問：「鍋子的把手為什麼不會軟化？」答案就是熱固性塑膠！',
+    q:{q:'酚醛樹脂（鍋具把手）是鏈狀聚合物還是網狀聚合物？',
+       opts:['🔗 鏈狀聚合物（熱塑性）','🕸️ 網狀聚合物（熱固性）'], ans:1,
+       ok:'✅ 正確！酚醛樹脂是網狀熱固性聚合物——耐高溫不軟化，所以適合做鍋柄！',
+       er:'❌ 不對！酚醛樹脂三維網狀交聯，加熱永遠不軟化，是熱固性聚合物。'},
+    concept:{type:'net', title:'🕸️ 網狀聚合物（熱固性聚合物）',
+      body:'酚醛樹脂（電木）是網狀熱固性聚合物，耐高溫不軟化（課本 p.136）。課本自然暖身操：「鍋子的把手為什麼不會軟化？」——因為鍋子的把手是用耐熱的熱固性塑膠製成！'},
+    keyPts:['課本例子：酚醛樹脂（課本 p.136）','課本自然暖身操：鍋子把手用熱固性塑膠','網狀結構 → 熱固性，耐高溫不變形，無法回收'] },
+];
+
+const P1 = ['starch','cellulose','protein','rubber','silk'];
+const P2 = ['pet','ldpe','pp','epoxy','bakelite'];
+const TOTAL = 10;
+
+const SCENE_META = {
+  kitchen:  {name:'🍳 廚房場景',  bg:'kitchen',
+             ids:['starch','protein','pet','ldpe']},
+  classroom:{name:'📚 教室場景',  bg:'classroom',
+             ids:['rubber','pp','epoxy']},
+  home:     {name:'🏠 家中場景',  bg:'home',
+             ids:['cellulose','silk','bakelite']},
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────
+let score=0, foundIds=new Set(), cur=null, phase=1;
+let allOrdered=[], allIdx=0, animFrame=null;
+
+const g = id => document.getElementById(id);
+const shuf = a => {
+  const b=[...a];
+  for(let i=b.length-1;i>0;i--){const j=0|Math.random()*(i+1);[b[i],b[j]]=[b[j],b[i]];}
+  return b;
+};
+const byId = id => ITEMS.find(x=>x.id===id);
+
+function show(id){
+  ['scr-start','scr-scene','scr-scope','scr-card','scr-trans','scr-result']
+    .forEach(s=>{const el=g(s);if(el)el.classList.toggle('off',s!==id);});
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  g('btn-start').addEventListener('click', startGame);
+  g('btn-restart').addEventListener('click', startGame);
+  g('btn-nq').addEventListener('click', ()=>showCard(cur));
+  g('btn-card-ok').addEventListener('click', afterCard);
+  g('btn-trans').addEventListener('click', ()=>{ phase=2; renderScene(); show('scr-scene'); updateHUD(); });
+});
+
+function startGame(){
+  score=0; foundIds=new Set(); cur=null; phase=1;
+  allOrdered=[...shuf([...P1]),...shuf([...P2])];
+  allIdx=0;
+  show('scr-scene'); renderScene(); updateHUD();
+}
+
+// ── SCENE ─────────────────────────────────────────────────────────────
+function renderScene(){
+  if(allIdx>=TOTAL){ doResult(); return; }
+  const tid = allOrdered[allIdx];
+  const item = byId(tid);
+  const sk = Object.keys(SCENE_META).find(k=>SCENE_META[k].ids.includes(tid))||'kitchen';
+  const sm = SCENE_META[sk];
+  const phaseLabel = phase===1 ? '第一關・天然 vs 合成' : '第二關・鏈狀 vs 網狀';
+
+  const tgt=g('sh-target');
+  if(tgt){ tgt.textContent='🎯 '+item.em+' '+item.name.split('（')[0];
+           tgt.style.background = phase===1 ? 'var(--nat)' : (item.structure==='chain'?'var(--chain)':'var(--net)'); }
+  const tb=g('tb-title'); if(tb)tb.textContent=sm.name;
+  const si=g('sinstr');   if(si)si.textContent=`🔎 ${phaseLabel}　第 ${allIdx+1} 題 / 共 ${TOTAL} 題`;
+
+  const canvas=g('scene-canvas');
+  if(!canvas)return;
+  canvas.className='scanvas '+sm.bg;
+  canvas.innerHTML='<div class="sf"></div>';
+
+  sm.ids.forEach(id=>{
+    const it=byId(id);
+    const btn=document.createElement('button');
+    btn.className='ibtn'+(foundIds.has(id)?' found':'')+(id===tid?' target':'');
+    btn.style.left=it.pos.l; btn.style.top=it.pos.t;
+    btn.innerHTML=`<span class="iem">${it.em}</span><span class="ilbl">${it.name.split('（')[0]}</span>`;
+    btn.addEventListener('click',()=>clickItem(id,tid));
+    canvas.appendChild(btn);
+  });
+}
+
+function clickItem(cid,tid){
+  if(cid!==tid){ floater('不是這個！','#ef4444'); return; }
+  cur=byId(cid); openScope(cur);
+}
+
+// ── SCOPE ─────────────────────────────────────────────────────────────
+function openScope(item){
+  show('scr-scope');
+  const em=g('sc-em'); if(em)em.textContent=item.em;
+  const nm=g('sc-name'); if(nm)nm.textContent=item.name;
+  const sb=g('sc-sub');  if(sb)sb.textContent=item.sub;
+  const desc=g('sc-desc'); if(desc)desc.textContent=item.desc;
+
+  const lbl=g('cvs-lbl');
+  if(lbl){
+    if(item.phase===1){
+      lbl.textContent='🌿 天然聚合物 — 生物體合成';
+      lbl.style.color='#81c784';
+    } else if(item.structure==='chain'){
+      lbl.textContent='🔗 鏈狀結構 — 分子鏈加熱可滑動';
+      lbl.style.color='#64b5f6';
+    } else {
+      lbl.textContent='🕸️ 網狀交聯 — 加熱不軟化';
+      lbl.style.color='#ff8a65';
+    }
+  }
+  const qq=g('qq'); if(qq)qq.textContent=item.q.q;
+  const fb=g('qfb'); if(fb)fb.className='qfb';
+  const nq=g('btn-nq'); if(nq)nq.style.display='none';
+  const opts=g('qopts');
+  if(opts){
+    opts.innerHTML='';
+    item.q.opts.forEach((o,i)=>{
+      const b=document.createElement('button');
+      b.className='qbtn'; b.textContent=o;
+      b.addEventListener('click',()=>ansQ(item,i,b));
+      opts.appendChild(b);
+    });
+  }
+  setTimeout(()=>drawScope(item),60);
+}
+
+// ── CANVAS ────────────────────────────────────────────────────────────
+function drawScope(item){
+  if(animFrame){cancelAnimationFrame(animFrame);animFrame=null;}
+  const cvs=g('scope-cvs'); if(!cvs)return;
+  const ctx=cvs.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const W=cvs.offsetWidth||600, H=160;
+  cvs.width=W*dpr; cvs.height=H*dpr;
+  ctx.scale(dpr,dpr);
+  let t=0;
+
+  if(item.phase===1){
+    // 第一關：浮動葉片，不畫分子結構
+    const leaves=[
+      {x:W*.12,y:H*.42,r:20,ph:0},
+      {x:W*.35,y:H*.38,r:15,ph:1.3},
+      {x:W*.58,y:H*.48,r:22,ph:2.2},
+      {x:W*.80,y:H*.36,r:17,ph:0.8},
+    ];
+    (function frame(){
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle='#071a0a'; ctx.fillRect(0,0,W,H);
+      t+=0.018;
+      leaves.forEach(lf=>{
+        const yy=lf.y+7*Math.sin(t*0.7+lf.ph);
+        ctx.save(); ctx.translate(lf.x,yy);
+        // leaf shape
+        ctx.beginPath();
+        ctx.ellipse(0,-lf.r*.5,lf.r*.5,lf.r,Math.PI/7,0,Math.PI*2);
+        ctx.fillStyle='#388e3c'; ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(0,-lf.r*.5,lf.r*.5,lf.r,-Math.PI/7,0,Math.PI*2);
+        ctx.fillStyle='#66bb6a'; ctx.globalAlpha=.75; ctx.fill();
+        ctx.globalAlpha=1;
+        // midrib
+        ctx.beginPath(); ctx.moveTo(0,lf.r*.35); ctx.lineTo(0,-lf.r*1.3);
+        ctx.strokeStyle='#a5d6a7'; ctx.lineWidth=1.5; ctx.stroke();
+        ctx.restore();
+      });
+      ctx.font='bold 13px sans-serif';
+      ctx.fillStyle='rgba(165,214,167,.85)';
+      ctx.textAlign='center';
+      ctx.fillText('🌿 天然聚合物 — 由生物體酵素催化合成',W/2,H-10);
+      ctx.textAlign='left';
+      animFrame=requestAnimationFrame(frame);
+    })();
+
+  } else if(item.structure==='network'){
+    // 第二關網狀：固定交聯格
+    const col='#ff7043';
+    const cols=9, rows=4;
+    const gx=W/(cols+1), gy=H/(rows+1);
+    const nodes=[];
+    for(let r=0;r<=rows;r++)
+      for(let c=0;c<=cols;c++)
+        nodes.push({x:gx*(c+1)+Math.sin(r*2.3+c)*5, y:gy*(r+1)+Math.cos(c*1.8+r)*3.5});
+    (function frame(){
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+      t+=0.01;
+      nodes.forEach((n,i)=>{
+        const row=0|i/(cols+1), cc=i%(cols+1);
+        const a=0.5+0.1*Math.sin(t+i*.3);
+        ctx.strokeStyle=col+Math.round(a*255).toString(16).padStart(2,'0');
+        ctx.lineWidth=1.5;
+        if(cc<cols){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(nodes[i+1].x,nodes[i+1].y);ctx.stroke();}
+        if(row<rows){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(nodes[i+cols+1].x,nodes[i+cols+1].y);ctx.stroke();}
+        if(cc<cols&&row<rows){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(nodes[i+cols+2].x,nodes[i+cols+2].y);ctx.stroke();}
+      });
+      nodes.forEach(n=>{ctx.beginPath();ctx.arc(n.x,n.y,3.5,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();});
+      ctx.font='bold 11px monospace'; ctx.fillStyle='rgba(255,255,255,.5)';
+      ctx.fillText('🕸️ 交聯鍵固定 → 熱固性，加熱不軟化',10,H-8);
+      animFrame=requestAnimationFrame(frame);
+    })();
+
+  } else {
+    // 第二關鏈狀：流動波浪
+    const col='#42a5f5';
+    const nc=4;
+    const chains=Array.from({length:nc},(_,i)=>({y:H*(i+0.9)/(nc+0.3),ph:i*0.8,sp:0.3+i*0.07}));
+    (function frame(){
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+      t+=0.022;
+      chains.forEach(ch=>{
+        ctx.beginPath();
+        for(let x=0;x<=W;x+=2){
+          const y=ch.y+10*Math.sin((x/W)*Math.PI*4+t*ch.sp+ch.ph);
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=col+'cc'; ctx.lineWidth=2.2; ctx.stroke();
+        for(let i=0;i<11;i++){
+          const x=W*i/10;
+          const y=ch.y+10*Math.sin((x/W)*Math.PI*4+t*ch.sp+ch.ph);
+          ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+        }
+      });
+      ctx.font='bold 11px monospace'; ctx.fillStyle='rgba(255,255,255,.5)';
+      ctx.fillText('🔗 鏈狀分子可流動 → 熱塑性，加熱可軟化',10,H-8);
+      animFrame=requestAnimationFrame(frame);
+    })();
+  }
+}
+
+// ── QUIZ ──────────────────────────────────────────────────────────────
+function ansQ(item,chosen,btn){
+  const btns=g('qopts').querySelectorAll('.qbtn');
+  btns.forEach(b=>b.disabled=true);
+  const ok = chosen===item.q.ans;
+  btn.classList.add(ok?'correct':'wrong');
+  if(!ok) btns[item.q.ans].classList.add('correct');
+  const fb=g('qfb');
+  if(fb){ fb.textContent=(ok?item.q.ok:item.q.er); fb.className='qfb '+(ok?'ok':'er'); }
+  if(ok) score+=10;
+  floater(ok?'+10 分！':'再想想…', ok?'#2e7d32':'#dc2626');
+  updateHUD();
+  const nq=g('btn-nq'); if(nq)nq.style.display='block';
+}
+
+// ── KNOWLEDGE CARD ────────────────────────────────────────────────────
+function showCard(item){
+  if(animFrame){cancelAnimationFrame(animFrame);animFrame=null;}
+  show('scr-card');
+  const em=g('kc-em');   if(em)em.textContent=item.em;
+  const nm=g('kc-name'); if(nm)nm.textContent=item.name+' 知識卡';
+  // tags
+  const tags=g('kc-tags');
+  if(tags){
+    tags.innerHTML='';
+    const add=(txt,cls)=>{const t=document.createElement('div');t.className='tag '+cls;t.textContent=txt;tags.appendChild(t);};
+    if(item.phase===1){ add('🌿 天然聚合物','tag-nat'); }
+    else {
+      add('🏭 合成聚合物','tag-syn');
+      if(item.structure==='chain'){ add('🔗 鏈狀聚合物','tag-chain'); add('♻️ 熱塑性','tag-thp'); }
+      else { add('🕸️ 網狀聚合物','tag-net'); add('🔥 熱固性','tag-ths'); }
+    }
+  }
+  const desc=g('kc-desc');   if(desc)desc.textContent=item.desc;
+  const cbox=g('kc-cbox');   const ctitle=g('kc-ctitle'); const cbody=g('kc-cbody');
+  const tm={nat:'nat',chain:'chain',net:'net'};
+  if(cbox)  cbox.className  ='concept-box '+(tm[item.concept.type]||'nat');
+  if(ctitle){ctitle.textContent=item.concept.title; ctitle.className='concept-title '+(tm[item.concept.type]||'nat');}
+  if(cbody) cbody.textContent=item.concept.body;
+  const ul=g('kc-ul');
+  if(ul){ ul.innerHTML=''; item.keyPts.forEach(p=>{const li=document.createElement('li');li.textContent=p;ul.appendChild(li);}); }
+}
+
+function afterCard(){
+  foundIds.add(cur.id); allIdx++;
+  if(allIdx===P1.length && phase===1){
+    if(animFrame){cancelAnimationFrame(animFrame);animFrame=null;}
+    show('scr-trans'); return;
+  }
+  updateHUD(); show('scr-scene'); renderScene();
+}
+
+// ── RESULT ────────────────────────────────────────────────────────────
+function doResult(){
+  if(animFrame){cancelAnimationFrame(animFrame);animFrame=null;}
+  show('scr-result');
+  const pct=score/100*100;
+  const ri=g('r-icon'); if(ri)ri.textContent=pct>=90?'🏆':pct>=70?'🔬':pct>=50?'💪':'📖';
+  const rs=g('r-score'); if(rs)rs.textContent=score;
+  const rf=g('r-found');
+  if(rf){
+    rf.innerHTML='';
+    allOrdered.forEach(id=>{
+      const it=byId(id);
+      const c=document.createElement('div');
+      c.className='fc';
+      c.textContent=it.em+' '+it.name.split('（')[0];
+      rf.appendChild(c);
+    });
+  }
+  launchConfetti();
+}
+
+// ── HUD ───────────────────────────────────────────────────────────────
+function updateHUD(){
+  const ts=g('tb-score'); if(ts)ts.textContent=score;
+  const tp=g('tb-prog');  if(tp)tp.textContent=allIdx+' / '+TOTAL;
+  const tb=g('tb-bar');   if(tb)tb.style.width=(allIdx/TOTAL*100)+'%';
+}
+
+// ── FX ────────────────────────────────────────────────────────────────
+function floater(txt,color){
+  const el=document.createElement('div'); el.className='floater';
+  el.style.cssText=`color:${color};left:${30+Math.random()*40}vw;top:${20+Math.random()*30}vh;`;
+  el.textContent=txt; document.body.appendChild(el); setTimeout(()=>el.remove(),950);
+}
+function launchConfetti(){
+  ['#4558d4','#22c97a','#f4511e','#9c27b0','#fbbf24'].forEach(c=>{
+    for(let i=0;i<10;i++){
+      const el=document.createElement('div');
+      const sz=5+Math.random()*8;
+      el.style.cssText=`position:fixed;pointer-events:none;z-index:9999;width:${sz}px;height:${sz}px;background:${c};border-radius:${Math.random()>.5?'50%':'3px'};left:${Math.random()*100}vw;top:-12px;animation:cFall ${1.4+Math.random()*1.5}s ${Math.random()*.9}s ease-in forwards;`;
+      document.body.appendChild(el); setTimeout(()=>el.remove(),3200);
+    }
+  });
+}
+</script>
+</body>
+</html>
