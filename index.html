@@ -53,66 +53,92 @@
         <h2 class="section-title">📍 最新任務單元</h2>
         <div class="lesson-grid">
             
-            <!-- 新增單元：化學英雄：對抗混亂博士 -->
-            <a href="pages/chemistry_story_quest.html" class="lesson-card featured">
-                <div class="card-image" style="background: linear-gradient(135deg, #0a0818 0%, #ff9a3c 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
-                    <span class="status-badge new">有機化合物</span>
-                    🧪
+            <!-- 分類：科學方法 -->
+            <div class="category-card" data-category="science_method" style="background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);">
+                <div class="category-icon">🔬</div>
+                <div class="category-info">
+                    <span class="category-badge">科學探究</span>
+                    <h3>科學方法</h3>
+                    <p>學習實驗設計與控制變因，培養科學思維與邏輯推理能力。</p>
                 </div>
-                <div class="card-content">
-                    <div class="tags">
-                        <span class="tag tag-chem">化學</span>
-                        <span class="tag tag-interactive">角色扮演</span>
-                    </div>
-                    <h3>化學英雄：對抗混亂博士</h3>
-                    <p>混亂博士入侵了化學世界！用你的化學知識喚醒甲烷、乙醇等七位英雄，解開身分謎題，合力擊敗混亂博士！</p>
-                    <div class="card-footer">
-                        <span class="difficulty">難度：⭐⭐⭐⭐</span>
-                        <span class="btn-text">立即挑戰 ➔</span>
-                    </div>
+                <div class="category-footer">
+                    <span class="games-count">1 個任務</span>
+                    <span class="btn-text">進入探索 ➔</span>
                 </div>
-            </a>
+            </div>
 
-            <!-- 新增單元：碳的秘密：密室逃脫 -->
-            <a href="pages/escape_room2.html" class="lesson-card featured">
-                <div class="card-image" style="background: linear-gradient(135deg, #1a0f07 0%, #d4a84b 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
-                    <span class="status-badge new">有機化合物</span>
-                    🗝️
+            <!-- 分類：電解質 -->
+            <div class="category-card" data-category="electrolytes" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 40%, #2980b9 100%);">
+                <div class="category-icon">⚡</div>
+                <div class="category-info">
+                    <span class="category-badge">水溶液化學</span>
+                    <h3>電解質</h3>
+                    <p>探索物質在水中的解離現象，挑戰酸鹼中和與原子結構的奧秘。</p>
                 </div>
-                <div class="card-content">
-                    <div class="tags">
-                        <span class="tag tag-chem">化學</span>
-                        <span class="tag tag-interactive">密室逃脫</span>
-                    </div>
-                    <h3>碳的秘密：密室逃脫</h3>
-                    <p>化學史的門，需要你來開！從拉瓦節的實驗到維勒的合成，挑戰五道有機化學的謎題，揭開碳的秘密！</p>
-                    <div class="card-footer">
-                        <span class="difficulty">難度：⭐⭐⭐⭐⭐</span>
-                        <span class="btn-text">立即挑戰 ➔</span>
-                    </div>
+                <div class="category-footer">
+                    <span class="games-count">4 個任務</span>
+                    <span class="btn-text">進入探索 ➔</span>
                 </div>
-            </a>
+            </div>
 
-            <!-- 新增單元：有機化合物命名大冒險 -->
-            <a href="pages/organic_naming_game.html" class="lesson-card featured">
-                <div class="card-image" style="background: linear-gradient(135deg, #1a5c0f 0%, #b8dba8 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
-                    <span class="status-badge new">有機化合物</span>
-                    🌿
+            <!-- 分類：反應速率與化學平衡 -->
+            <div class="category-card" data-category="equilibrium" style="background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);">
+                <div class="category-icon">⏱️</div>
+                <div class="category-info">
+                    <span class="category-badge">動態平衡</span>
+                    <h3>反應速率與化學平衡</h3>
+                    <p>認識濃度、溫度對反應快慢的影響，探討化學平衡的動態調節。</p>
+                </div>
+                <div class="category-footer">
+                    <span class="games-count">3 個任務</span>
+                    <span class="btn-text">進入探索 ➔</span>
+                </div>
+            </div>
+
+            <!-- 分類：有機化合物 -->
+            <div class="category-card" data-category="organic" style="background: linear-gradient(135deg, #0a0818 0%, #ff9a3c 100%);">
+                <div class="category-icon">🧪</div>
+                <div class="category-info">
+                    <span class="category-badge">有機世界</span>
+                    <h3>有機化合物</h3>
+                    <p>解鎖碳氫氧化合物的命名與結構，探索身邊的聚合物與合成材料。</p>
+                </div>
+                <div class="category-footer">
+                    <span class="games-count">4 個任務</span>
+                    <span class="btn-text">進入探索 ➔</span>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 隱藏資料源：各個分類的遊戲卡片 (供 JS 複製至彈出視窗，維護 SEO 與加速載入) -->
+    <div id="games-source" style="display: none;">
+        <!-- 科學方法 -->
+        <div class="games-group" data-category="science_method">
+            <!-- 新增單元：科學變因大挑戰 -->
+            <a href="pages/science_game.html" class="lesson-card featured">
+                <div class="card-image" style="background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
+                    <span class="status-badge new">科學方法</span>
+                    🔬
                 </div>
                 <div class="card-content">
                     <div class="tags">
-                        <span class="tag tag-chem">化學</span>
-                        <span class="tag tag-interactive">命名挑戰</span>
+                        <span class="tag tag-chem">科學方法</span>
+                        <span class="tag tag-interactive">實驗挑戰</span>
                     </div>
-                    <h3>有機化合物命名大冒險</h3>
-                    <p>挑戰烷類、醇類、酸類與酯類的命名規則！從官能基配對到寫出化學式，三種關卡讓你成為化學大師。</p>
+                    <h3>科學變因大挑戰</h3>
+                    <p>學習「單一變因原則」，成為實驗設計大師！測試不同變因組合，尋找保冰最久的容器與最強升級藥水。</p>
                     <div class="card-footer">
                         <span class="difficulty">難度：⭐⭐⭐</span>
                         <span class="btn-text">立即挑戰 ➔</span>
                     </div>
                 </div>
             </a>
+        </div>
 
+        <!-- 電解質 -->
+        <div class="games-group" data-category="electrolytes">
             <!-- 遊戲單元：電解質大師 -->
             <a href="pages/electrolyte_game.html" class="lesson-card featured">
                 <div class="card-image" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 40%, #2980b9 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
@@ -192,7 +218,10 @@
                     </div>
                 </div>
             </a>
+        </div>
 
+        <!-- 反應速率與化學平衡 -->
+        <div class="games-group" data-category="equilibrium">
             <!-- 新增單元：反應速率 -->
             <a href="pages/chem_game_html.html" class="lesson-card featured">
                 <div class="card-image" style="background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
@@ -213,7 +242,7 @@
                 </div>
             </a>
 
-        <!-- 新增單元：反應速率偵探社 -->
+            <!-- 新增單元：反應速率偵探社 -->
             <a href="pages/detective_html.html" class="lesson-card featured">
                 <div class="card-image" style="background: linear-gradient(135deg, #c8a84a 0%, #8a6820 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
                     <span class="status-badge new">反應速率</span>
@@ -229,26 +258,6 @@
                     <div class="card-footer">
                         <span class="difficulty">難度：⭐⭐⭐⭐</span>
                         <span class="btn-text">開始偵查 ➔</span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- 新增單元：科學變因大挑戰 -->
-            <a href="pages/science_game.html" class="lesson-card featured">
-                <div class="card-image" style="background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
-                    <span class="status-badge new">科學方法</span>
-                    🔬
-                </div>
-                <div class="card-content">
-                    <div class="tags">
-                        <span class="tag tag-chem">科學方法</span>
-                        <span class="tag tag-interactive">實驗挑戰</span>
-                    </div>
-                    <h3>科學變因大挑戰</h3>
-                    <p>學習「單一變因原則」，成為實驗設計大師！測試不同變因組合，尋找保冰最久的容器與最強升級藥水。</p>
-                    <div class="card-footer">
-                        <span class="difficulty">難度：⭐⭐⭐</span>
-                        <span class="btn-text">立即挑戰 ➔</span>
                     </div>
                 </div>
             </a>
@@ -272,9 +281,108 @@
                     </div>
                 </div>
             </a>
-
         </div>
-    </main>
+
+        <!-- 有機化合物 -->
+        <div class="games-group" data-category="organic">
+            <!-- 新增單元：化學英雄：對抗混亂博士 -->
+            <a href="pages/chemistry_story_quest.html" class="lesson-card featured">
+                <div class="card-image" style="background: linear-gradient(135deg, #0a0818 0%, #ff9a3c 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
+                    <span class="status-badge new">有機化合物</span>
+                    🧪
+                </div>
+                <div class="card-content">
+                    <div class="tags">
+                        <span class="tag tag-chem">化學</span>
+                        <span class="tag tag-interactive">角色扮演</span>
+                    </div>
+                    <h3>化學英雄：對抗混亂博士</h3>
+                    <p>混難博士入侵了化學世界！用你的化學知識喚醒甲烷、乙醇等七位英雄，解開身分謎題，合力擊敗混亂博士！</p>
+                    <div class="card-footer">
+                        <span class="difficulty">難度：⭐⭐⭐⭐</span>
+                        <span class="btn-text">立即挑戰 ➔</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- 新增單元：碳的秘密：密室逃脫 -->
+            <a href="pages/escape_room2.html" class="lesson-card featured">
+                <div class="card-image" style="background: linear-gradient(135deg, #1a0f07 0%, #d4a84b 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
+                    <span class="status-badge new">有機化合物</span>
+                    🗝️
+                </div>
+                <div class="card-content">
+                    <div class="tags">
+                        <span class="tag tag-chem">化學</span>
+                        <span class="tag tag-interactive">密室逃脫</span>
+                    </div>
+                    <h3>碳的秘密：密室逃脫</h3>
+                    <p>化學史的門，需要你來開！從拉瓦節的實驗到維勒的合成，挑戰五道有機化學的謎題，揭開碳的秘密！</p>
+                    <div class="card-footer">
+                        <span class="difficulty">難度：⭐⭐⭐⭐⭐</span>
+                        <span class="btn-text">立即挑戰 ➔</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- 新增單元：有機化合物命名大冒險 -->
+            <a href="pages/organic_naming_game.html" class="lesson-card featured">
+                <div class="card-image" style="background: linear-gradient(135deg, #1a5c0f 0%, #b8dba8 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
+                    <span class="status-badge new">有機化合物</span>
+                    🌿
+                </div>
+                <div class="card-content">
+                    <div class="tags">
+                        <span class="tag tag-chem">化學</span>
+                        <span class="tag tag-interactive">命名挑戰</span>
+                    </div>
+                    <h3>有機化合物命名大冒險</h3>
+                    <p>挑戰烷類、醇類、酸類與酯類的命名規則！從官能基配對到寫出化學式，三種關卡讓你成為化學大師。</p>
+                    <div class="card-footer">
+                        <span class="difficulty">難度：⭐⭐⭐</span>
+                        <span class="btn-text">立即挑戰 ➔</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- 新增單元：生活中的聚合物獵人 -->
+            <a href="pages/polymer_game.html" class="lesson-card featured">
+                <div class="card-image" style="background: linear-gradient(135deg, #4558d4 0%, #6a1b9a 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
+                    <span class="status-badge new">有機化合物</span>
+                    🔎
+                </div>
+                <div class="card-content">
+                    <div class="tags">
+                        <span class="tag tag-chem">化學</span>
+                        <span class="tag tag-interactive">生活挑戰</span>
+                    </div>
+                    <h3>生活中的聚合物獵人</h3>
+                    <p>探索廚房、教室、家中等日常場景，找出藏在生活裡的天然與合成聚合物！學習區分熱塑性與熱固性結構。</p>
+                    <div class="card-footer">
+                        <span class="difficulty">難度：⭐⭐⭐</span>
+                        <span class="btn-text">立即挑戰 ➔</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- 玻璃擬態彈出式遊戲選單 (Modal Overlay) -->
+    <div class="modal-overlay" id="category-modal">
+        <div class="modal-content">
+            <button class="modal-close" aria-label="關閉選單">&times;</button>
+            <div class="modal-header">
+                <span class="modal-title-icon">🧪</span>
+                <div class="modal-title-wrap">
+                    <h2 class="modal-title">分類名稱</h2>
+                    <p class="modal-desc">分類的詳細描述</p>
+                </div>
+            </div>
+            <div class="modal-body-grid">
+                <!-- 動態注入的遊戲卡片將顯示在這裡 -->
+            </div>
+        </div>
+    </div>
 
     <footer>
         <p>🔬 里中自然課 © 2026. Designed for awesome students.</p>
