@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>肥皂科學三部曲</title>
+<style>
+/*===== 全域 =====*/
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Microsoft JhengHei','Noto Sans TC','Segoe UI',sans-serif;}
+body{background:#1a1a2e;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+
+/*===== 頂部導覽列 =====*/
+#top-nav{
+  width:100%;background:linear-gradient(135deg,#0f3460,#16213e);
+  padding:10px 16px;display:flex;align-items:center;gap:12px;
+  box-shadow:0 3px 12px rgba(0,0,0,.4);position:sticky;top:0;z-index:100;
+}
+#top-nav .nav-title{color:#FFD580;font-size:clamp(13px,2.5vw,18px);font-weight:700;flex:1;}
+.chapter-tabs{display:flex;gap:6px;}
+.ctab{
+  padding:6px 14px;border-radius:20px;border:2px solid rgba(255,213,128,.35);
+  background:transparent;color:#aaa;font-size:clamp(11px,1.8vw,13px);font-weight:600;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.ctab.active{background:#F4A431;border-color:#F4A431;color:#fff;}
+.ctab.unlocked{border-color:rgba(255,213,128,.6);color:#FFD580;}
+.ctab.locked{opacity:.4;cursor:not-allowed;}
+
+/*===== 主容器 =====*/
+#app{width:100%;max-width:760px;flex:1;display:flex;flex-direction:column;padding:0 12px 16px;}
+
+/*===== 章節包裝 =====*/
+.chapter{display:none;flex-direction:column;gap:10px;padding-top:10px;}
+.chapter.active{display:flex;}
+
+/* ── 封面卡 ── */
+.cover-card{
+  background:linear-gradient(135deg,#1a1a2e,#0f3460);
+  border:2px solid rgba(255,213,128,.3);border-radius:20px;
+  padding:32px 24px;text-align:center;margin-top:10px;
+}
+.cover-card .big-em{font-size:72px;margin-bottom:12px;}
+.cover-card h1{font-size:clamp(20px,4vw,28px);color:#FFD580;margin-bottom:8px;}
+.cover-card p{font-size:14px;color:#bbb;margin-bottom:24px;line-height:1.7;}
+.chapter-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.chapter-item{
+  background:rgba(255,255,255,.06);border:2px solid rgba(255,213,128,.2);
+  border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;text-align:left;
+}
+.chapter-item .ci-num{font-size:28px;}
+.chapter-item .ci-info h3{font-size:15px;color:#FFD580;margin-bottom:3px;}
+.chapter-item .ci-info p{font-size:12px;color:#aaa;}
+
+/*===== 共用元件 =====*/
+.panel-box{
+  background:rgba(255,248,220,.93);border-radius:16px;
+  padding:14px 18px;border-left:5px solid #F4A431;
+  font-size:15px;color:#3a2000;line-height:1.9;
+}
+.hint-box{
+  background:rgba(255,235,130,.95);border:2px dashed #c8900a;
+  border-radius:14px;padding:10px 16px;
+  font-size:14px;color:#6b4500;text-align:center;
+}
+.btn{
+  padding:11px 28px;border:none;border-radius:30px;
+  font-size:15px;font-weight:700;cursor:pointer;
+  transition:transform .1s;box-shadow:0 3px 10px rgba(0,0,0,.3);
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:hover{transform:scale(1.04);}
+.btn:active{transform:scale(.97);}
+.btn-orange{background:#F4A431;color:#fff;}
+.btn-green{background:#4CAF50;color:#fff;}
+.btn-blue{background:linear-gradient(135deg,#42a5f5,#1565c0);color:#fff;}
+.btn-teal{background:linear-gradient(135deg,#2d9e72,#1a6b4a);color:#fff;}
+.btn-hidden{display:none!important;}
+
+.scene-title{
+  font-size:16px;font-weight:700;color:#FFD580;
+  background:rgba(0,0,0,.35);border-radius:20px;
+  padding:7px 20px;text-align:center;
+}
+.canvas{
+  width:100%;height:260px;border-radius:18px;overflow:hidden;
+  position:relative;box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+.bg-greece{background:linear-gradient(180deg,#2c1810 0%,#5c3a1e 40%,#8B6914 70%,#6B4A0A 100%);}
+.bg-river{background:linear-gradient(180deg,#1a3a5c 0%,#2a5f8f 40%,#3a8f6f 70%,#2d6b4f 100%);}
+.narr-line{display:none;}
+.narr-line.shown{display:block;}
+.obj{
+  position:absolute;text-align:center;cursor:pointer;
+  user-select:none;transition:transform .15s;
+}
+.obj:hover{transform:scale(1.18);}
+.obj .em{font-size:36px;display:block;line-height:1.1;}
+.obj .lb{font-size:10px;background:rgba(255,255,255,.82);border-radius:6px;padding:1px 5px;color:#333;display:block;margin-top:2px;}
+.flame-anim{animation:flicker .5s ease-in-out infinite alternate;}
+@keyframes flicker{from{transform:scale(1) rotate(-2deg);}to{transform:scale(1.12) rotate(2deg);}}
+.glow-anim{animation:glow .9s ease-in-out infinite alternate;}
+@keyframes glow{from{filter:drop-shadow(0 0 4px gold);}to{filter:drop-shadow(0 0 16px gold);}}
+.river{
+  position:absolute;bottom:0;left:0;right:0;height:90px;
+  background:linear-gradient(180deg,#3ab0e0 0%,#1a7aaa 100%);
+  border-radius:60% 60% 0 0/18px 18px 0 0;overflow:hidden;
+}
+.ripple{
+  position:absolute;top:12px;left:0;right:0;height:14px;
+  background:repeating-linear-gradient(90deg,transparent 0,transparent 28px,rgba(255,255,255,.22) 28px,rgba(255,255,255,.22) 48px);
+  animation:rip 2s linear infinite;
+}
+@keyframes rip{from{background-position:0 0;}to{background-position:76px 0;}}
+.raindrop{
+  position:absolute;top:-14px;width:2px;height:13px;
+  background:rgba(140,200,240,.7);border-radius:2px;
+  animation:rain linear infinite;
+}
+@keyframes rain{from{transform:translateY(0);opacity:1;}to{transform:translateY(300px);opacity:0;}}
+.prog-wrap{width:100%;}
+.prog-lbl{font-size:13px;color:#ccc;margin-bottom:4px;text-align:center;}
+.prog-bg{background:rgba(255,255,255,.15);border-radius:10px;height:14px;overflow:hidden;}
+.prog-fill{height:100%;width:0;background:linear-gradient(90deg,#4CAF50,#8BC34A);border-radius:10px;transition:width .3s;}
+
+/* 探索格 */
+.explore-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;}
+.clue-card{
+  background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);
+  border-radius:12px;padding:10px 4px;text-align:center;cursor:pointer;
+  transition:background .2s,transform .15s;
+}
+.clue-card:hover{background:rgba(255,255,255,.16);transform:scale(1.06);}
+.clue-card.viewed{background:rgba(255,220,80,.12);border-color:rgba(255,220,80,.4);}
+.clue-card .cem{font-size:28px;}
+.clue-card .cnm{font-size:10px;color:#ddd;margin-top:3px;}
+.clue-popup{
+  position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;z-index:200;
+}
+.clue-inner{background:#fff;border-radius:20px;padding:22px 20px;max-width:320px;width:90%;text-align:center;}
+.ci-em{font-size:50px;}.ci-title{font-size:17px;font-weight:700;color:#3a2000;margin:8px 0 5px;}
+.ci-desc{font-size:13px;color:#555;line-height:1.8;}
+
+/* Q */
+.qa-section{width:100%;background:rgba(255,255,255,.06);border-radius:14px;padding:14px;display:none;}
+.qa-section.active{display:block;}
+.qa-title{font-size:14px;font-weight:700;color:#FFD700;margin-bottom:6px;}
+.qa-subtitle{font-size:12px;color:#ccc;margin-bottom:8px;}
+.ans-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:7px;}
+.ans-chip{
+  background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.25);
+  border-radius:20px;padding:7px 13px;font-size:13px;color:#fff;cursor:pointer;
+  transition:background .15s;
+}
+.ans-chip:hover{background:rgba(255,255,255,.2);}
+.ans-chip.correct{background:rgba(76,175,80,.3);border-color:#4CAF50;color:#a5d6a7;}
+.ans-chip.wrong{background:rgba(229,57,53,.3);border-color:#e53935;color:#ef9a9a;}
+.qa-feedback{font-size:13px;min-height:18px;margin-top:3px;}
+.qa-feedback.ok{color:#81C784;}.qa-feedback.err{color:#EF9A9A;}
+.combo-slot{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:9px;}
+.slot-box{
+  width:80px;height:48px;border:2px dashed rgba(255,255,255,.35);border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
+}
+.slot-box.filled{border-color:#F4A431;}
+.slot-em{font-size:20px;color:rgba(255,255,255,.3);}
+.slot-box.filled .slot-em{color:#fff;}
+.slot-lb{font-size:8px;color:#ccc;}
+.slot-plus,.slot-arrow{font-size:18px;color:#aaa;}
+.slot-result{font-size:12px;color:#FFD700;font-weight:700;min-width:70px;text-align:center;}
+
+/* 結局通用 */
+.end-card{background:#fff;border-radius:22px;padding:24px 20px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(244,164,49,.2);}
+.end-title{font-size:22px;font-weight:700;color:#C77C00;margin-bottom:8px;}
+.end-know{background:linear-gradient(135deg,#FFF9E6,#FFF0B3);border-radius:14px;padding:16px;border:2px solid #F4A431;font-size:13px;color:#3a2000;line-height:1.9;text-align:left;margin:10px 0;}
+.formula{background:#3a2000;color:#FFD700;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:700;text-align:center;margin:8px 0;letter-spacing:.5px;}
+
+/* ── 章節二：去污舞台 ── */
+#stage2{
+  flex:0 0 auto;height:clamp(200px,38vh,280px);
+  background:linear-gradient(180deg,#b8dcff 0%,#dff0ff 100%);
+  position:relative;overflow:hidden;border-radius:16px;
+  border-bottom:3px solid #90caf9;
+}
+#stage2-title{position:absolute;top:5px;left:0;right:0;text-align:center;font-size:clamp(12px,2vw,15px);color:#1565c0;font-weight:700;pointer-events:none;z-index:10;}
+#shirt2{position:absolute;bottom:4%;left:50%;transform:translateX(-50%);font-size:clamp(110px,26vw,190px);z-index:2;user-select:none;transition:filter .8s;line-height:1;}
+#stain2{position:absolute;border-radius:50% 55% 48% 52%;background:radial-gradient(ellipse at 40% 38%,#a0622a,#5a3010);z-index:3;transition:opacity .9s,top 1.3s,left 1.3s;}
+.soap2{position:absolute;display:flex;flex-direction:row;align-items:center;opacity:0;z-index:5;pointer-events:none;transform-origin:center center;}
+.soap-bead2{border-radius:50%;background:radial-gradient(circle at 35% 35%,#666,#111);border:1px solid #000;flex-shrink:0;}
+.soap-head2{border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a65,#d84315);border:2px solid #bf360c;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;box-shadow:0 2px 6px rgba(216,67,21,.45);}
+.water2{position:absolute;font-size:clamp(18px,4vw,28px);opacity:0;z-index:6;pointer-events:none;}
+.sparkle2{position:absolute;pointer-events:none;z-index:9;font-size:clamp(20px,4.5vw,32px);opacity:0;animation:spa2 1.3s forwards;}
+@keyframes spa2{0%{opacity:0;transform:scale(.5) rotate(0deg);}40%{opacity:1;transform:scale(1.4) rotate(25deg);}100%{opacity:0;transform:scale(.7) rotate(-15deg);}}
+
+#ctrl2{background:#fff;border-radius:16px;padding:12px 16px;display:flex;flex-direction:column;align-items:center;gap:7px;}
+.step-dots2{display:flex;gap:7px;}
+.dot2{width:11px;height:11px;border-radius:50%;background:#cfd8dc;transition:background .4s;}
+.dot2.done{background:#43a047;}.dot2.active{background:#1565c0;}
+#prog2{font-size:12px;color:#78909c;font-weight:600;}
+#q2txt{font-size:clamp(13px,2.3vw,16px);color:#1a237e;font-weight:700;text-align:center;line-height:1.4;max-width:580px;}
+#opts2{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%;max-width:600px;}
+.opt2{
+  flex:1 1 160px;min-width:140px;max-width:250px;min-height:60px;
+  border:3px solid #90caf9;border-radius:14px;background:#f0f8ff;cursor:pointer;
+  padding:7px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  font-size:clamp(10px,1.7vw,12px);color:#1565c0;font-weight:600;text-align:center;line-height:1.4;
+  transition:transform .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent;
+}
+.opt2:active{transform:scale(.96);}.opt2:hover{box-shadow:0 4px 14px rgba(21,101,192,.18);}
+.opt2:disabled{cursor:default;opacity:.6;}
+.opt2.ok{background:#e8f5e9;border-color:#43a047;color:#1b5e20;}
+.opt2.bad{background:#ffebee;border-color:#e53935;color:#b71c1c;}
+.msw{display:flex;flex-direction:row;align-items:center;gap:1px;}
+.mb{width:6px;height:6px;border-radius:50%;border:1px solid #111;background:#333;flex-shrink:0;}
+.mb.w{background:#64b5f6;border-color:#1565c0;}
+.mh{width:14px;height:14px;border-radius:50%;border:2px solid;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#fff;}
+.mh.hydro{background:radial-gradient(circle at 35% 30%,#ff8a65,#d84315);border-color:#bf360c;}
+.mh.lipid{background:radial-gradient(circle at 35% 30%,#999,#333);border-color:#111;}
+#fb2{font-size:clamp(12px,2.2vw,15px);min-height:20px;font-weight:700;color:#333;text-align:center;}
+#end2{display:none;flex-direction:column;align-items:center;gap:10px;padding:10px;text-align:center;}
+#end2 h2{font-size:clamp(15px,2.8vw,21px);color:#1a237e;}
+.summary2{font-size:clamp(11px,1.9vw,14px);color:#333;line-height:1.8;background:#f3f8ff;border-radius:10px;padding:11px 16px;max-width:480px;}
+
+/* ── 章節三：實驗室 ── */
+#lab-header{
+  width:100%;background:linear-gradient(135deg,#1a6b4a,#2d9e72);
+  color:#fff;text-align:center;padding:12px 16px;border-radius:14px;
+  box-shadow:0 3px 10px rgba(0,0,0,.2);
+}
+#lab-header h2{font-size:clamp(1rem,2.8vw,1.4rem);letter-spacing:2px;}
+#lab-header p{font-size:clamp(0.72rem,1.9vw,0.9rem);opacity:.85;margin-top:3px;}
+.lab-progress-wrap{width:100%;display:flex;gap:8px;padding:4px 0;}
+.lab-dot{flex:1;height:7px;border-radius:99px;background:#ccc;transition:background .5s;}
+.lab-dot.active{background:#2d9e72;}.lab-dot.complete{background:#1a6b4a;}
+.lab-main{display:flex;flex-wrap:wrap;gap:12px;width:100%;}
+.lab-area{
+  flex:1 1 280px;min-height:340px;background:#d0d8df;border-radius:16px;
+  box-shadow:inset 0 3px 8px rgba(0,0,0,.15),0 4px 12px rgba(0,0,0,.1);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;padding:16px;overflow:hidden;
+}
+.lab-area::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(0,0,0,.04) 60px,rgba(0,0,0,.04) 61px);border-radius:16px;pointer-events:none;}
+.lab-label{position:absolute;top:10px;left:14px;font-size:.75rem;color:#7a8a96;font-weight:600;letter-spacing:1px;}
+.beaker-wrap{position:relative;width:150px;height:200px;margin:16px auto 0;}
+.beaker-body{position:absolute;bottom:0;left:8px;width:134px;height:168px;border:5px solid #7aaccc;border-top:none;border-radius:0 0 26px 26px;background:transparent;z-index:3;}
+.beaker-neck{position:absolute;top:0;left:0;width:150px;height:44px;border:5px solid #7aaccc;border-bottom:none;border-radius:12px 12px 0 0;z-index:3;}
+.beaker-spout{position:absolute;top:-4px;right:-9px;width:24px;height:10px;border-right:5px solid #7aaccc;border-top:5px solid #7aaccc;border-radius:0 5px 0 0;z-index:4;}
+.beaker-mark{position:absolute;left:12px;width:12px;height:2px;background:rgba(122,172,204,.5);z-index:4;}
+.beaker-liquid-area{position:absolute;bottom:5px;left:14px;width:120px;height:157px;overflow:hidden;border-radius:0 0 20px 20px;z-index:2;}
+.liquid3{position:absolute;left:0;right:0;transition:height 1.2s cubic-bezier(.4,0,.2,1),background 1.2s,opacity .8s;}
+.blackboard3{
+  background:#2e4a3a;border:5px solid #7a5c32;border-radius:10px;
+  padding:14px 16px;color:#e8f5e9;font-size:clamp(.85rem,2.3vw,1rem);
+  text-align:center;line-height:2.2;box-shadow:3px 3px 8px rgba(0,0,0,.35);
+  width:92%;max-width:340px;position:relative;z-index:5;margin-top:8px;
+}
+.blank3{display:inline-block;min-width:64px;border-bottom:3px solid #a5d6a7;color:#a5d6a7;font-weight:700;padding:0 5px;transition:color .4s;cursor:pointer;}
+.blank3.filled{color:#ffeb3b;border-color:#ffeb3b;cursor:default;}
+.dropper3{position:absolute;top:16px;right:18px;font-size:2rem;z-index:10;opacity:0;transform:translateY(-18px);transition:opacity .4s,transform .4s;pointer-events:none;}
+.dropper3.show{opacity:1;transform:translateY(0);}
+@keyframes dropFall3{0%{transform:translateY(0) scaleY(1);opacity:1;}80%{transform:translateY(70px) scaleY(1.3);opacity:.8;}100%{transform:translateY(110px) scaleY(.5);opacity:0;}}
+.drop-particle3{position:absolute;width:9px;height:12px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;animation:dropFall3 .7s ease-in forwards;pointer-events:none;z-index:9;}
+.soap-block3{
+  position:absolute;left:50%;transform:translateX(-50%);
+  width:72px;height:24px;background:linear-gradient(160deg,#fff9c4,#f9a825);border-radius:7px;
+  box-shadow:2px 2px 5px rgba(0,0,0,.2);opacity:0;bottom:120px;
+  transition:opacity 1s,bottom 1.2s;z-index:6;
+  display:flex;align-items:center;justify-content:center;font-size:.65rem;color:#795548;font-weight:700;
+}
+.soap-block3.visible{opacity:1;bottom:134px;}
+@keyframes fw3{0%{transform:translate(0,0) scale(0);opacity:1;}100%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:0;}}
+.fw-p3{position:absolute;width:9px;height:9px;border-radius:50%;animation:fw3 .9s ease-out forwards;pointer-events:none;}
+.lab-panel{
+  flex:1 1 260px;background:#fff;border-radius:16px;
+  box-shadow:0 4px 16px rgba(0,0,0,.1);
+  display:flex;flex-direction:column;padding:18px 16px;gap:13px;
+}
+.lab-badge{display:inline-block;background:#e0f2f1;color:#1a6b4a;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:99px;letter-spacing:1px;}
+.lab-task-title{font-size:clamp(.95rem,2.6vw,1.15rem);font-weight:700;color:#1e3a2f;line-height:1.6;}
+.lab-task-desc{font-size:clamp(.82rem,2.1vw,.95rem);color:#444;line-height:1.8;background:#f5f7f9;border-left:4px solid #2d9e72;padding:9px 12px;border-radius:0 7px 7px 0;}
+.lab-choices{display:flex;flex-direction:column;gap:8px;}
+.btn-lab{
+  width:100%;padding:12px 16px;font-size:clamp(.88rem,2.3vw,1rem);font-weight:600;
+  border:3px solid #c5d8cc;border-radius:10px;background:#f0f7f3;color:#1e3a2f;
+  cursor:pointer;text-align:left;transition:background .2s,border-color .2s,transform .1s;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn-lab:active{transform:scale(.97);}.btn-lab:hover{background:#d8eee4;border-color:#2d9e72;}
+.btn-lab.correct{background:#c8f0d8;border-color:#2d9e72;color:#1a5c35;cursor:default;}
+.btn-lab.wrong{background:#ffe0e0;border-color:#e57373;color:#8b1a1a;animation:shake3 .4s;}
+.btn-lab:disabled{cursor:default;}
+@keyframes shake3{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.lab-feedback{min-height:56px;font-size:clamp(.82rem,2.1vw,.94rem);line-height:1.7;color:#2c4a38;background:#f0faf4;border-radius:9px;padding:10px 12px;opacity:0;transition:opacity .5s;border:1px solid #b2dfce;}
+.lab-feedback.visible{opacity:1;}.lab-feedback.error{background:#fff3f3;color:#8b1a1a;border-color:#f5a5a5;}
+.btn-lab-next{display:none;width:100%;padding:13px;font-size:1rem;font-weight:700;background:linear-gradient(135deg,#2d9e72,#1a6b4a);color:#fff;border:none;border-radius:10px;cursor:pointer;letter-spacing:1px;box-shadow:0 4px 10px rgba(45,158,114,.35);transition:transform .2s,box-shadow .2s;}
+.btn-lab-next:active{transform:scale(.97);box-shadow:none;}
+.lab-ending{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:8px;}
+.lab-ending-emoji{font-size:3.5rem;animation:lbounce .8s infinite alternate;}
+@keyframes lbounce{from{transform:translateY(0);}to{transform:translateY(-10px);}}
+.lab-ending h2{font-size:clamp(1.1rem,2.8vw,1.4rem);color:#1a6b4a;}
+.lab-summary-box{background:#e8f5ee;border-radius:10px;padding:12px 16px;text-align:left;font-size:.88rem;color:#2c4a38;line-height:2;width:100%;}
+
+/* ── 全局完成面板 ── */
+#final-screen{
+  display:none;flex-direction:column;align-items:center;gap:16px;
+  padding:20px 16px;width:100%;max-width:700px;
+}
+.final-card{background:linear-gradient(135deg,#fff9e6,#fff3cc);border-radius:22px;padding:28px 22px;text-align:center;border:3px solid #F4A431;box-shadow:0 8px 32px rgba(244,164,49,.25);}
+.final-card .fem{font-size:64px;margin-bottom:10px;}
+.final-card h1{font-size:clamp(18px,4vw,26px);color:#C77C00;margin-bottom:10px;}
+.final-know{background:#fff;border-radius:14px;padding:16px 18px;border:2px solid #F4A431;font-size:13px;color:#3a2000;line-height:2;text-align:left;margin:10px 0;}
+.mystery-box{background:linear-gradient(135deg,#1a1a2e,#2d1b4e);border-radius:14px;padding:18px;margin:10px 0;text-align:left;}
+
+/*===== Toast =====*/
+#toast{
+  position:fixed;top:32px;left:50%;
+  transform:translateX(-50%) scale(.8);
+  background:rgba(255,235,100,.97);border-radius:18px;
+  padding:9px 22px;font-size:14px;font-weight:700;color:#5C3D2E;
+  z-index:999;pointer-events:none;opacity:0;
+  transition:all .25s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.25);
+}
+#toast.show{opacity:1;transform:translateX(-50%) scale(1);}
+
+/*===== 彈窗 fade =====*/
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeIn .4s ease;}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ════ 頂部導覽列 ════ -->
+<div id="top-nav">
+  <div class="nav-title">🧼 肥皂科學三部曲</div>
+  <div class="chapter-tabs">
+    <button class="ctab active" id="tab0" onclick="showChapter(0)">封面</button>
+    <button class="ctab locked" id="tab1" onclick="tryChapter(1)">Ⅰ 歷史</button>
+    <button class="ctab locked" id="tab2" onclick="tryChapter(2)">Ⅱ 去污</button>
+    <button class="ctab locked" id="tab3" onclick="tryChapter(3)">Ⅲ 製皂</button>
+  </div>
+</div>
+
+<div id="app">
+
+<!-- ════════════════════════
+     封面
+════════════════════════ -->
+<div class="chapter active" id="ch0">
+  <div class="cover-card fade-in">
+    <div class="big-em">🧼</div>
+    <h1>肥皂科學三部曲</h1>
+    <p>從古代傳說到現代化學，跟著三個關卡<br>一起揭開肥皂的神秘面紗！</p>
+    <div class="chapter-list">
+      <div class="chapter-item">
+        <div class="ci-num">🏛️</div>
+        <div class="ci-info"><h3>關卡一：肥皂的歷史傳說</h3><p>追溯肥皂的起源，找出古人無意發現的神秘物質</p></div>
+      </div>
+      <div class="chapter-item">
+        <div class="ci-num">🔬</div>
+        <div class="ci-info"><h3>關卡二：肥皂的去污能力</h3><p>動畫工作室：理解肥皂分子如何抓住油污</p></div>
+      </div>
+      <div class="chapter-item">
+        <div class="ci-num">⚗️</div>
+        <div class="ci-info"><h3>關卡三：自己動手做肥皂</h3><p>虛擬實驗室：完成三個步驟，搞懂皂化反應！</p></div>
+      </div>
+    </div>
+    <button class="btn btn-orange" onclick="startChapter1()">▶ 開始第一關！</button>
+  </div>
+</div>
+
+<!-- ════════════════════════
+     關卡一：歷史
+════════════════════════ -->
+<div class="chapter" id="ch1">
+
+  <!-- 子面板：場景一 -->
+  <div id="s1-a">
+    <div class="scene-title" style="margin-bottom:6px;">🏛️ 場景一：古希臘的祭典</div>
+    <div class="panel-box" id="narr1">
+      <div class="narr-line" id="n1-1">📜 很久很久以前，在古希臘的山丘上，人們正在舉行一場盛大的祭天儀式。</div>
+      <div class="narr-line" id="n1-2">🪵 祭司們堆起一大堆木柴，點燃熊熊大火，</div>
+      <div class="narr-line" id="n1-3">🥩 並將帶著豐厚脂肪的動物肉放在火上燃燒，獻給眾神。</div>
+      <div class="narr-line" id="n1-4">🔥 高溫逼出了動物身上的<strong>油脂（脂肪）</strong>，它們緩緩滴落在熾熱的木柴上…</div>
+    </div>
+    <div class="canvas bg-greece" id="cv1">
+      <div style="position:absolute;bottom:26px;left:50%;transform:translateX(-50%);width:100px;height:40px;background:#6B5A3E;border-radius:7px 7px 2px 2px;display:flex;align-items:center;justify-content:center;"><span style="font-size:10px;color:#F5E6C8;font-weight:700;">祭　壇</span></div>
+      <div class="obj" id="obj-fire" style="bottom:64px;left:50%;transform:translateX(-50%);" onclick="ignite()">
+        <span class="em" id="fire-em">🪵🪵</span><span class="lb">點燃木柴</span>
+      </div>
+      <div class="obj" id="obj-meat" style="top:24px;left:48px;display:none;"><span class="em">🥩</span><span class="lb">動物脂肪</span></div>
+      <div class="obj glow-anim" id="obj-mys1" style="bottom:64px;left:50%;transform:translateX(-50%);display:none;"><span class="em">✨🟡✨</span><span class="lb">神秘黃色物質</span></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:28px;background:#6B4A0A;"></div>
+      <div style="position:absolute;top:10px;right:26px;font-size:26px;">⛩️</div>
+      <div style="position:absolute;top:16px;left:14px;font-size:20px;">🌿</div>
+    </div>
+    <div class="hint-box" id="hint-s1a">👆 點擊「木柴」，點燃祭典的火焰！</div>
+    <div class="hint-box btn-hidden" id="hint-s1b">🟡 神秘的黃色物質出現了！大雨即將把它帶走…</div>
+    <button class="btn btn-orange btn-hidden" id="btn-s1next" onclick="goS2()">前往溪邊 →</button>
+  </div>
+
+  <!-- 子面板：場景二 -->
+  <div id="s1-b" style="display:none;">
+    <div class="scene-title" style="margin-bottom:6px;">🌊 場景二：溪邊的奇蹟</div>
+    <div class="panel-box">
+      <div class="narr-line shown" id="n2-1">🌧️ 天空突然下起大雨，雨水將山丘上那些<strong>神秘的黃色物質</strong>沖刷進了山下的溪流。</div>
+      <div class="narr-line" id="n2-2">👗 溪邊，一位鄉民正在用溪水搓洗一件沾滿污垢的衣服，完全不知道溪水裡多了什麼…</div>
+      <div class="narr-line" id="n2-3">😮 搓著搓著，衣服上的污漬竟然神奇地消失了！衣服變得煥然一新！</div>
+      <div class="narr-line" id="n2-4">❓ 究竟是什麼讓這件衣服變乾淨了？讓我們找出真相！</div>
+    </div>
+    <div class="canvas bg-river">
+      <div id="rain-wrap" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;"></div>
+      <div class="river"><div class="ripple"></div></div>
+      <div class="obj glow-anim" id="obj-mys2" style="bottom:66px;left:40%;transform:translateX(-50%);display:none;"><span class="em">✨🟡✨</span><span class="lb">神秘黃色物質</span></div>
+      <div style="position:absolute;bottom:88px;left:26px;text-align:center;"><span style="font-size:30px;">🧑‍🌾</span><div style="font-size:9px;color:#ddd;">鄉民</div></div>
+      <div class="obj" id="obj-clothes" style="bottom:92px;right:36px;" onclick="washClick()">
+        <span class="em" id="clothes-em">👕</span><span class="lb" id="clothes-lb">髒衣服（點我搓洗！）</span>
+      </div>
+      <div style="position:absolute;top:8px;left:14px;font-size:26px;">🌲</div>
+      <div style="position:absolute;top:8px;right:14px;font-size:22px;">🌿</div>
+    </div>
+    <div class="prog-wrap" id="wash-prog" style="display:none;">
+      <div class="prog-lbl">搓洗進度：<span id="wash-pct">0</span>%</div>
+      <div class="prog-bg"><div class="prog-fill" id="wash-fill"></div></div>
+    </div>
+    <div class="hint-box btn-hidden" id="hint-s2">👆 點擊「髒衣服」，反覆搓洗看看！</div>
+    <button class="btn btn-orange btn-hidden" id="btn-s2next" onclick="goExplore()">🔍 找出真相！</button>
+  </div>
+
+  <!-- 子面板：探索 -->
+  <div id="s1-c" style="display:none;">
+    <div class="scene-title" style="margin-bottom:6px;">🔍 找出真相——翻閱物品線索！</div>
+    <div class="panel-box" style="border-left-color:#7B68EE;font-size:13px;">🕵️ 故事裡出現了很多東西。點擊每一個物品，閱讀它的線索說明，再回答下面的問題！</div>
+    <div class="explore-grid" id="clue-grid"></div>
+    <div style="font-size:12px;color:#aaa;text-align:center;">已閱讀線索：<span id="clue-count">0</span> / <span id="clue-total">0</span></div>
+    <div class="qa-section" id="qa1">
+      <div class="qa-title">❓ 問題一：是什麼讓衣服變乾淨了？</div>
+      <div class="qa-subtitle">從下列選項中選出正確答案：</div>
+      <div class="ans-row" id="q1-row"></div>
+      <div class="qa-feedback" id="q1-fb"></div>
+    </div>
+    <div class="qa-section" id="qa2">
+      <div class="qa-title">❓ 問題二：神秘黃色物質是怎麼產生的？</div>
+      <div class="qa-subtitle">點選兩個材料填入空格，組合出答案：</div>
+      <div class="combo-slot">
+        <div class="slot-box" id="slot0" onclick="clearSlot(0)"><span class="slot-em" id="sl0-em">？</span><span class="slot-lb" id="sl0-lb"></span></div>
+        <div class="slot-plus">＋</div>
+        <div class="slot-box" id="slot1" onclick="clearSlot(1)"><span class="slot-em" id="sl1-em">？</span><span class="slot-lb" id="sl1-lb"></span></div>
+        <div class="slot-arrow">→</div>
+        <div class="slot-result" id="combo-result">?</div>
+      </div>
+      <div class="ans-row" id="q2-row"></div>
+      <div class="qa-feedback" id="q2-fb"></div>
+      <button class="btn btn-green btn-hidden" id="btn-check-combo" onclick="checkCombo()" style="margin-top:7px;padding:9px 22px;font-size:14px;">✔ 確認答案</button>
+    </div>
+    <button class="btn btn-orange btn-hidden" id="btn-to-ch1end" onclick="finishCh1()">🎉 揭開秘密！</button>
+  </div>
+
+  <!-- 子面板：關卡一結局 -->
+  <div id="s1-end" style="display:none;">
+    <div class="end-card fade-in">
+      <div class="end-title">🎊 你找出真相了！</div>
+      <div style="font-size:34px;margin:8px 0;">🥩 ➕ ⬜ ➡️ ✨🟡 ➡️ 👕✨</div>
+      <div class="end-know">
+        <p>✅ 你已找出這個神奇現象的關鍵：</p><br>
+        <p>🥩 <strong>動物脂肪（油脂）</strong>滴落在</p>
+        <p>⬜ <strong>木柴燃燒後的灰燼</strong>上，</p>
+        <p>兩者相遇，產生了那個<strong>神秘的黃色物質</strong>——正是它，讓溪水擁有了去除污垢的能力！</p><br>
+        <div class="formula">動物脂肪（油脂） ＋ 木柴灰燼<br>↓ 發生了某種化學反應<br>✨🟡 神秘黃色物質（具去污能力）</div>
+        <br><p>💡 這個神秘的黃色物質，其實就是人類最早發現的<strong>肥皂</strong>！</p>
+      </div>
+      <div class="mystery-box">
+        <div style="font-size:15px;font-weight:700;color:#FFD580;margin-bottom:8px;">🔮 下一個謎題等著你！</div>
+        <p style="font-size:13px;color:#ddd;line-height:1.9;">我們知道肥皂是由<strong style="color:#FFD700;">動物脂肪</strong>和<strong style="color:#FFD700;">木柴灰燼</strong>反應產生的。<br>但它究竟是如何去除污垢的？它的分子結構有什麼秘密？</p>
+      </div>
+      <button class="btn btn-orange" onclick="unlockAndGo(2)">前往關卡二：去污能力 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 線索彈窗 -->
+<div id="clue-popup" class="clue-popup" style="display:none;" onclick="closePopup()">
+  <div class="clue-inner" onclick="event.stopPropagation()">
+    <div class="ci-em" id="cp-em"></div>
+    <div class="ci-title" id="cp-title"></div>
+    <div class="ci-desc" id="cp-desc"></div>
+    <button class="btn btn-orange" style="margin-top:12px;padding:9px 22px;" onclick="closePopup()">✔ 知道了！</button>
+  </div>
+</div>
+
+<!-- ════════════════════════
+     關卡二：去污
+════════════════════════ -->
+<div class="chapter" id="ch2">
+  <div id="stage2" style="margin-top:4px;">
+    <div id="stage2-title">🔬 去污動畫工作室</div>
+    <div id="shirt2">👕</div>
+    <div id="stain2"></div>
+    <div class="soap2" id="s2-0"></div><div class="soap2" id="s2-1"></div>
+    <div class="soap2" id="s2-2"></div><div class="soap2" id="s2-3"></div>
+    <div class="soap2" id="s2-4"></div><div class="soap2" id="s2-5"></div>
+    <div class="water2" id="w2-0">💧</div><div class="water2" id="w2-1">💧</div>
+    <div class="water2" id="w2-2">💧</div><div class="water2" id="w2-3">💧</div>
+  </div>
+  <div id="ctrl2">
+    <div class="step-dots2"><div class="dot2" id="d2-0"></div><div class="dot2" id="d2-1"></div><div class="dot2" id="d2-2"></div></div>
+    <div id="prog2"></div>
+    <div id="q2txt"></div>
+    <div id="opts2">
+      <button class="opt2" id="btnA2" onclick="answer2('a')"></button>
+      <button class="opt2" id="btnB2" onclick="answer2('b')"></button>
+    </div>
+    <div id="fb2"></div>
+    <div id="end2">
+      <h2>🎉 恭喜完成去污動畫大作！</h2>
+      <div class="summary2">
+        <strong>去汙原理：</strong><br>
+        1️⃣ 親油端（碳氫鏈）插入並包圍油汙<br>
+        2️⃣ 親水端（帶電頭部）朝外面向水分子<br>
+        3️⃣ 水流將油汙連根帶離衣物
+      </div>
+      <button class="btn btn-orange" onclick="unlockAndGo(3)">前往關卡三：自製肥皂 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════
+     關卡三：製皂實驗室
+════════════════════════ -->
+<div class="chapter" id="ch3">
+  <div id="lab-header">
+    <h2>⚗️ 虛擬化學實驗室：皂化反應解密</h2>
+    <p>完成三個實驗關卡，學會製造肥皂的科學原理！</p>
+  </div>
+  <div class="lab-progress-wrap">
+    <div class="lab-dot active" id="ldot1"></div>
+    <div class="lab-dot" id="ldot2"></div>
+    <div class="lab-dot" id="ldot3"></div>
+  </div>
+  <div class="lab-main">
+    <!-- 實驗桌 -->
+    <div class="lab-area" id="labArea3">
+      <span class="lab-label">🧪 實驗桌</span>
+      <div class="dropper3" id="dropper3">🧴</div>
+      <div class="beaker-wrap" id="beakerWrap3">
+        <div class="beaker-neck"><div class="beaker-spout"></div></div>
+        <div class="beaker-liquid-area" id="liquidArea3"></div>
+        <div class="beaker-body">
+          <div class="beaker-mark" style="bottom:110px"></div>
+          <div class="beaker-mark" style="bottom:72px"></div>
+          <div class="beaker-mark" style="bottom:36px"></div>
+        </div>
+        <div class="soap-block3" id="soapBlock3">🧼 肥皂</div>
+      </div>
+      <div class="blackboard3" id="blackboard3">
+        <span id="blank3-1" class="blank3">？反應物一？</span>
+        ＋
+        <span id="blank3-2" class="blank3">？反應物二？</span>
+        <br>↓<br>
+        <span style="color:#a5d6a7">肥皂（脂肪酸鈉）＋ 甘油</span>
+      </div>
+    </div>
+    <!-- 任務面板 -->
+    <div class="lab-panel" id="labPanel3">
+      <span class="lab-badge" id="labBadge3">🧪 關卡一</span>
+      <div class="lab-task-title" id="labTitle3">寫下配方：皂化反應式</div>
+      <div class="lab-task-desc" id="labDesc3"></div>
+      <div class="lab-choices" id="labChoices3"></div>
+      <div class="lab-feedback" id="labFeedback3"></div>
+      <button class="btn-lab-next" id="btnLabNext3" onclick="labGoNext()">繼續實驗 ➜</button>
+      <div class="lab-ending" id="labEnding3">
+        <div class="lab-ending-emoji">🎉</div>
+        <h2>恭喜完成虛擬實驗！</h2>
+        <p>你已掌握皂化反應的三個關鍵步驟！</p>
+        <div class="lab-summary-box">
+          🔑 <b>三大關鍵回顧：</b><br>
+          1️⃣ 皂化反應：油脂 ＋ NaOH → 肥皂 ＋ 甘油<br>
+          2️⃣ 加入酒精（乙醇）讓油脂與鹼均勻混合<br>
+          3️⃣ 鹽析：加飽和食鹽水，使肥皂浮出分離<br><br>
+          📅 下週進實驗室，記得這三個步驟喔！
+        </div>
+        <button class="btn-lab-next" style="display:block;margin-top:4px;" onclick="showFinalScreen()">🏆 查看學習成果！</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════
+     全局完成
+════════════════════════ -->
+<div id="final-screen">
+  <div class="final-card fade-in">
+    <div class="fem">🏆</div>
+    <h1>恭喜完成肥皂科學三部曲！</h1>
+    <div class="final-know">
+      <p>📖 <strong>今天你學到了：</strong></p><br>
+      <p>🏛️ <strong>關卡一｜歷史起源</strong><br>人類最早的肥皂來自古代祭典，油脂遇到木灰（強鹼）而誕生。</p><br>
+      <p>🔬 <strong>關卡二｜去污原理</strong><br>肥皂分子有「親油端」與「親水端」，能同時抓住油污與水，帶走污垢。</p><br>
+      <p>⚗️ <strong>關卡三｜皂化反應</strong></p>
+      <div class="formula">油脂 ＋ NaOH（強鹼）→ 肥皂（脂肪酸鈉）＋ 甘油<br>（加酒精助混合，加食鹽水鹽析分離）</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+      <button class="btn btn-orange" onclick="restartAll()">🔄 從頭再來一次</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #app -->
+
+<script>
+/* ═══════════════════════════
+   工具函式
+═══════════════════════════ */
+function toast(msg,d=1800){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),d);
+}
+function showEl(id){document.getElementById(id).style.display='block';}
+function hideEl(id){document.getElementById(id).style.display='none';}
+function showFlex(id){document.getElementById(id).style.display='flex';}
+
+/* 解鎖章節 */
+const unlocked=[true,false,false,false];
+function unlockTab(n){
+  unlocked[n]=true;
+  const t=document.getElementById('tab'+n);
+  t.classList.remove('locked');t.classList.add('unlocked');
+}
+function tryChapter(n){
+  if(!unlocked[n]){toast('⚠️ 請先完成前一個關卡！',1600);return;}
+  showChapter(n);
+}
+function showChapter(n){
+  document.querySelectorAll('.chapter').forEach(c=>c.classList.remove('active'));
+  document.getElementById('ch'+n).classList.add('active');
+  document.querySelectorAll('.ctab').forEach((t,i)=>{
+    t.classList.toggle('active',i===n);
+  });
+  hideEl('final-screen');
+  if(n===2) initGame2();
+  if(n===3) initLab3();
+}
+
+/* ═══════════════════════════
+   關卡一：歷史
+═══════════════════════════ */
+function startChapter1(){
+  unlockTab(1);showChapter(1);
+  // 顯示 s1-a，隱藏其他
+  showEl('s1-a');hideEl('s1-b');hideEl('s1-c');hideEl('s1-end');
+  startS1();
+}
+
+/* 場景一 */
+const N1IDS=['n1-1','n1-2','n1-3','n1-4'];
+let s1i=0,s1done=false;
+function startS1(){s1i=0;s1done=false;tickN1();}
+function tickN1(){
+  if(s1i<N1IDS.length){
+    document.getElementById(N1IDS[s1i]).classList.add('shown');
+    s1i++;
+    if(s1i<N1IDS.length) setTimeout(tickN1,1700);
+  }
+}
+function ignite(){
+  if(s1done)return;s1done=true;
+  const fe=document.getElementById('fire-em');
+  fe.textContent='🔥🔥🔥';
+  document.getElementById('obj-fire').classList.add('flame-anim');
+  document.getElementById('obj-fire').querySelector('.lb').textContent='燃燒中…';
+  showEl('obj-meat');
+  toast('🔥 火焰熊熊燃起！油脂緩緩滴落…',2000);
+  setTimeout(()=>{
+    fe.textContent='⬜⬜';
+    document.getElementById('obj-fire').classList.remove('flame-anim');
+    document.getElementById('obj-fire').querySelector('.lb').textContent='木柴灰燼';
+    hideEl('obj-meat');showEl('obj-mys1');
+    toast('✨ 神秘的黃色物質出現了！',2000);
+    document.getElementById('hint-s1a').classList.add('btn-hidden');
+    document.getElementById('hint-s1b').classList.remove('btn-hidden');
+    setTimeout(()=>document.getElementById('btn-s1next').classList.remove('btn-hidden'),1800);
+  },3000);
+}
+
+/* 場景二 */
+function goS2(){
+  hideEl('s1-a');showEl('s1-b');
+  let s2i=0;
+  const N2=['n2-2','n2-3','n2-4'];
+  setTimeout(()=>{
+    function tickN2(){
+      if(s2i<N2.length){document.getElementById(N2[s2i]).classList.add('shown');s2i++;setTimeout(tickN2,1800);}
+    }tickN2();
+  },400);
+  makeRain();
+  setTimeout(()=>{showEl('obj-mys2');document.getElementById('wash-prog').style.display='block';document.getElementById('hint-s2').classList.remove('btn-hidden');},2800);
+}
+function makeRain(){
+  const w=document.getElementById('rain-wrap');w.innerHTML='';
+  for(let i=0;i<24;i++){
+    const d=document.createElement('div');d.className='raindrop';
+    d.style.left=Math.random()*100+'%';
+    d.style.animationDuration=(0.5+Math.random()*.7)+'s';
+    d.style.animationDelay=(Math.random()*1.2)+'s';
+    w.appendChild(d);
+  }
+}
+let washN=0,washDone=false;
+const WASH_MAX=8;
+function washClick(){
+  if(washDone)return;
+  washN++;
+  const pct=Math.min(Math.round(washN/WASH_MAX*100),100);
+  document.getElementById('wash-pct').textContent=pct;
+  document.getElementById('wash-fill').style.width=pct+'%';
+  const em=document.getElementById('clothes-em');
+  if(washN===3){em.textContent='🌀';toast('🫧 起泡了！繼續搓！');}
+  else if(washN===6){em.textContent='✨';toast('🌟 越來越乾淨！');}
+  else if(washN>=WASH_MAX){
+    washDone=true;em.textContent='👕';em.style.filter='brightness(1.6) saturate(1.5)';
+    document.getElementById('clothes-lb').textContent='✨ 乾淨的衣服！';
+    toast('🎉 衣服洗乾淨了！',2000);
+    setTimeout(()=>document.getElementById('btn-s2next').classList.remove('btn-hidden'),1400);
+  }
+}
+
+/* 探索 */
+const CLUES=[
+  {id:'meat',em:'🥩',name:'動物脂肪',desc:'祭典上燃燒的動物身上含有豐富的油脂（脂肪）。高溫將這些油脂逼了出來，讓它緩緩滴落在木柴上。'},
+  {id:'fire',em:'🔥',name:'燃燒的木柴',desc:'用來點燃祭典火焰的木柴。熊熊燃燒之後，木材化為了灰色的粉末。'},
+  {id:'ash', em:'⬜',name:'木柴灰燼',desc:'木材燃燒後留下的灰色粉末。油脂滴落到灰燼上之後，兩者之間悄悄發生了某種變化……'},
+  {id:'mys', em:'🟡',name:'神秘黃色物質',desc:'油脂與灰燼相遇後產生的奇妙物質。它溶入水中後，讓溪水擁有了去除污垢的神奇能力！'},
+  {id:'rain',em:'🌧️',name:'大雨',desc:'大雨把神秘黃色物質從山丘沖刷進了溪流，讓下游的鄉民在不知情的情況下使用了它。'},
+  {id:'river',em:'🌊',name:'溪水',desc:'鄉民平常用來洗衣的溪水。本身並沒有特別的去污能力，但這一次，溪水裡多了些不一樣的東西……'},
+  {id:'cloth',em:'👕',name:'髒衣服',desc:'鄉民在溪邊搓洗的衣服。在含有神秘物質的溪水中搓揉之後，污垢竟然神奇地消失了！'},
+];
+const Q1_OPTS=[
+  {id:'river',label:'🌊 溪水本來就很乾淨'},
+  {id:'rain', label:'🌧️ 大雨的沖刷力道'},
+  {id:'mys',  label:'🟡 神秘的黃色物質'},
+  {id:'cloth',label:'👕 衣服自己掉色了'},
+];
+const Q2_OPTS=[
+  {id:'meat', em:'🥩',label:'動物脂肪'},
+  {id:'ash',  em:'⬜',label:'木柴灰燼'},
+  {id:'fire', em:'🔥',label:'燃燒的火焰'},
+  {id:'river',em:'🌊',label:'溪水'},
+];
+const Q2_CORRECT=new Set(['meat','ash']);
+let viewedSet=new Set(),currentClue=null,q1done=false,q2done=false,comboSlots=[null,null];
+
+function goExplore(){
+  hideEl('s1-b');showEl('s1-c');
+  viewedSet.clear();q1done=false;q2done=false;comboSlots=[null,null];
+  renderGrid();renderQ1();renderQ2();
+  document.getElementById('qa1').classList.remove('active');
+  document.getElementById('qa2').classList.remove('active');
+  document.getElementById('btn-to-ch1end').classList.add('btn-hidden');
+  document.getElementById('clue-total').textContent=CLUES.length;
+  document.getElementById('clue-count').textContent=0;
+}
+function renderGrid(){
+  const g=document.getElementById('clue-grid');g.innerHTML='';
+  CLUES.forEach((c,i)=>{
+    const d=document.createElement('div');
+    d.className='clue-card'+(viewedSet.has(c.id)?' viewed':'');
+    d.innerHTML=`<div class="cem">${c.em}</div><div class="cnm">${c.name}</div>`;
+    d.onclick=()=>openPopup(i);g.appendChild(d);
+  });
+}
+function openPopup(i){
+  currentClue=i;const c=CLUES[i];
+  document.getElementById('cp-em').textContent=c.em;
+  document.getElementById('cp-title').textContent=c.name;
+  document.getElementById('cp-desc').textContent=c.desc;
+  showEl('clue-popup');
+}
+function closePopup(){
+  if(currentClue!==null){
+    viewedSet.add(CLUES[currentClue].id);
+    document.getElementById('clue-count').textContent=viewedSet.size;
+    renderGrid();
+    if(viewedSet.size>=CLUES.length&&!q1done){
+      document.getElementById('qa1').classList.add('active');
+      toast('🎉 全部線索讀完了！來回答問題吧！',2000);
+    }
+  }
+  hideEl('clue-popup');currentClue=null;
+}
+function renderQ1(){
+  const row=document.getElementById('q1-row');row.innerHTML='';
+  Q1_OPTS.forEach(o=>{
+    const b=document.createElement('button');b.className='ans-chip';b.textContent=o.label;
+    b.onclick=()=>ansQ1(o.id,b);row.appendChild(b);
+  });document.getElementById('q1-fb').textContent='';
+}
+function ansQ1(id,btn){
+  if(q1done)return;
+  document.querySelectorAll('#q1-row .ans-chip').forEach(b=>b.classList.remove('correct','wrong'));
+  const fb=document.getElementById('q1-fb');
+  if(id==='mys'){
+    q1done=true;btn.classList.add('correct');
+    fb.textContent='✅ 答對了！正是「神秘的黃色物質」讓衣服變乾淨！';fb.className='qa-feedback ok';
+    document.querySelectorAll('#q1-row .ans-chip').forEach(b=>b.style.pointerEvents='none');
+    setTimeout(()=>document.getElementById('qa2').classList.add('active'),700);
+  } else {
+    btn.classList.add('wrong');
+    fb.textContent='❌ 再想想看！同樣的溪水，以前洗衣可沒這效果喔…';fb.className='qa-feedback err';
+    setTimeout(()=>{btn.classList.remove('wrong');fb.textContent='';},1700);
+  }
+}
+function renderQ2(){
+  const row=document.getElementById('q2-row');row.innerHTML='';
+  Q2_OPTS.forEach(o=>{
+    const b=document.createElement('button');b.className='ans-chip';b.dataset.id=o.id;
+    b.textContent=o.em+' '+o.label;b.onclick=()=>selectCombo(o);row.appendChild(b);
+  });
+  comboSlots=[null,null];updateSlotUI();document.getElementById('q2-fb').textContent='';
+}
+function selectCombo(o){
+  if(q2done)return;
+  if((comboSlots[0]&&comboSlots[0].id===o.id)||(comboSlots[1]&&comboSlots[1].id===o.id))return;
+  if(!comboSlots[0])comboSlots[0]=o;
+  else if(!comboSlots[1])comboSlots[1]=o;
+  else return;
+  updateSlotUI();
+}
+function clearSlot(i){if(q2done)return;comboSlots[i]=null;updateSlotUI();}
+function updateSlotUI(){
+  const s0=comboSlots[0],s1=comboSlots[1];
+  document.getElementById('sl0-em').textContent=s0?s0.em:'？';
+  document.getElementById('sl0-lb').textContent=s0?s0.label:'';
+  document.getElementById('slot0').classList.toggle('filled',!!s0);
+  document.getElementById('sl1-em').textContent=s1?s1.em:'？';
+  document.getElementById('sl1-lb').textContent=s1?s1.label:'';
+  document.getElementById('slot1').classList.toggle('filled',!!s1);
+  document.getElementById('combo-result').textContent=(s0&&s1)?'✨🟡？':'?';
+  document.getElementById('btn-check-combo').classList.toggle('btn-hidden',!(s0&&s1));
+}
+function checkCombo(){
+  if(q2done)return;
+  const ids=new Set(comboSlots.filter(Boolean).map(o=>o.id));
+  const fb=document.getElementById('q2-fb');
+  const ok=[...ids].every(id=>Q2_CORRECT.has(id))&&ids.size===2;
+  if(ok){
+    q2done=true;
+    document.getElementById('combo-result').textContent='✨🟡✅';
+    fb.textContent='✅ 正確！動物脂肪 ＋ 木柴灰燼 → 神秘黃色物質！';fb.className='qa-feedback ok';
+    document.querySelectorAll('#q2-row .ans-chip').forEach(b=>b.style.pointerEvents='none');
+    document.getElementById('btn-check-combo').classList.add('btn-hidden');
+    setTimeout(()=>document.getElementById('btn-to-ch1end').classList.remove('btn-hidden'),900);
+  } else {
+    fb.textContent='❌ 答案不對！想想哪兩樣東西在祭壇上相遇了…';fb.className='qa-feedback err';
+    setTimeout(()=>{comboSlots=[null,null];updateSlotUI();fb.textContent='';},1800);
+  }
+}
+function finishCh1(){
+  hideEl('s1-c');showEl('s1-end');
+  unlockTab(2);
+}
+
+/* ═══════════════════════════
+   關卡二：去污
+═══════════════════════════ */
+const stage2El=document.getElementById('stage2');
+const shirt2El=document.getElementById('shirt2');
+const stain2El=document.getElementById('stain2');
+const soaps2=[0,1,2,3,4,5].map(i=>document.getElementById('s2-'+i));
+const waters2=[0,1,2,3].map(i=>document.getElementById('w2-'+i));
+
+function sz2(){
+  const bead=Math.round(Math.max(7,Math.min(11,window.innerWidth*.018)));
+  const head=Math.round(Math.max(18,Math.min(28,window.innerWidth*.042)));
+  return{bead,head};
+}
+function buildSoap2(el,headRight=true,nBeads=7){
+  el.innerHTML='';const{bead:bs,head:hs}=sz2();
+  const makeBeads=()=>{const f=document.createDocumentFragment();for(let i=0;i<nBeads;i++){const b=document.createElement('div');b.className='soap-bead2';b.style.width=b.style.height=bs+'px';f.appendChild(b);}return f;};
+  const makeHead=()=>{const h=document.createElement('div');h.className='soap-head2';h.style.width=h.style.height=hs+'px';h.style.fontSize=Math.round(hs*.4)+'px';h.textContent='−';return h;};
+  if(headRight){el.appendChild(makeBeads());el.appendChild(makeHead());}
+  else{el.appendChild(makeHead());el.appendChild(makeBeads());}
+}
+function stainCenter2(){
+  const sR=stage2El.getBoundingClientRect();const tR=stain2El.getBoundingClientRect();
+  return{x:tR.left-sR.left+tR.width/2,y:tR.top-sR.top+tR.height/2,w:tR.width,h:tR.height};
+}
+function placeStain2(){
+  const sR=stage2El.getBoundingClientRect();const fR=shirt2El.getBoundingClientRect();
+  const sw=Math.round(Math.max(50,Math.min(90,window.innerWidth*.12)));const sh=Math.round(sw*.68);
+  stain2El.style.width=sw+'px';stain2El.style.height=sh+'px';
+  stain2El.style.left=Math.round(fR.left-sR.left+fR.width*.5-sw*.5)+'px';
+  stain2El.style.top=Math.round(fR.top-sR.top+fR.height*.24)+'px';
+  stain2El.style.transform='';
+}
+
+const correctMini=()=>{let b='';for(let i=0;i<6;i++)b+=`<div class="mb"></div>`;return`<div class="msw">${b}<div class="mh hydro">−</div></div>`;};
+const wrongMini=()=>{let b='';for(let i=0;i<6;i++)b+=`<div class="mb w"></div>`;return`<div class="msw">${b}<div class="mh lipid">−</div></div>`;};
+
+const STEPS2=[
+  {q:'請問哪一張圖卡標示了正確的肥皂分子結構？',
+   a:{html:wrongMini(),  label:'選項 A\n藍色鏈（親水）→ 灰色頭（親油）',correct:false,fb:'❌ 注意看！長長的碳氫鏈才是親油的一端喔！'},
+   b:{html:correctMini(),label:'選項 B\n黑色鏈（親油）→ 橘紅大頭（親水）',correct:true,fb:'✅ 答對了！肥皂準備就緒！'}},
+  {q:'遇到衣服上的油汙，肥皂分子會怎麼行動？',
+   a:{html:correctMini(),label:'選項 A\n親油鏈插入並包圍油汙',correct:true,fb:'✅ 正確！親油端插入油汙中將它包圍！'},
+   b:{html:wrongMini(),  label:'選項 B\n親水大頭插入油汙',correct:false,fb:'❌ 親水端不喜歡油，進不去油汙裡啦！'}},
+  {q:'水流來了，接下來會發生什麼事完成去汙？',
+   a:{html:wrongMini(),  label:'選項 A\n水分子 💧 抓住親油鏈',correct:false,fb:'❌ 親水端才會和水分子結合喔！'},
+   b:{html:correctMini(),label:'選項 B\n水分子 💧 抓住親水大頭',correct:true,fb:'✅ 完美！水抓住親水端，把油汙連根帶走！'}},
+];
+let step2=0,answered2=false;
+
+function initGame2(){
+  step2=0;answered2=false;
+  shirt2El.style.filter='';
+  stain2El.style.transition='';stain2El.style.opacity='1';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    placeStain2();
+    requestAnimationFrame(()=>{
+      soaps2.forEach(s=>{s.style.cssText='position:absolute;display:flex;flex-direction:row;align-items:center;opacity:0;z-index:5;pointer-events:none;';s.innerHTML='';});
+      waters2.forEach(w=>{w.style.opacity='0';w.style.transition='';});
+      ['prog2','q2txt','opts2','fb2'].forEach(id=>document.getElementById(id).style.display='');
+      document.querySelector('.step-dots2').style.display='';
+      document.getElementById('end2').style.display='none';
+      renderStep2();
+    });
+  }));
+}
+function renderStep2(){
+  answered2=false;const s=STEPS2[step2];
+  document.getElementById('prog2').textContent=`分鏡 ${step2+1} / 3`;
+  for(let i=0;i<3;i++){const d=document.getElementById('d2-'+i);d.className='dot2'+(i<step2?' done':i===step2?' active':'');}
+  document.getElementById('q2txt').textContent=s.q;
+  document.getElementById('fb2').textContent='';
+  const bA=document.getElementById('btnA2'),bB=document.getElementById('btnB2');
+  bA.innerHTML=s.a.html+`<span style="white-space:pre-line">${s.a.label}</span>`;
+  bB.innerHTML=s.b.html+`<span style="white-space:pre-line">${s.b.label}</span>`;
+  bA.disabled=false;bA.className='opt2';bB.disabled=false;bB.className='opt2';
+}
+function answer2(choice){
+  if(answered2)return;answered2=true;
+  const s=STEPS2[step2],opt=choice==='a'?s.a:s.b;
+  const bA=document.getElementById('btnA2'),bB=document.getElementById('btnB2');
+  document.getElementById('fb2').textContent=opt.fb;
+  bA.disabled=true;bB.disabled=true;
+  if(opt.correct){
+    (choice==='a'?bA:bB).classList.add('ok');
+    playAnim2(step2);
+  } else {
+    (choice==='a'?bA:bB).classList.add('bad');
+    setTimeout(()=>{answered2=false;bA.disabled=false;bA.className='opt2';bB.disabled=false;bB.className='opt2';document.getElementById('fb2').textContent='🔄 再試一次！';},1700);
+  }
+}
+function playAnim2(n){if(n===0)anim2_1();else if(n===1)anim2_2();else anim2_3();}
+function anim2_1(){
+  const r=stage2El.getBoundingClientRect();const N=5,spacing=r.width/(N+1);const{bead:bs,head:hs}=sz2();const soapW=bs*7+hs+7;
+  soaps2.slice(0,N).forEach((s,i)=>{
+    buildSoap2(s,true,7);s.style.left=Math.round(spacing*(i+1)-soapW/2)+'px';s.style.top='18px';s.style.transform='';s.style.transition='opacity 0.5s';
+    setTimeout(()=>{s.style.opacity='1';},i*150);
+  });
+  setTimeout(()=>{step2++;renderStep2();},2200);
+}
+function anim2_2(){
+  const c=stainCenter2();const{bead:bs,head:hs}=sz2();const soapLen=bs*7+hs+7;const orbit=Math.max(c.w,c.h)/2+soapLen*.52+4;const angles=[0,60,120,180,240,300];
+  soaps2.forEach((s,i)=>{
+    buildSoap2(s,true,7);const angDeg=angles[i];const angRad=angDeg*Math.PI/180;
+    const mx=c.x+orbit*Math.cos(angRad);const my=c.y+orbit*Math.sin(angRad);
+    s.style.left=Math.round(mx-soapLen/2)+'px';s.style.top=Math.round(my-hs/2)+'px';
+    s.style.transformOrigin='center center';s.style.transform=`rotate(${angDeg}deg)`;
+    s.style.transition='opacity 0.5s, left 0.9s, top 0.9s, transform 0.9s';
+    setTimeout(()=>{s.style.opacity='1';},i*110);
+  });
+  setTimeout(()=>{step2++;renderStep2();},2500);
+}
+function anim2_3(){
+  const c=stainCenter2();const{bead:bs,head:hs}=sz2();const soapLen=bs*7+hs+7;const outerR=Math.max(c.w,c.h)/2+soapLen*1.6;const innerR=Math.max(c.w,c.h)/2+soapLen*1.1;const wAngles=[30,150,210,330];const wSize=Math.max(18,Math.min(26,window.innerWidth*.04));
+  waters2.forEach((w,i)=>{
+    const rad=wAngles[i]*Math.PI/180;w.style.transition='';
+    w.style.left=Math.round(c.x+outerR*Math.cos(rad)-wSize/2)+'px';w.style.top=Math.round(c.y+outerR*Math.sin(rad)-wSize/2)+'px';
+    setTimeout(()=>{w.style.opacity='1';w.style.transition='opacity 0.4s, left 0.9s, top 0.9s';w.style.left=Math.round(c.x+innerR*Math.cos(rad)-wSize/2)+'px';w.style.top=Math.round(c.y+innerR*Math.sin(rad)-wSize/2)+'px';},i*140+100);
+  });
+  setTimeout(()=>{
+    const flyDist=c.y+90;
+    stain2El.style.transition='opacity 1.1s, top 1.1s';stain2El.style.top=(parseFloat(stain2El.style.top)-flyDist)+'px';stain2El.style.opacity='0';
+    soaps2.forEach(s=>{s.style.transition='opacity 1.1s, top 1.1s';s.style.top=(parseFloat(s.style.top)-flyDist)+'px';s.style.opacity='0';});
+    waters2.forEach(w=>{w.style.transition='opacity 1.1s, top 1.1s';w.style.top=(parseFloat(w.style.top)-flyDist)+'px';w.style.opacity='0';});
+    setTimeout(()=>{shirt2El.style.filter='brightness(1.5) drop-shadow(0 0 18px #ffe082)';spawnSparkles2();},1000);
+    setTimeout(()=>showEnd2(),2200);
+  },1600);
+}
+function spawnSparkles2(){
+  const sR=stage2El.getBoundingClientRect();const fR=shirt2El.getBoundingClientRect();
+  const cx=fR.left-sR.left+fR.width/2,cy=fR.top-sR.top+fR.height/2;
+  ['✨','⭐','✨','💫','✨','⭐'].forEach((em,i)=>{
+    const el=document.createElement('div');el.className='sparkle2';el.textContent=em;
+    el.style.left=(cx+(Math.random()-.5)*fR.width)+'px';el.style.top=(cy+(Math.random()-.5)*fR.height*.65)+'px';el.style.animationDelay=(i*.16)+'s';
+    stage2El.appendChild(el);setTimeout(()=>el.remove(),1900);
+  });
+}
+function showEnd2(){
+  ['prog2','q2txt','opts2','fb2'].forEach(id=>document.getElementById(id).style.display='none');
+  document.querySelector('.step-dots2').style.display='none';
+  document.getElementById('end2').style.display='flex';
+  for(let i=0;i<3;i++)document.getElementById('d2-'+i).className='dot2 done';
+}
+
+/* ═══════════════════════════
+   關卡三：製皂實驗室
+═══════════════════════════ */
+let lab3Stage=1,lab3Answered=false;
+
+const lab3Stages=[
+  {badge:'🧪 關卡一',title:'寫下配方：皂化反應式',choices:[],
+   correctFeedback:'✅ 正確！\n油脂 ＋ 強鹼（NaOH）→ 肥皂 ＋ 甘油\n這就是皂化反應（Saponification）的核心方程式！',
+   autoNext:true,autoDelay:2200},
+  {badge:'🧪 關卡二',title:'互不相溶的難題',
+   choices:[{label:'A. 加入純水',correct:false},{label:'B. 加入酒精（乙醇）',correct:true}],
+   correctFeedback:'✅ 答對了！\n加入「酒精（乙醇）」作為溶劑，可以讓油脂與氫氧化鈉均勻混合，加速皂化反應！',
+   wrongFeedback:'❌ 水沒辦法讓油溶化喔，再想想看！',autoNext:false},
+  {badge:'🧪 關卡三',title:'分離純化（鹽析）',
+   choices:[{label:'A. 加入飽和食鹽水',correct:true},{label:'B. 加入冰水',correct:false}],
+   correctFeedback:'✅ 完美！這個步驟稱為「鹽析」。\n因為肥皂不溶於食鹽水，且密度比食鹽水小，所以會浮在水面上，成功與甘油分離！',
+   wrongFeedback:'❌ 降溫雖然會變冷，但肥皂還是混在裡面呀！',autoNext:false},
+];
+const lab3Liquids={
+  stage1_start:[],
+  stage2_start:[{color:'rgba(220,230,240,0.85)',h:75},{color:'rgba(210,180,60,0.75)',h:56}],
+  stage2_correct:[{color:'rgba(230,230,215,0.90)',h:138}],
+  stage3_start:[{color:'rgba(230,230,215,0.90)',h:138}],
+  stage3_correct:[{color:'rgba(200,220,240,0.80)',h:112}],
+};
+const lab3Blank1Opts={options:['油脂','酒精','食鹽'],correct:'油脂',filled:false};
+const lab3Blank2Opts={options:['氫氧化鈉（NaOH）','鹽酸（HCl）','食鹽水'],correct:'氫氧化鈉（NaOH）',filled:false};
+let lab3BlankActive=null;
+
+function initLab3(){
+  lab3Stage=1;lab3Answered=false;
+  lab3Blank1Opts.filled=false;lab3Blank2Opts.filled=false;lab3BlankActive=null;
+  document.getElementById('soapBlock3').classList.remove('visible');
+  updateLabProgress();setLab3Liquid('stage1_start');
+  document.getElementById('blackboard3').style.display='block';
+  const b1=document.getElementById('blank3-1'),b2=document.getElementById('blank3-2');
+  b1.textContent='？反應物一？';b1.classList.remove('filled');b1.style.outline='';
+  b2.textContent='？反應物二？';b2.classList.remove('filled');b2.style.outline='';
+  ['labBadge3','labTitle3','labDesc3','labChoices3','labFeedback3'].forEach(id=>document.getElementById(id).style.display='');
+  document.getElementById('btnLabNext3').style.display='none';
+  document.getElementById('labEnding3').style.display='none';
+  renderLab3Stage1();
+}
+function updateLabProgress(){
+  for(let i=1;i<=3;i++){
+    const d=document.getElementById('ldot'+i);d.className='lab-dot';
+    if(i<lab3Stage)d.classList.add('complete');
+    if(i===lab3Stage)d.classList.add('active');
+  }
+}
+function setLab3Liquid(key){
+  const area=document.getElementById('liquidArea3');area.innerHTML='';
+  const layers=lab3Liquids[key]||[];let bottom=0;
+  layers.forEach(l=>{const div=document.createElement('div');div.className='liquid3';div.style.cssText=`background:${l.color};height:${l.h}px;bottom:${bottom}px;`;area.appendChild(div);bottom+=l.h;});
+}
+function renderLab3Stage1(){
+  document.getElementById('labBadge3').textContent=lab3Stages[0].badge;
+  document.getElementById('labTitle3').textContent=lab3Stages[0].title;
+  document.getElementById('labDesc3').innerHTML='製造肥皂的核心配方是什麼？<br>請分別點選黑板上的 <b style="color:#2d9e72">空格</b>，選出兩個反應物！';
+  const fb=document.getElementById('labFeedback3');
+  fb.textContent='👆 請先點選黑板上的其中一個空格，再選答案。';fb.className='lab-feedback visible';
+  document.getElementById('btnLabNext3').style.display='none';
+  document.getElementById('labChoices3').innerHTML='';
+  ['blank3-1','blank3-2'].forEach(id=>{
+    const el=document.getElementById(id);el.style.cursor='pointer';
+    el.onclick=()=>lab3SelectBlank(id);
+  });
+  updateLab3BlankUI('blank3-1');updateLab3BlankUI('blank3-2');
+}
+function lab3SelectBlank(id){
+  const data=id==='blank3-1'?lab3Blank1Opts:lab3Blank2Opts;
+  if(data.filled)return;
+  lab3BlankActive=id;
+  ['blank3-1','blank3-2'].forEach(bid=>document.getElementById(bid).style.outline=bid===id?'3px solid #ffeb3b':'none');
+  const fb=document.getElementById('labFeedback3');
+  const label=id==='blank3-1'?'反應物一（左格）':'反應物二（右格）';
+  fb.textContent=`👇 你選了「${label}」，請從下方選出正確答案：`;fb.className='lab-feedback visible';
+  const choicesEl=document.getElementById('labChoices3');choicesEl.innerHTML='';
+  data.options.forEach(opt=>{
+    const btn=document.createElement('button');btn.className='btn-lab';btn.textContent=opt;
+    btn.onclick=()=>lab3HandleBlankAnswer(id,opt,btn);choicesEl.appendChild(btn);
+  });
+}
+function lab3HandleBlankAnswer(blankId,chosen,btn){
+  const data=blankId==='blank3-1'?lab3Blank1Opts:lab3Blank2Opts;
+  const allBtns=document.querySelectorAll('#labChoices3 .btn-lab');
+  if(chosen===data.correct){
+    allBtns.forEach(b=>b.disabled=true);btn.classList.add('correct');
+    data.filled=true;updateLab3BlankUI(blankId);
+    document.getElementById(blankId).style.outline='none';lab3BlankActive=null;
+    const fb=document.getElementById('labFeedback3');
+    if(lab3Blank1Opts.filled&&lab3Blank2Opts.filled){
+      fb.textContent=lab3Stages[0].correctFeedback;fb.className='lab-feedback visible';
+      document.getElementById('labChoices3').innerHTML='';
+      setTimeout(labGoNext,lab3Stages[0].autoDelay);
+    } else {
+      const otherId=blankId==='blank3-1'?'blank3-2':'blank3-1';
+      const otherLabel=otherId==='blank3-1'?'反應物一（左格）':'反應物二（右格）';
+      fb.textContent=`✅ 答對！再點選「${otherLabel}」完成另一個空格吧！`;fb.className='lab-feedback visible';
+      document.getElementById('labChoices3').innerHTML='';
+    }
+  } else {
+    btn.classList.add('wrong');
+    setTimeout(()=>{btn.classList.remove('wrong');btn.disabled=false;},900);
+    const fb=document.getElementById('labFeedback3');
+    fb.textContent=`❌ 不對，再想想！`;fb.className='lab-feedback visible error';
+    setTimeout(()=>{fb.textContent=`👇 請從下方選出正確答案：`;fb.className='lab-feedback visible';},1100);
+  }
+}
+function updateLab3BlankUI(id){
+  const el=document.getElementById(id);const data=id==='blank3-1'?lab3Blank1Opts:lab3Blank2Opts;
+  if(data.filled){el.textContent=data.correct;el.classList.add('filled');el.style.cursor='default';}
+  else{el.textContent=id==='blank3-1'?'？反應物一？':'？反應物二？';el.classList.remove('filled');}
+}
+function renderLab3Stage(){
+  const s=lab3Stages[lab3Stage-1];lab3Answered=false;
+  document.getElementById('labBadge3').textContent=s.badge;
+  document.getElementById('labTitle3').textContent=s.title;
+  document.getElementById('labDesc3').textContent=s.desc||s.title;
+  const fb=document.getElementById('labFeedback3');fb.textContent='';fb.className='lab-feedback';
+  document.getElementById('btnLabNext3').style.display='none';
+  const choicesEl=document.getElementById('labChoices3');choicesEl.innerHTML='';
+  if(lab3Stage===2){
+    document.getElementById('labDesc3').textContent='哎呀！油和水互不相溶，反應太慢了。\n該加入什麼試劑來拯救這場反應？';
+  } else if(lab3Stage===3){
+    document.getElementById('labDesc3').textContent='肥皂做好了！但它現在和甘油混在一起。\n該加入什麼才能把肥皂分離出來？';
+  }
+  s.choices.forEach((c,i)=>{
+    const btn=document.createElement('button');btn.className='btn-lab';btn.textContent=c.label;
+    btn.onclick=()=>lab3HandleAnswer(i);choicesEl.appendChild(btn);
+  });
+}
+function lab3HandleAnswer(idx){
+  if(lab3Answered)return;lab3Answered=true;
+  const s=lab3Stages[lab3Stage-1];const choice=s.choices[idx];
+  const btns=document.querySelectorAll('#labChoices3 .btn-lab');
+  const fb=document.getElementById('labFeedback3');
+  btns.forEach(b=>b.disabled=true);
+  if(choice.correct){
+    btns[idx].classList.add('correct');fb.textContent=s.correctFeedback;fb.className='lab-feedback visible';
+    lab3OnCorrect();
+  } else {
+    btns[idx].classList.add('wrong');fb.textContent=s.wrongFeedback;fb.className='lab-feedback visible error';
+    setTimeout(()=>{lab3Answered=false;btns.forEach(b=>{b.disabled=false;b.classList.remove('wrong');});fb.className='lab-feedback';},1400);
+  }
+}
+function lab3OnCorrect(){
+  if(lab3Stage===2){
+    animLab3Dropper('🍶','rgba(200,230,200,0.8)',()=>{
+      rippleLab3();setTimeout(()=>setLab3Liquid('stage2_correct'),200);
+    });
+    setTimeout(()=>{document.getElementById('btnLabNext3').style.display='block';},3100);
+  } else if(lab3Stage===3){
+    animLab3Dropper('🧂','rgba(180,220,255,0.8)',()=>{
+      rippleLab3();setTimeout(()=>{setLab3Liquid('stage3_correct');setTimeout(()=>document.getElementById('soapBlock3').classList.add('visible'),500);},200);
+    });
+    setTimeout(()=>{const n=document.getElementById('btnLabNext3');n.style.display='block';n.textContent='查看實驗結果 🎉';},3400);
+  }
+}
+function animLab3Dropper(emoji,color,cb){
+  const dropper=document.getElementById('dropper3');const wrap=document.getElementById('beakerWrap3');
+  dropper.textContent=emoji;dropper.classList.add('show');
+  [0,280,560].forEach(delay=>{
+    setTimeout(()=>{
+      const drop=document.createElement('div');drop.className='drop-particle3';
+      drop.style.cssText=`background:${color};right:26px;top:40px;`;
+      wrap.appendChild(drop);setTimeout(()=>drop.remove(),750);
+    },delay);
+  });
+  setTimeout(()=>{dropper.classList.remove('show');if(cb)cb();},1100);
+}
+function rippleLab3(){
+  const area=document.getElementById('liquidArea3');
+  area.style.transition='none';area.style.opacity='.6';
+  setTimeout(()=>{area.style.transition='opacity .8s';area.style.opacity='1';},100);
+}
+function labGoNext(){
+  if(lab3Stage<3){
+    lab3Stage++;updateLabProgress();document.getElementById('soapBlock3').classList.remove('visible');
+    if(lab3Stage===2){document.getElementById('blackboard3').style.display='none';setLab3Liquid('stage2_start');renderLab3Stage();}
+    else if(lab3Stage===3){setLab3Liquid('stage3_start');renderLab3Stage();}
+  } else {
+    // 顯示結局
+    ['labBadge3','labTitle3','labDesc3','labChoices3','labFeedback3','btnLabNext3']
+      .forEach(id=>document.getElementById(id).style.display='none');
+    const ending=document.getElementById('labEnding3');
+    ending.style.display='flex';launchFw3();
+    unlockTab(3);// 完成所有三關後已解鎖
+  }
+}
+function launchFw3(){
+  const area=document.getElementById('labArea3');
+  const colors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8'];
+  for(let burst=0;burst<5;burst++){
+    setTimeout(()=>{
+      const cx=20+Math.random()*60,cy=15+Math.random()*55;
+      for(let p=0;p<12;p++){
+        const el=document.createElement('div');el.className='fw-p3';
+        const angle=(p/12)*360,dist=45+Math.random()*45;
+        el.style.cssText=`left:${cx}%;top:${cy}%;background:${colors[p%colors.length]};--dx:${Math.cos(angle*Math.PI/180)*dist}px;--dy:${Math.sin(angle*Math.PI/180)*dist}px;animation-delay:${Math.random()*.2}s;animation-duration:${.7+Math.random()*.4}s;`;
+        area.appendChild(el);setTimeout(()=>el.remove(),1400);
+      }
+    },burst*480);
+  }
+}
+function showFinalScreen(){
+  document.querySelectorAll('.chapter').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('final-screen').style.display='flex';
+  // 放煙火在 body
+  launchFinalFw();
+}
+function launchFinalFw(){
+  const colors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#fff'];
+  for(let burst=0;burst<8;burst++){
+    setTimeout(()=>{
+      const cx=10+Math.random()*80,cy=5+Math.random()*50;
+      for(let p=0;p<16;p++){
+        const el=document.createElement('div');el.className='fw-p3';
+        const angle=(p/16)*360,dist=55+Math.random()*60;
+        el.style.cssText=`position:fixed;left:${cx}vw;top:${cy}vh;width:10px;height:10px;border-radius:50%;background:${colors[p%colors.length]};--dx:${Math.cos(angle*Math.PI/180)*dist}px;--dy:${Math.sin(angle*Math.PI/180)*dist}px;animation:fw3 ${.8+Math.random()*.5}s ease-out ${Math.random()*.25}s forwards;z-index:500;pointer-events:none;`;
+        document.body.appendChild(el);setTimeout(()=>el.remove(),1600);
+      }
+    },burst*400);
+  }
+}
+function unlockAndGo(n){unlockTab(n);showChapter(n);}
+function restartAll(){
+  unlocked.fill(false);unlocked[0]=true;
+  document.querySelectorAll('.ctab').forEach((t,i)=>{t.className='ctab'+(i===0?' active':' locked');});
+  document.getElementById('final-screen').style.display='none';
+  washN=0;washDone=false;
+  // reset narr lines
+  document.querySelectorAll('.narr-line').forEach(el=>el.classList.remove('shown'));
+  document.getElementById('n2-1').classList.add('shown');
+  showChapter(0);
+}
+</script>
+</body>
+</html>
