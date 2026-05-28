@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>隱形力場追緝令</title>
+<style>
+/* ═══════════════════════════════════════════════════
+   GLOBAL RESET & BASE
+═══════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Segoe UI','Noto Sans TC',sans-serif;color:#e2e8f0;background:#080f1e;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.03) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;z-index:0}
+
+/* ═══════════════════════════════════════════════════
+   SCREEN SYSTEM
+═══════════════════════════════════════════════════ */
+.screen{position:fixed;inset:0;z-index:10;display:none;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
+
+/* ═══════════════════════════════════════════════════
+   SHARED HEADER
+═══════════════════════════════════════════════════ */
+.hdr{flex-shrink:0;background:linear-gradient(90deg,#071828,#0d2140);border-bottom:1px solid #1e3a5f;padding:5px 14px;display:flex;align-items:center;justify-content:space-between;z-index:20}
+.hdr-title{font-size:13px;font-weight:700;color:#38bdf8;letter-spacing:.04em}
+.hdr-sub{font-size:8px;color:#334155;letter-spacing:.08em}
+.hdr-badge{font-size:10px;padding:3px 10px;border-radius:4px;border:1px solid #1e3a5f;color:#38bdf8;background:#071828;font-family:monospace;white-space:nowrap}
+
+/* ═══════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════ */
+.btn{border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-blue{background:linear-gradient(90deg,#0c2a4e,#1e3a5f);border:1px solid #38bdf8;color:#38bdf8}
+.btn-blue:hover:not(:disabled){background:linear-gradient(90deg,#1e3a5f,#2563eb)}
+.btn-green{background:linear-gradient(90deg,#0c4a2e,#166534);border:1px solid #4ade80;color:#4ade80}
+.btn-green:hover:not(:disabled){background:linear-gradient(90deg,#166534,#15803d)}
+.btn-red{background:linear-gradient(90deg,#7f1d1d,#991b1b);border:1px solid #ef4444;color:#fca5a5}
+.btn-red:hover:not(:disabled){background:linear-gradient(90deg,#991b1b,#b91c1c)}
+.btn-yellow{background:linear-gradient(90deg,#78350f,#92400e);border:1px solid #fbbf24;color:#fde68a}
+.btn-yellow:hover:not(:disabled){background:linear-gradient(90deg,#92400e,#b45309)}
+.btn-gold{background:linear-gradient(90deg,#451a03,#78350f);border:2px solid #f59e0b;color:#fde68a;font-size:14px;padding:12px 28px}
+.btn-gold:hover{background:linear-gradient(90deg,#78350f,#b45309);box-shadow:0 0 20px rgba(245,158,11,.4)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* ═══════════════════════════════════════════════════
+   CARDS / PANELS
+═══════════════════════════════════════════════════ */
+.card{background:linear-gradient(135deg,#071828,#0d2140);border:1px solid #1e3a5f;border-radius:9px;padding:8px 11px;flex-shrink:0}
+.ctitle{font-size:10px;color:#38bdf8;font-weight:700;letter-spacing:.04em;margin-bottom:4px}
+.dscreen{background:#030c14;border:1px solid #166534;border-radius:9px;padding:7px 10px;display:flex;gap:6px;flex-shrink:0}
+.dcell{text-align:center;flex:1}
+.dcell .lbl{font-size:8px;color:#166534;letter-spacing:.05em}
+.dcell .val{font-family:monospace;font-size:16px;font-weight:900;color:#4ade80;line-height:1.1}
+.dcell .unit{font-size:8px;color:#166534}
+.dcell.big .val{font-size:22px;color:#22c55e;text-shadow:0 0 8px rgba(34,197,94,.4)}
+.dcell.big .lbl{color:#22c55e}
+
+/* ═══════════════════════════════════════════════════
+   LAYOUT HELPERS
+═══════════════════════════════════════════════════ */
+.row{display:flex;gap:7px}
+.row.f1{flex:1;min-height:0}
+.col{display:flex;flex-direction:column;gap:7px}
+.col.f1{flex:1;min-width:0;min-height:0}
+.scroll{overflow-y:auto}
+
+/* ═══════════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════════ */
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@keyframes glow{0%,100%{text-shadow:0 0 10px #38bdf8}50%{text-shadow:0 0 30px #38bdf8,0 0 60px #38bdf8}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-7px)}80%{transform:translateX(7px)}}
+@keyframes flyOut{0%{opacity:1;transform:scale(1)}60%{opacity:.5;transform:scale(.5)}100%{opacity:0;transform:scale(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+.fade-in{animation:fadeIn .5s ease both}
+.pop-in{animation:popIn .35s ease both}
+.pulse{animation:pulse 1.4s ease-in-out infinite}
+.card-shake{animation:shake .45s ease}
+.card-fly{animation:flyOut .55s ease forwards}
+.slide-in{animation:slideIn .4s ease both}
+
+/* ═══════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════ */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:300;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-bg.show{display:flex}
+.modal-box{background:linear-gradient(145deg,#071828,#0d2140);border:2px solid #3b82f6;border-radius:14px;padding:20px;max-width:400px;width:100%;text-align:center;box-shadow:0 0 50px rgba(59,130,246,.3)}
+
+/* ═══════════════════════════════════════════════════
+   STEP DOTS
+═══════════════════════════════════════════════════ */
+.sdot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid #1e293b;background:#0a1120;color:#334155;transition:all .3s}
+.sdot.done{background:#052010;border-color:#22c55e;color:#22c55e}
+.sdot.active{background:#0f2744;border-color:#38bdf8;color:#38bdf8}
+
+/* ═══════════════════════════════════════════════════
+   QA OPTIONS
+═══════════════════════════════════════════════════ */
+.qa-opt{background:#0a1828;border:1px solid #1e293b;border-radius:7px;padding:7px 10px;cursor:pointer;font-size:11px;color:#94a3b8;transition:all .2s;text-align:left;width:100%;font-family:inherit}
+.qa-opt:hover:not(:disabled){background:#0f2236;border-color:#38bdf8;color:#e2e8f0}
+.qa-opt.correct{background:#052010;border-color:#22c55e;color:#4ade80}
+.qa-opt.wrong{background:#1c0505;border-color:#ef4444;color:#fca5a5}
+.qa-opt .oc{width:22px;height:22px;border-radius:50%;flex-shrink:0;border:1px solid #1e293b;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#94a3b8;margin-right:8px}
+
+/* ═══════════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════════ */
+.etable{width:100%;border-collapse:collapse;font-size:11px}
+.etable th{background:#0f2744;color:#38bdf8;padding:4px 7px;text-align:center;border-bottom:1px solid #1e3a5f;font-size:10px}
+.etable td{padding:4px 7px;text-align:center;border-bottom:1px solid #0f1f3a;font-family:monospace}
+.row-f{color:#fbbf24!important;font-weight:700}
+.row-dx{color:#22c55e!important;font-weight:900}
+.row-ratio{color:#a78bfa!important}
+
+/* ═══════════════════════════════════════════════════
+   PREDICT INPUTS
+═══════════════════════════════════════════════════ */
+.pred-input{background:#030c14;border:1px solid #38bdf8;border-radius:7px;padding:5px 8px;font-family:monospace;font-size:15px;font-weight:900;color:#38bdf8;width:70px;text-align:center;outline:none}
+.pred-input:focus{box-shadow:0 0 8px rgba(56,189,248,.3)}
+
+/* ═══════════════════════════════════════════════════
+   WEIGHT BUTTONS (Hooke)
+═══════════════════════════════════════════════════ */
+.wbtn{padding:6px 14px;font-size:12px;font-weight:700;border-radius:7px;cursor:pointer;border:2px solid #1e3a5f;background:#0a1828;color:#38bdf8;transition:all .2s;font-family:monospace}
+.wbtn:hover:not(:disabled){border-color:#38bdf8}
+.wbtn:disabled{opacity:.3;cursor:not-allowed}
+
+/* ═══════════════════════════════════════════════════
+   SCREEN 0 – BRIEFING
+═══════════════════════════════════════════════════ */
+#s0{background:radial-gradient(ellipse at 50% 30%, #0d2140 0%, #040c1a 70%);align-items:center;justify-content:center;text-align:center}
+.brief-wrap{max-width:520px;padding:24px;position:relative;z-index:2}
+.brief-badge{display:inline-block;font-size:10px;letter-spacing:.16em;color:#38bdf8;border:1px solid #1e3a5f;border-radius:4px;padding:3px 12px;margin-bottom:16px;font-family:monospace}
+.brief-title{font-size:28px;font-weight:900;line-height:1.2;color:#fff;margin-bottom:8px;animation:glow 3s ease-in-out infinite}
+.brief-title span{color:#38bdf8}
+.brief-sub{font-size:12px;color:#64748b;letter-spacing:.1em;margin-bottom:20px}
+.brief-story{background:rgba(7,24,40,.7);border:1px solid #1e3a5f;border-radius:10px;padding:16px;margin-bottom:20px;text-align:left;font-size:12px;color:#94a3b8;line-height:1.8}
+.brief-story strong{color:#38bdf8}
+.missions{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
+.mission-row{display:flex;align-items:center;gap:10px;background:rgba(7,24,40,.6);border:1px solid #1e3a5f;border-radius:8px;padding:8px 14px;text-align:left}
+.mission-num{width:28px;height:28px;border-radius:50%;border:2px solid #38bdf8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#38bdf8;flex-shrink:0}
+.mission-info .mt{font-size:12px;font-weight:700;color:#e2e8f0}
+.mission-info .ms{font-size:10px;color:#475569}
+
+/* ═══════════════════════════════════════════════════
+   SCREEN 1 – INVISIBLE DETECTIVE
+═══════════════════════════════════════════════════ */
+#s1-tabs{display:flex;gap:6px;padding:8px 14px 0;flex-shrink:0}
+.s1-tab{flex:1;text-align:left;cursor:pointer;border-radius:8px;padding:7px 10px;transition:all .2s;border:1px solid #1e293b;background:#0b1220}
+.s1-tab.active{background:#0f2236;border-color:#2563eb}
+.s1-tab .tl{font-size:11px;font-weight:600;color:#4b5563}
+.s1-tab.active .tl{color:#93c5fd}
+.s1-tab .ts{font-size:9px;margin-top:2px;display:inline-block;border-radius:3px;padding:1px 5px;color:#334155}
+.s1-tab.active .ts{color:#60a5fa;background:#172554}
+#s1-scene-wrap{margin:6px 14px 0;background:#0a1120;border:1.5px solid #1e2d40;border-radius:10px;position:relative;overflow:hidden;transition:border-color .4s;flex-shrink:0}
+/* qa wrap 不再限高，讓內容自然展開 */
+#s1-qa-wrap{padding:6px 14px 6px;display:none}
+#s1-xray-wrap{padding:6px 14px 8px;display:none}
+#s1-scene-wrap.reveal{border-color:#7f1d1d}
+.s1corner{position:absolute;width:12px;height:12px;transition:border-color .4s}
+.s1corner.tl{top:6px;left:6px;border-top:2px solid #1e3a5f;border-left:2px solid #1e3a5f}
+.s1corner.tr{top:6px;right:6px;border-top:2px solid #1e3a5f;border-right:2px solid #1e3a5f}
+.s1corner.bl{bottom:6px;left:6px;border-bottom:2px solid #1e3a5f;border-left:2px solid #1e3a5f}
+.s1corner.br{bottom:6px;right:6px;border-bottom:2px solid #1e3a5f;border-right:2px solid #1e3a5f}
+#s1-scene-wrap.reveal .s1corner{border-color:#7f1d1d}
+#s1-scanline{position:absolute;inset:0;pointer-events:none;z-index:20;display:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(239,68,68,.07) 3px,rgba(239,68,68,.07) 4px)}
+#s1-canvas{display:block;width:100%;height:200px}
+#s1-prog-bar{height:4px;background:#0f1a2a;overflow:hidden;border-bottom:1px solid #1e293b;flex-shrink:0}
+#s1-prog-fill{height:100%;width:0%;transition:width .05s linear,background .4s;background:linear-gradient(90deg,#1e3a5f,#38bdf8)}
+#s1-hint-box{margin:5px 14px 0;border:1px solid #1e2d40;border-radius:8px;padding:8px 12px;display:flex;align-items:flex-start;gap:8px;min-height:40px;transition:all .4s;flex-shrink:0}
+#s1-hint-box.reveal{background:rgba(18,5,5,.3);border-color:#7f1d1d}
+#s1-hint-text{font-size:12px;line-height:1.6;color:#93c5fd;transition:color .4s}
+#s1-hint-box.reveal #s1-hint-text{color:#fca5a5;font-weight:600}
+#s1-play-btn{margin:5px 14px 0;border-radius:8px;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;border:1.5px solid #14532d;background:#0d1f14;width:calc(100% - 28px);flex-shrink:0}
+#s1-play-btn.playing{background:#0f2236;border-color:#2563eb}
+#s1-qa-wrap{padding:6px 14px 0;display:none;flex-shrink:0}
+#s1-qa-box{background:#071020;border:1px solid #1e3a5f;border-radius:9px;padding:10px 12px}
+#s1-qa-prog{display:flex;gap:4px;margin-bottom:8px}
+.s1-qdot{height:3px;flex:1;border-radius:2px;background:#1e293b;transition:background .3s}
+.s1-qdot.done{background:#22c55e}.s1-qdot.cur{background:#38bdf8}
+#s1-qa-badge{font-size:9px;color:#60a5fa;background:#0f2236;border:1px solid #1e3a5f;border-radius:4px;padding:2px 7px;display:inline-block;margin-bottom:7px}
+#s1-qa-q{font-size:12px;font-weight:600;color:#bfdbfe;margin-bottom:9px;line-height:1.5}
+#s1-qa-opts{display:flex;flex-direction:column;gap:5px}
+#s1-qa-fb{display:none;margin-top:8px;border-radius:7px;padding:8px 11px;font-size:11px;line-height:1.5}
+#s1-qa-fb.correct{display:block;background:#052010;border:1px solid #16a34a;color:#4ade80}
+#s1-qa-fb.wrong{display:block;background:#1c0505;border:1px solid #ef4444;color:#fca5a5}
+#s1-qa-actions{display:flex;gap:6px;margin-top:8px;align-items:center}
+#s1-hint-btn{font-size:10px;color:#475569;background:transparent;border:1px solid #1e293b;border-radius:5px;padding:4px 9px;cursor:pointer}
+#s1-hint-show{font-size:10px;color:#60a5fa;background:#071828;border:1px solid #1e3a5f;border-radius:5px;padding:5px 9px;flex:1;display:none}
+#s1-next-btn,#s1-retry-btn{margin-left:auto;font-size:11px;font-weight:600;border-radius:6px;padding:6px 14px;cursor:pointer;display:none}
+#s1-next-btn{color:#38bdf8;background:#071828;border:1px solid #1e3a5f}
+#s1-retry-btn{color:#fca5a5;background:#1c0505;border:1px solid #7f1d1d}
+#s1-done-box{display:none;background:#052010;border:1px solid #16a34a;border-radius:9px;padding:10px 12px;margin-top:6px}
+#s1-xray-wrap{padding:6px 14px 0;display:none;flex-shrink:0}
+#s1-xray-btn{width:100%;border-radius:9px;padding:9px 14px;cursor:pointer;display:flex;align-items:center;gap:9px;transition:all .3s;background:#0b1220;border:2px solid #2563eb}
+#s1-xray-btn.on{background:#1c0505;border-color:#ef4444;box-shadow:0 0 18px rgba(239,68,68,.2)}
+
+/* ═══════════════════════════════════════════════════
+   SCREEN 2 – FORCE CLASSIFIER
+═══════════════════════════════════════════════════ */
+#s2-card-zone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px 6px;gap:8px;min-height:0}
+#s2-ev-card{background:linear-gradient(160deg,#0d1f35,#0a1628);border:1.5px solid #1e3a5f;border-radius:16px;padding:20px 20px 16px;display:flex;flex-direction:column;align-items:center;width:100%;max-width:380px;position:relative;cursor:grab;transition:opacity .4s,transform .15s}
+#s2-card-badge{position:absolute;top:10px;right:12px;font-size:9px;color:#475569;background:#0b1628;border:1px solid #1e293b;border-radius:4px;padding:2px 7px;font-family:monospace}
+#s2-card-emoji{font-size:60px;margin-bottom:10px;line-height:1}
+#s2-card-scene{font-size:20px;font-weight:700;color:#f1f5f9;text-align:center;line-height:1.5}
+#s2-card-drag{margin-top:8px;font-size:10px;color:#334155}
+#s2-fb{border-radius:9px;padding:9px 14px;font-size:12px;line-height:1.5;max-width:380px;width:100%;text-align:center;display:none}
+#s2-fb.show{display:block}
+#s2-fb.correct{background:#052010;border:1px solid #16a34a;color:#4ade80}
+#s2-fb.wrong{background:#1c0505;border:1px solid #ef4444;color:#fca5a5}
+#s2-portals{display:flex;gap:8px;padding:0 14px 8px;flex-shrink:0;height:170px}
+.s2-portal{flex:1;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 8px;cursor:pointer;transition:all .25s;border:2px solid transparent}
+.s2-portal:hover,.s2-portal.drag-over{border-color:var(--col);box-shadow:0 0 16px color-mix(in srgb,var(--col) 30%,transparent)}
+.s2-portal.flash{box-shadow:0 0 36px color-mix(in srgb,var(--col) 70%,transparent)}
+.s2-portal-ring{width:56px;height:56px;border-radius:50%;border:3px solid var(--col);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:7px;box-shadow:0 0 10px color-mix(in srgb,var(--col) 40%,transparent);animation:portalPulse 2s ease-in-out infinite}
+@keyframes portalPulse{0%,100%{box-shadow:0 0 10px color-mix(in srgb,var(--col) 35%,transparent)}50%{box-shadow:0 0 24px color-mix(in srgb,var(--col) 65%,transparent)}}
+.s2-portal.flash .s2-portal-ring{box-shadow:0 0 28px color-mix(in srgb,var(--col) 80%,transparent)}
+.s2-portal-label{font-size:12px;font-weight:700;color:var(--col);margin-bottom:2px}
+.s2-portal-sub{font-size:9px;color:#64748b;text-align:center;line-height:1.4;max-width:120px}
+.s2-portal-count{margin-top:6px;font-size:11px;font-weight:700;font-family:monospace;color:#334155;transition:color .3s}
+.s2-portal-count.has{color:var(--col)}
+#s2-portal-c{--col:#38bdf8;background:#07182877}
+#s2-portal-r{--col:#a78bfa;background:#0a052077}
+#s2-chips{display:flex;flex-wrap:wrap;gap:4px;padding:0 14px 6px;justify-content:center;flex-shrink:0;min-height:24px}
+.s2chip{border-radius:5px;padding:3px 6px;background:#0a1120;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:13px}
+.s2chip .ctag{font-size:7px}
+.s2chip.contact{border:1px solid #1e3a5f}.s2chip.contact .ctag{color:#38bdf8}
+.s2chip.remote{border:1px solid #4c1d95}.s2chip.remote .ctag{color:#a78bfa}
+#s2-prog-dots{display:flex;gap:3px;align-items:center}
+.s2dot{width:10px;height:10px;border-radius:50%;background:#1e293b;border:1.5px solid #1e293b;transition:background .3s}
+.s2dot.done{background:#4ade80}.s2dot.current{border-color:#38bdf8}
+
+/* S2 summary */
+#s2-summary{display:none;flex-direction:column;align-items:center;padding:12px 14px;gap:10px;overflow-y:auto;flex:1}
+#s2-summary.show{display:flex}
+#s2-sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:540px}
+.s2sc{border-radius:9px;overflow:hidden}
+.s2sc.contact{background:#071828;border:1px solid #1e3a5f}
+.s2sc.remote{background:#0a0520;border:1px solid #4c1d95}
+.s2sc-hd{padding:8px 12px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700}
+.s2sc.contact .s2sc-hd{background:#38bdf822;border-bottom:1px solid #1e3a5f44;color:#38bdf8}
+.s2sc.remote .s2sc-hd{background:#a78bfa22;border-bottom:1px solid #4c1d9544;color:#a78bfa}
+.s2sc-row{display:flex;align-items:flex-start;gap:7px;padding:7px 12px;border-bottom:1px solid #0f172a;font-size:11px}
+.s2sc-row .se{font-size:16px;flex-shrink:0}
+.s2sc-row .sn{font-weight:600;color:#e2e8f0;line-height:1.4}
+.s2sc-row .st{font-size:9px;color:#475569;margin-top:1px}
+
+/* ═══════════════════════════════════════════════════
+   SCREEN 3 – HOOKE'S LAW
+═══════════════════════════════════════════════════ */
+#s3-main{flex:1;display:flex;overflow:hidden}
+#s3-spring-panel{width:180px;flex-shrink:0;background:linear-gradient(180deg,#071828,#040e1c);border-right:1px solid #1e3a5f;position:relative}
+#s3-spring-canvas{display:block;width:100%;height:100%}
+#s3-right{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.s3ph{display:none;flex:1;flex-direction:column;overflow:hidden;padding:7px 11px;gap:6px}
+.s3ph.active{display:flex}
+#s3-ol-status{font-size:10px;font-family:monospace;color:#fbbf24;min-height:16px;flex-shrink:0}
+
+/* ═══════════════════════════════════════════════════
+   SCREEN 4 – FINALE
+═══════════════════════════════════════════════════ */
+#s4{background:radial-gradient(ellipse at 50% 20%,#0d2140 0%,#040c1a 70%);overflow-y:auto}
+#s4-inner{max-width:700px;margin:0 auto;padding:20px 16px 30px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.f4-trophy{font-size:52px;text-align:center;animation:glow 2s ease-in-out infinite}
+.f4-title{font-size:22px;font-weight:900;color:#fbbf24;text-align:center;letter-spacing:.04em}
+.f4-sub{font-size:12px;color:#64748b;text-align:center}
+.f4-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.f4-card{background:rgba(7,24,40,.8);border-radius:12px;padding:14px;text-align:center;border:1px solid #1e3a5f}
+.f4-icon{font-size:32px;margin-bottom:8px}
+.f4-kw{font-size:13px;font-weight:700;margin-bottom:6px}
+.f4-body{font-size:11px;color:#94a3b8;line-height:1.7}
+.f4-formula{background:#030c14;border:1px solid #166534;border-radius:10px;padding:14px 20px;width:100%;text-align:center}
+.f4-formula .fml{font-family:monospace;font-size:18px;font-weight:900;color:#38bdf8;text-shadow:0 0 14px rgba(56,189,248,.5)}
+.f4-achievements{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.achv{display:flex;align-items:center;gap:6px;background:#071828;border:1px solid #fbbf2455;border-radius:8px;padding:7px 12px;font-size:11px;color:#fde68a}
+
+/* ═══════════════════════════════════════════════════
+   LEVEL CLEAR OVERLAY
+═══════════════════════════════════════════════════ */
+#lv-clear{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center}
+#lv-clear.show{display:flex}
+#lv-clear-box{background:linear-gradient(145deg,#071828,#0d2140);border:2px solid #4ade80;border-radius:16px;padding:28px 24px;max-width:360px;width:100%;text-align:center;box-shadow:0 0 60px rgba(74,222,128,.3)}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 0 – BRIEFING
+════════════════════════════════════════════════ -->
+<div id="s0" class="screen active">
+  <div class="brief-wrap fade-in">
+    <div class="brief-badge">INVISIBLE FORCE INVESTIGATION</div>
+    <h1 class="brief-title">隱形<span>力場</span>追緝令</h1>
+    <p class="brief-sub">PHYSICS DETECTIVE AGENCY · SPECIAL OPS</p>
+    <div class="brief-story">
+      <strong>特遣物理偵探，你的任務已來到。</strong><br/><br/>
+      「力」是這個宇宙中最神秘的存在——它看不見、摸不著，卻默默改變著世界上每一個物體的形狀與運動。<br/><br/>
+      現在，城市中發生了三起不明事件，每一起都藏著隱形的力在幕後操縱。你必須依靠科學的眼光，逐一追蹤、解碼、測量，揭開力的真實面目。
+    </div>
+    <div class="missions">
+      <div class="mission-row"><div class="mission-num">01</div><div class="mission-info"><div class="mt">【追蹤隱形足跡】</div><div class="ms">力是看不見的，但它留下了效應——找到它！</div></div></div>
+      <div class="mission-row"><div class="mission-num">02</div><div class="mission-info"><div class="mt">【力場屬性解碼】</div><div class="ms">接觸力？超距力？將 8 張案件卡片正確歸類！</div></div></div>
+      <div class="mission-row"><div class="mission-num">03</div><div class="mission-info"><div class="mt">【虎克天秤的審判】</div><div class="ms">用彈簧精準測量力的大小，發現黃金定律！</div></div></div>
+    </div>
+    <button class="btn btn-gold pulse" onclick="startMission()">⚡ 啟動任務</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 1 – INVISIBLE DETECTIVE
+════════════════════════════════════════════════ -->
+<div id="s1" class="screen" style="overflow-y:auto">
+  <div class="hdr">
+    <div><div class="hdr-title">🔬 第一關：追蹤隱形足跡</div><div class="hdr-sub">INVISIBLE FORCE INVESTIGATION UNIT</div></div>
+    <div id="s1-badge" class="hdr-badge">第一步：觀察現象</div>
+  </div>
+  <div id="s1-tabs">
+    <button class="s1-tab active" id="s1-tab-can" onclick="s1SwitchCase('can')">
+      <div class="tl">案件一：離奇變形的鐵罐</div><span class="ts">效應：形狀改變（形變）</span>
+    </button>
+    <button class="s1-tab" id="s1-tab-ball" onclick="s1SwitchCase('ball')">
+      <div class="tl">案件二：桌球被揮拍改變運動</div><span class="ts">效應：運動狀態改變</span>
+    </button>
+  </div>
+  <div id="s1-scene-wrap">
+    <div class="s1corner tl"></div><div class="s1corner tr"></div>
+    <div class="s1corner bl"></div><div class="s1corner br"></div>
+    <div id="s1-scanline"></div>
+    <canvas id="s1-canvas" style="display:block;width:100%"></canvas>
+  </div>
+  <div id="s1-prog-bar"><div id="s1-prog-fill"></div></div>
+  <div id="s1-hint-box"><span id="s1-hint-icon" style="font-size:14px;flex-shrink:0;margin-top:1px">👁</span><span id="s1-hint-text">按下播放，觀察接下來發生了什麼事…</span></div>
+  <button id="s1-play-btn" onclick="s1TogglePlay()">
+    <span id="s1-pb-icon" style="font-size:18px">▶</span>
+    <div><div id="s1-pb-main" style="font-size:12px;font-weight:700;color:#4ade80">▶ 播放動畫，開始觀察</div><div id="s1-pb-sub" style="font-size:9px;color:#334155">觀察鐵罐從左右被擠壓後的形狀變化</div></div>
+  </button>
+  <div id="s1-qa-wrap">
+    <div id="s1-qa-box">
+      <div id="s1-qa-prog"></div>
+      <div id="s1-qa-badge"></div>
+      <div id="s1-qa-q"></div>
+      <div id="s1-qa-opts"></div>
+      <div id="s1-qa-fb"></div>
+      <div id="s1-qa-actions">
+        <button id="s1-hint-btn" onclick="s1ShowHint()">💡 提示</button>
+        <div id="s1-hint-show"></div>
+        <button id="s1-next-btn" onclick="s1NextQ()">下一題 →</button>
+        <button id="s1-retry-btn" onclick="s1RetryQ()">再試一次</button>
+      </div>
+    </div>
+    <div id="s1-done-box">
+      <div id="s1-done-text" style="font-size:12px;color:#4ade80;font-weight:700;margin-bottom:6px"></div>
+      <button id="s1-case-next-btn" class="btn btn-blue" style="font-size:11px" onclick="s1HandleCaseDone()"></button>
+    </div>
+  </div>
+  <div id="s1-xray-wrap">
+    <button id="s1-xray-btn" onclick="s1ToggleXray()">
+      <span id="s1-xray-icon" style="font-size:20px">🔵</span>
+      <div><div id="s1-xray-main" style="font-size:12px;font-weight:700;color:#93c5fd">開啟物理透視鏡——驗證你的推理！</div><div id="s1-xray-sub" style="font-size:9px;color:#1e3a5f;margin-top:1px">▸ 你已完成推理，現在來看看力在哪裡</div></div>
+    </button>
+  </div>
+  <div style="font-size:9px;color:#1e2d40;text-align:center;padding:5px 0;flex-shrink:0">力是看不見的——我們只能透過觀察「效應」，推論力的存在。</div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 2 – FORCE CLASSIFIER
+════════════════════════════════════════════════ -->
+<div id="s2" class="screen">
+  <div class="hdr">
+    <div><div class="hdr-title">⚡ 第二關：力場屬性解碼</div><div class="hdr-sub">FORCE FIELD DETECTOR · LEVEL 2</div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:10px;color:#64748b">已分類</span>
+      <div id="s2-prog-dots"></div>
+      <span id="s2-prog-label" style="font-size:12px;font-weight:700;font-family:monospace;color:#38bdf8;margin-left:4px">0/8</span>
+    </div>
+  </div>
+
+  <!-- Game area -->
+  <div id="s2-game">
+    <div id="s2-card-zone">
+      <div id="s2-ev-card" draggable="true">
+        <div id="s2-card-badge">案件 1/8</div>
+        <div id="s2-card-emoji">🪂</div>
+        <div id="s2-card-scene">載入中…</div>
+        <div id="s2-card-drag">拖曳到下方傳送門，或點擊傳送門分類</div>
+      </div>
+      <div id="s2-fb"></div>
+    </div>
+    <div id="s2-portals">
+      <div class="s2-portal" id="s2-portal-c">
+        <div class="s2-portal-ring" id="s2-ring-c">🤝</div>
+        <div class="s2-portal-label">【接觸力場】</div>
+        <div class="s2-portal-sub">施力者需要與受力者接觸</div>
+        <div class="s2-portal-count" id="s2-cnt-c">0 張 ✓</div>
+      </div>
+      <div class="s2-portal" id="s2-portal-r">
+        <div class="s2-portal-ring" id="s2-ring-r">✨</div>
+        <div class="s2-portal-label">【超距力場】</div>
+        <div class="s2-portal-sub">施力者不需與受力者接觸</div>
+        <div class="s2-portal-count" id="s2-cnt-r">0 張 ✓</div>
+      </div>
+    </div>
+    <div id="s2-chips"></div>
+  </div>
+
+  <!-- Summary (hidden) -->
+  <div id="s2-summary">
+    <div style="text-align:center"><div style="font-size:32px">🏆</div>
+      <div style="font-size:17px;font-weight:900;color:#4ade80;margin-top:4px">解碼成功！</div>
+      <div style="font-size:11px;color:#64748b;margin-top:2px">成功歸納力的兩大種類</div>
+    </div>
+    <div id="s2-sum-grid"></div>
+    <div style="background:#0a1828;border:1px solid #1e293b;border-radius:9px;padding:12px 16px;max-width:540px;width:100%;text-align:center;font-size:11px;color:#94a3b8;line-height:1.9">
+      <span style="color:#38bdf8;font-weight:700">接觸力</span>：拉力、推力、浮力、彈力、摩擦力
+      <span style="color:#334155;margin:0 6px">｜</span>
+      <span style="color:#a78bfa;font-weight:700">超距力</span>：重力、磁力、靜電力<br/>
+      <span style="font-size:10px;color:#475569">施力者與受力者之間是否需要直接接觸，是區分兩類的關鍵！</span>
+    </div>
+    <button class="btn btn-gold" onclick="goToLevel(3)">前往第三關：虎克天秤的審判 ⚖️</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 3 – HOOKE'S LAW
+════════════════════════════════════════════════ -->
+<div id="s3" class="screen">
+  <div class="hdr">
+    <div><div class="hdr-title">⚖️ 第三關：虎克天秤的審判</div><div class="hdr-sub">FORCE MEASUREMENT · HOOKE'S LAW LAB</div></div>
+    <div id="s3-badge" class="hdr-badge">第一階段：實驗</div>
+  </div>
+  <div id="s3-main">
+    <div id="s3-spring-panel"><canvas id="s3-spring-canvas"></canvas></div>
+    <div id="s3-right">
+
+      <!-- Phase 1: Experiment -->
+      <div id="s3-ph1" class="s3ph active">
+        <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+          <div class="sdot active" id="s3sd1">1</div><div class="sdot" id="s3sd2">2</div>
+          <div class="sdot" id="s3sd3">3</div><div class="sdot" id="s3sd4">4</div>
+          <div style="font-size:9px;color:#475569;margin-left:5px">請依序完成 4 組實驗</div>
+        </div>
+        <div class="card">
+          <div class="ctitle">📋 實驗說明</div>
+          <div style="font-size:10px;color:#94a3b8;line-height:1.7">
+            ① 依序點選（<span style="color:#fbbf24;font-weight:700">20→40→60→80 gw</span>）② 觀察彈簧伸長 ③ 記錄數據
+          </div>
+        </div>
+        <div class="row f1">
+          <div class="col f1">
+            <div class="dscreen">
+              <div class="dcell"><div class="lbl">外力 F</div><div class="val" id="s3-d-f">0</div><div class="unit">gw</div></div>
+              <div class="dcell"><div class="lbl">總長 L</div><div class="val" id="s3-d-l">10.0</div><div class="unit">cm</div></div>
+              <div class="dcell big"><div class="lbl">伸長量 ΔX</div><div class="val" id="s3-d-dx">0.0</div><div class="unit">cm</div></div>
+            </div>
+            <div class="card">
+              <div class="ctitle">⚖️ 選擇外力（依序）</div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap">
+                <button class="wbtn" id="s3wb20" onclick="s3SetForce(20)">20 gw</button>
+                <button class="wbtn" id="s3wb40" onclick="s3SetForce(40)" disabled>40 gw</button>
+                <button class="wbtn" id="s3wb60" onclick="s3SetForce(60)" disabled>60 gw</button>
+                <button class="wbtn" id="s3wb80" onclick="s3SetForce(80)" disabled>80 gw</button>
+              </div>
+            </div>
+            <button class="btn btn-green" id="s3-rec-btn" onclick="s3Record()" disabled style="flex-shrink:0">📋 記錄數據</button>
+          </div>
+          <div class="col f1">
+            <div style="font-size:9px;color:#475569">實驗紀錄表</div>
+            <div class="scroll" style="flex:1;border-radius:7px;border:1px solid #1e3a5f">
+              <table class="etable"><thead><tr><th>#</th><th>F</th><th>L</th><th>ΔX</th><th>F/ΔX</th></tr></thead>
+              <tbody id="s3-tbody"><tr><td colspan="5" style="color:#334155;font-style:italic;padding:10px">尚無數據</td></tr></tbody></table>
+            </div>
+            <button class="btn btn-yellow" id="s3-goto-chart" onclick="s3GotoChart()" disabled style="flex-shrink:0">📈 查看圖表 →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 2: Chart -->
+      <div id="s3-ph2" class="s3ph">
+        <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+          <span style="font-size:11px;color:#38bdf8;font-weight:700">📊 F–ΔX 關係圖</span>
+          <span style="font-size:9px;color:#475569;flex:1">根據實驗數據繪製</span>
+          <button class="btn btn-yellow" style="font-size:10px;padding:5px 10px" onclick="s3GotoPredict()">預測 100 gw →</button>
+        </div>
+        <canvas id="s3-chart" style="flex:1;min-height:0;border-radius:7px;background:#030c14;border:1px solid #1e3a5f;display:block;width:100%"></canvas>
+        <div class="card">
+          <div class="ctitle">🔍 圖形規律</div>
+          <div style="font-size:10px;color:#94a3b8;line-height:1.6">
+            外力越大，伸長量越大，形成一條<span style="color:#38bdf8;font-weight:700">通過原點的直線</span>（正比）。每組 F/ΔX = <span style="color:#fbbf24;font-family:monospace;font-weight:700">10（定值）</span>。
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 3: Predict -->
+      <div id="s3-ph3" class="s3ph">
+        <div class="card" style="border-color:#fbbf24">
+          <div class="ctitle" style="color:#fbbf24">🧠 科學預測挑戰</div>
+          <div style="font-size:10px;color:#94a3b8;line-height:1.6">
+            你已完成 4 組實驗並發現規律。<span style="color:#fbbf24;font-weight:700">若外力是 100 gw，預測 ΔX 和 L？</span><br/>
+            <span style="color:#64748b;font-size:9px">（可參考下方數據與圖表）</span>
+          </div>
+        </div>
+        <div class="row" style="flex-shrink:0">
+          <div class="card col f1"><div class="ctitle">預測 ΔX (cm)</div><input class="pred-input" id="s3-pred-dx" type="number" min="0" max="30" step="0.1" placeholder="?"/></div>
+          <div class="card col f1"><div class="ctitle">預測 L (cm)</div><input class="pred-input" id="s3-pred-l" type="number" min="0" max="40" step="0.1" placeholder="?"/></div>
+          <div class="col" style="justify-content:flex-end"><button class="btn btn-yellow" style="font-size:11px" onclick="s3CheckPredict()">🔬 驗證！</button></div>
+        </div>
+        <div id="s3-pred-result" style="display:none;flex-shrink:0">
+          <div class="dscreen" style="margin-bottom:6px">
+            <div class="dcell"><div class="lbl">外力 F</div><div class="val">100</div><div class="unit">gw</div></div>
+            <div class="dcell"><div class="lbl">總長 L</div><div class="val">20.0</div><div class="unit">cm</div></div>
+            <div class="dcell big"><div class="lbl">伸長量 ΔX</div><div class="val">10.0</div><div class="unit">cm</div></div>
+          </div>
+          <div id="s3-pred-fb" class="card" style="margin-bottom:6px"></div>
+          <button class="btn btn-red" style="font-size:11px" onclick="s3GotoOverload()">💥 挑戰彈性限度 →</button>
+        </div>
+        <div class="row f1" style="min-height:0">
+          <div class="col f1 scroll" style="border-radius:7px;border:1px solid #1e3a5f">
+            <table class="etable"><thead><tr><th>#</th><th>F</th><th>L</th><th>ΔX</th><th>F/ΔX</th></tr></thead><tbody id="s3-ref-tbody"></tbody></table>
+          </div>
+          <div class="col f1">
+            <canvas id="s3-chart2" style="flex:1;min-height:0;border-radius:7px;background:#030c14;border:1px solid #1e3a5f;display:block;width:100%"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 4: Overload -->
+      <div id="s3-ph4" class="s3ph">
+        <div class="card" style="border-color:#ef4444;flex-shrink:0">
+          <div class="ctitle" style="color:#ef4444">⚠️ 超過彈性限度實驗</div>
+          <div style="font-size:10px;color:#94a3b8;line-height:1.6">
+            掛上 <span style="color:#fca5a5;font-weight:700">150 gw</span> 的重物，再拿掉，觀察彈簧的變化！
+          </div>
+        </div>
+        <div id="s3-ol-status"></div>
+        <div id="s3-ol-action" style="flex-shrink:0">
+          <button class="btn btn-red pulse" onclick="s3RunOverload()">💥 掛上 150 gw（超過彈性限度）</button>
+        </div>
+        <div id="s3-ol-qa" style="display:none;flex-direction:column;gap:6px;flex:1;overflow-y:auto">
+          <div class="card" style="flex-shrink:0">
+            <div class="ctitle">👁 觀察與推論</div>
+            <div style="font-size:10px;color:#fca5a5;margin-bottom:7px">重物拿掉後，彈簧恢復了嗎？</div>
+            <div style="display:flex;flex-direction:column;gap:5px" id="s3-ol-opts">
+              <button class="qa-opt" onclick="s3OlAnswer(0)"><span class="oc">A</span>彈簧完全恢復原狀（回到 10 cm）</button>
+              <button class="qa-opt" onclick="s3OlAnswer(1)"><span class="oc">B</span>彈簧無法恢復，比原來更長（永久形變）</button>
+              <button class="qa-opt" onclick="s3OlAnswer(2)"><span class="oc">C</span>彈簧縮得比原來還短</button>
+            </div>
+          </div>
+          <div id="s3-ol-fb" style="display:none;flex-direction:column;gap:6px">
+            <div class="card" style="flex-shrink:0;border-color:#22c55e">
+              <div class="ctitle" style="color:#22c55e">✅ 原理解釋</div>
+              <div style="font-size:10px;color:#94a3b8;line-height:1.7">
+                在<span style="color:#38bdf8;font-weight:700">彈性限度</span>內，彈簧能完全恢復，虎克定律成立。<br/>
+                超過後<span style="color:#ef4444;font-weight:700">永久形變</span>，無法恢復，虎克定律<span style="color:#ef4444;font-weight:700">失效</span>。
+              </div>
+            </div>
+            <div class="card" style="flex-shrink:0;border-color:#3b82f6;text-align:center">
+              <div class="ctitle" style="color:#38bdf8">🏆 虎克定律</div>
+              <div style="font-family:monospace;font-size:14px;font-weight:900;color:#38bdf8;padding:5px 0;text-shadow:0 0 12px rgba(56,189,248,.5)">F₁/ΔX₁ = F₂/ΔX₂ = k（定值）</div>
+              <div style="font-size:9px;color:#475569">在彈性限度內恆成立</div>
+            </div>
+            <button class="btn btn-gold" style="flex-shrink:0;font-size:12px;padding:9px 18px" onclick="goToLevel(4)">🎉 完成審判，前往終極結局！</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 4 – FINALE
+════════════════════════════════════════════════ -->
+<div id="s4" class="screen">
+  <div id="s4-inner">
+    <div class="f4-trophy">🏆</div>
+    <div class="f4-title">物理大偵探名錄</div>
+    <div class="f4-sub">你成功完成三大任務，解開了「力」的神祕面紗！</div>
+    <div class="f4-achievements">
+      <div class="achv">🔬 第一關破案</div>
+      <div class="achv">⚡ 力場解碼</div>
+      <div class="achv">⚖️ 虎克審判</div>
+    </div>
+    <div class="f4-grid">
+      <div class="f4-card" style="border-color:#38bdf844">
+        <div class="f4-icon">🔵</div>
+        <div class="f4-kw" style="color:#38bdf8">力的效應①<br/>形狀改變（形變）</div>
+        <div class="f4-body">鐵罐被擠壓→形變<br/>力越大，形變越大<br/>力的方向決定形變方向</div>
+      </div>
+      <div class="f4-card" style="border-color:#fbbf2444">
+        <div class="f4-icon">🟡</div>
+        <div class="f4-kw" style="color:#fbbf24">力的效應②<br/>運動狀態改變</div>
+        <div class="f4-body">桌球靜止→被打飛<br/>力造成加速（牛頓）<br/>力的方向=加速方向</div>
+      </div>
+      <div class="f4-card" style="border-color:#a78bfa44">
+        <div class="f4-icon">⚡</div>
+        <div class="f4-kw" style="color:#a78bfa">力的兩大分類</div>
+        <div class="f4-body"><span style="color:#38bdf8">接觸力</span>：拉、推、浮、彈、摩擦<br/><span style="color:#a78bfa">超距力</span>：重力、磁力、靜電力</div>
+      </div>
+    </div>
+    <div class="f4-formula">
+      <div style="font-size:11px;color:#166534;margin-bottom:6px;letter-spacing:.06em">⚖️ 虎克定律黃金公式（彈性限度內）</div>
+      <div class="fml">F₁ / ΔX₁ = F₂ / ΔX₂ = k（彈力係數，定值）</div>
+      <div style="font-size:10px;color:#475569;margin-top:6px">超過彈性限度 → 永久形變 → 虎克定律失效</div>
+    </div>
+    <button class="btn btn-gold pulse" onclick="restartAll()">🔄 重新挑戰</button>
+  </div>
+</div>
+
+<!-- Level Clear Overlay -->
+<div id="lv-clear">
+  <div id="lv-clear-box" class="pop-in">
+    <div id="lv-clear-icon" style="font-size:44px;margin-bottom:8px">🎉</div>
+    <div id="lv-clear-title" style="font-size:20px;font-weight:900;color:#4ade80;margin-bottom:4px"></div>
+    <div id="lv-clear-sub" style="font-size:11px;color:#64748b;margin-bottom:16px"></div>
+    <button id="lv-clear-btn" class="btn btn-gold" style="width:100%"></button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════════
+let currentLevel=0;
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s'+id).classList.add('active');
+  currentLevel=id;
+}
+function startMission(){ goToLevel(1); }
+function restartAll(){ location.reload(); }
+function goToLevel(n){
+  hideLvClear();
+  showScreen(n);
+  if(n===1){ setTimeout(s1Init,80); }
+  if(n===2){ setTimeout(s2Init,80); }
+  if(n===3){ setTimeout(s3Init,80); }
+}
+
+// Level clear
+function showLvClear(icon,title,sub,btnLabel,nextLv){
+  document.getElementById('lv-clear-icon').textContent=icon;
+  document.getElementById('lv-clear-title').textContent=title;
+  document.getElementById('lv-clear-sub').textContent=sub;
+  const btn=document.getElementById('lv-clear-btn');
+  btn.textContent=btnLabel;
+  btn.onclick=()=>goToLevel(nextLv);
+  document.getElementById('lv-clear').classList.add('show');
+}
+function hideLvClear(){ document.getElementById('lv-clear').classList.remove('show'); }
+
+// ══════════════════════════════════════════════════════════════════
+// SCREEN 1 – INVISIBLE DETECTIVE
+// ══════════════════════════════════════════════════════════════════
+const S1QA={
+  can:[
+    {q:"鐵罐從左右兩邊被壓扁了。你觀察到物體發生了什麼變化？",opts:["顏色變深了","重量變輕了","形狀改變（被壓扁）","溫度升高了"],ans:2,hint:"仔細看鐵罐的輪廓，它的形狀和原來一樣嗎？",fb:"正確！鐵罐的【形狀改變】了，這就叫做「形變」。"},
+    {q:"鐵罐會自己變形嗎？壓得越扁，你猜那個力有什麼變化？",opts:["力消失了","力保持不變","力越來越大","和力無關"],ans:2,hint:"形變越大，需要施加多大的力才能做到？",fb:"答對了！形變越大，施加的力越大——力與形變成正比。"},
+    {q:"造成鐵罐形變的力，是從哪個方向施加的？",opts:["從上往下壓","從左右兩側往中間擠壓","從下往上頂","從四面八方均勻施壓"],ans:1,hint:"觀察鐵罐左右兩側，哪個方向的形變最明顯？",fb:"完全正確！力從左右兩側往內擠壓，造成鐵罐形狀改變。開啟透視鏡驗證！",unlock:true}
+  ],
+  ball:[
+    {q:"球拍揮到桌球之前，球的運動狀態是？",opts:["往右飛","往左飛","靜止不動","上下彈跳"],ans:2,hint:"觀察球拍還沒接觸到球之前，桌球有沒有在動？",fb:"正確！球拍揮來之前，桌球是【靜止】的。"},
+    {q:"球拍打到球之後，球的運動狀態改變了嗎？",opts:["沒有，球還是靜止","有，球開始往右飛出去","球往下掉","球消失了"],ans:1,hint:"球被打到之後，它往哪個方向跑？",fb:"答對了！球從靜止變成往右飛——運動狀態改變了！"},
+    {q:"是什麼造成桌球的運動狀態改變？力的方向是？",opts:["球自己想動，沒有力","空氣推動，方向不定","球拍施力，由左往右","球拍施力，由右往左"],ans:2,hint:"球拍從左邊揮過來，球往右飛——力和球飛出的方向一致。",fb:"完全正確！球拍由左往右施力，改變了桌球的運動狀態。開啟透視鏡驗證！",unlock:true}
+  ]
+};
+let s1Case='can',s1Phase='observe',s1XrayOn=false;
+let s1AnimId=null,s1Playing=false,s1T=0,s1LastTs=null,s1Prog=0;
+let s1QStep=0,s1QChosen=null;
+let s1Case1Done=false;
+const S1_CAN_DUR=6,S1_BALL_DUR=5;
+const s1Canvas=document.getElementById('s1-canvas');
+const s1Ctx=s1Canvas.getContext('2d');
+const S1H=200; // logical canvas height in CSS px
+
+function s1Init(){
+  s1Case='can'; s1Phase='observe'; s1XrayOn=false;
+  s1Playing=false; s1T=0; s1LastTs=null; s1Prog=0; s1Case1Done=false;
+  s1ResizeCanvas();
+  s1SetPhase('observe');
+  s1SwitchCase('can');
+}
+function s1ResizeCanvas(){
+  const dpr=window.devicePixelRatio||1;
+  const w=s1Canvas.offsetWidth || s1Canvas.parentElement.offsetWidth || 400;
+  s1Canvas.width = w * dpr;
+  s1Canvas.height = S1H * dpr;
+  s1Ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize',()=>{ if(currentLevel===1){s1ResizeCanvas();s1DrawScene();} });
+
+// Drawing
+function s1rr(x,y,w,h,r){
+  s1Ctx.beginPath();
+  if(s1Ctx.roundRect){s1Ctx.roundRect(x,y,w,h,r);}
+  else{s1Ctx.moveTo(x+r,y);s1Ctx.lineTo(x+w-r,y);s1Ctx.quadraticCurveTo(x+w,y,x+w,y+r);s1Ctx.lineTo(x+w,y+h-r);s1Ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);s1Ctx.lineTo(x+r,y+h);s1Ctx.quadraticCurveTo(x,y+h,x,y+h-r);s1Ctx.lineTo(x,y+r);s1Ctx.quadraticCurveTo(x,y,x+r,y);s1Ctx.closePath();}
+}
+function s1Arrow(x1,y1,x2,y2,col,lw){
+  const a=Math.atan2(y2-y1,x2-x1),hs=10;
+  s1Ctx.strokeStyle=col;s1Ctx.lineWidth=lw;s1Ctx.lineCap='round';
+  s1Ctx.beginPath();s1Ctx.moveTo(x1,y1);s1Ctx.lineTo(x2,y2);s1Ctx.stroke();
+  s1Ctx.fillStyle=col;s1Ctx.beginPath();
+  s1Ctx.moveTo(x2,y2);s1Ctx.lineTo(x2-hs*Math.cos(a-Math.PI/6),y2-hs*Math.sin(a-Math.PI/6));
+  s1Ctx.lineTo(x2-hs*Math.cos(a+Math.PI/6),y2-hs*Math.sin(a+Math.PI/6));s1Ctx.closePath();s1Ctx.fill();
+}
+function s1DrawScene(){
+  const W=s1Canvas.offsetWidth, H=s1Canvas.offsetHeight||Math.round(s1Canvas.offsetWidth*0.52);
+  s1Ctx.clearRect(0,0,W,H);
+  s1Case==='can'?s1DrawCan(W,H):s1DrawBall(W,H);
+}
+function s1DrawCan(W,H){
+  const p=s1Prog,cx=W/2,tableY=H-32;
+  const sq=p*0.58, cw=Math.min(80,W*0.18)*(1-sq), ch=Math.min(H*0.56,130)*(1+sq*.5), cy=tableY-ch;
+  // table
+  s1Ctx.fillStyle='#1E293B';s1rr(30,tableY,W-60,11,3);s1Ctx.fill();
+  s1Ctx.fillStyle='#0F172A';s1rr(30,tableY+11,W-60,4,2);s1Ctx.fill();
+  // can body
+  const g=s1Ctx.createLinearGradient(cx-cw/2,0,cx+cw/2,0);
+  g.addColorStop(0,'#374151');g.addColorStop(.28,'#6B7280');g.addColorStop(.58,'#9CA3AF');g.addColorStop(1,'#4B5563');
+  s1Ctx.fillStyle=g;s1rr(cx-cw/2,cy,cw,ch,0);s1Ctx.fill();
+  s1Ctx.beginPath();s1Ctx.ellipse(cx,cy,cw/2,7*(1-sq*.5),0,0,Math.PI*2);s1Ctx.fillStyle='#9CA3AF';s1Ctx.fill();
+  s1Ctx.beginPath();s1Ctx.ellipse(cx,cy,cw/2-5,4*(1-sq*.4),0,0,Math.PI*2);s1Ctx.fillStyle='#6B7280';s1Ctx.fill();
+  s1Ctx.beginPath();s1Ctx.ellipse(cx,tableY,cw/2,7*(1-sq*.3),0,0,Math.PI*2);s1Ctx.fillStyle='#6B7280';s1Ctx.fill();
+  // dents
+  if(p>0.12){
+    for(let i=0;i<4;i++){
+      const dy=cy+(i+1)*ch/5,dw=p*14;
+      const dg=s1Ctx.createLinearGradient(cx-cw/2-dw,0,cx-cw/2+dw,0);
+      dg.addColorStop(0,'#1F2937');dg.addColorStop(.5,'#374151');dg.addColorStop(1,'#1F2937');
+      s1Ctx.fillStyle=dg;s1Ctx.globalAlpha=.8;
+      s1Ctx.beginPath();s1Ctx.ellipse(cx-cw/2,dy,dw,3+p*3,0,0,Math.PI*2);s1Ctx.fill();
+      s1Ctx.beginPath();s1Ctx.ellipse(cx+cw/2,dy,dw,3+p*3,0,0,Math.PI*2);s1Ctx.fill();
+      s1Ctx.globalAlpha=1;
+    }
+  }
+  if(p<0.3){s1Ctx.fillStyle='#D1D5DB';s1Ctx.font='bold 13px sans-serif';s1Ctx.textAlign='center';s1Ctx.textBaseline='middle';s1Ctx.fillText('鐵罐',cx,cy+ch*.48);}
+  if(p>0.05){s1Ctx.fillStyle='#64748B';s1Ctx.font='12px sans-serif';s1Ctx.textAlign='center';s1Ctx.textBaseline='middle';s1Ctx.fillText('形變量：'+(sq*100).toFixed(0)+' mm',cx,Math.max(14,cy-14));}
+  // xray arrows
+  if(s1XrayOn&&p>0.03){
+    const al=18+p*68,midY=cy+ch*.5,fn=(p*12).toFixed(1);
+    // left arrow (from left toward can)
+    s1Arrow(cx-cw/2-al-4,midY,cx-cw/2-4,midY,'#EF4444',3.5);
+    // right arrow (from right toward can)
+    s1Arrow(cx+cw/2+al+4,midY,cx+cw/2+4,midY,'#EF4444',3.5);
+    const lbx=cx-cw/2-al-90, lbw=86;
+    if(lbx>0){
+      s1Ctx.fillStyle='rgba(28,5,5,.9)';s1rr(lbx,midY-26,lbw,20,4);s1Ctx.fill();
+      s1Ctx.fillStyle='#FCA5A5';s1Ctx.font='bold 11px sans-serif';s1Ctx.textAlign='center';s1Ctx.textBaseline='middle';
+      s1Ctx.fillText('左側推力 →',lbx+lbw/2,midY-16);
+    }
+    const rbx=cx+cw/2+al+4;
+    if(rbx+86<W){
+      s1Ctx.fillStyle='rgba(28,5,5,.9)';s1rr(rbx,midY-26,86,20,4);s1Ctx.fill();
+      s1Ctx.fillStyle='#FCA5A5';s1Ctx.font='bold 11px sans-serif';s1Ctx.textAlign='center';s1Ctx.textBaseline='middle';
+      s1Ctx.fillText('← 右側推力',rbx+43,midY-16);
+    }
+    s1Ctx.fillStyle='#FCA5A5';s1Ctx.font='bold 11px sans-serif';s1Ctx.textAlign='center';s1Ctx.textBaseline='middle';
+    s1Ctx.fillText('F = '+fn+' N（兩側合力）',cx,midY+24);
+  }
+  if(p<0.02){s1Ctx.fillStyle='#334155';s1Ctx.font='13px sans-serif';s1Ctx.textAlign='center';s1Ctx.textBaseline='middle';s1Ctx.fillText('等待現象發生…',cx,H-14);}
+}
+function s1DrawBall(W,H){
+  const p=s1Prog;
+  // keep table higher so ball fits
+  const tableY=H-52;
+  const pc=0.40;
+  // swing end at 32% from left – ensures paddle fits on screen
+  const se=W*0.32;
+  let px=p<=pc ? 8+(p/pc)*(se-8) : se+(p-pc)*16;
+  const pW=38,pH=54,pCY=tableY-28;
+  // table
+  s1Ctx.fillStyle='#1E293B';s1rr(0,tableY,W,11,0);s1Ctx.fill();
+  s1Ctx.fillStyle='#0F172A';s1rr(0,tableY+11,W,4,0);s1Ctx.fill();
+  // net (shifted right so it's clearly visible)
+  const netX=W*0.62;
+  s1Ctx.fillStyle='#475569';s1rr(netX-2,tableY-26,4,28,1);s1Ctx.fill();s1rr(netX-14,tableY-28,28,4,1);s1Ctx.fill();
+  // paddle handle
+  s1Ctx.strokeStyle='#92400E';s1Ctx.lineWidth=7;s1Ctx.lineCap='round';
+  s1Ctx.beginPath();s1Ctx.moveTo(px+pW/2-8,pCY+pH/2);s1Ctx.lineTo(px+pW/2-20,pCY+pH/2+28);s1Ctx.stroke();
+  // paddle face
+  const pg=s1Ctx.createLinearGradient(px,0,px+pW,0);
+  pg.addColorStop(0,'#7C3AED');pg.addColorStop(1,'#A78BFA');
+  s1Ctx.fillStyle=pg;s1rr(px,pCY-pH/2,pW,pH,7);s1Ctx.fill();
+  s1Ctx.strokeStyle='#7C3AED';s1Ctx.lineWidth=1.5;s1Ctx.stroke();
+  // ball
+  const bR=13;
+  const brx=se+pW/2+bR+4;
+  let bx,rx=bR,ry=bR;
+  if(p<pc-0.04){bx=brx;}
+  else if(p<pc+0.07){const ct=(p-(pc-0.04))/.11,sq=Math.sin(ct*Math.PI)*.42;bx=brx-sq*7;rx=bR*(1-sq);ry=bR*(1+sq*.6);}
+  else{const ft=(p-pc-0.07)/(1-pc-0.07);bx=brx+ft*(W-bR-16-brx);}
+  const bcy=tableY-bR-2;
+  const flying=p>pc+0.07,flyP=flying?(p-pc-0.07)/(1-pc-0.07):0;
+  // ghost trails
+  if(flying&&flyP>0.1){
+    [0.5,0.32,0.18].forEach((op,i)=>{
+      const gx=bx-(i+1)*20*flyP;
+      if(gx>bR){s1Ctx.fillStyle=`rgba(217,119,6,${op*.22})`;s1Ctx.beginPath();s1Ctx.ellipse(gx,bcy,bR*.9,bR*.9,0,0,Math.PI*2);s1Ctx.fill();}
+    });
+  }
+  // ball
+  const bg=s1Ctx.createRadialGradient(bx-bR*.28,bcy-bR*.28,1,bx,bcy,bR);
+  bg.addColorStop(0,'#FDE68A');bg.addColorStop(1,'#D97706');
+  s1Ctx.fillStyle=bg;s1Ctx.beginPath();s1Ctx.ellipse(bx,bcy,rx,ry,0,0,Math.PI*2);s1Ctx.fill();
+  s1Ctx.fillStyle='rgba(255,255,255,.5)';s1Ctx.beginPath();s1Ctx.ellipse(bx-bR*.28,bcy-bR*.28,bR*.22,bR*.16,0,0,Math.PI*2);s1Ctx.fill();
+  // speed meter – top-right
+  const mX=W-8,mY=10,mW=110,mH=46;
+  s1Ctx.fillStyle='#0B1628';s1rr(mX-mW,mY,mW,mH,6);s1Ctx.fill();
+  s1Ctx.strokeStyle='#1E3A5F';s1Ctx.lineWidth=1;s1Ctx.stroke();
+  s1Ctx.fillStyle='#475569';s1Ctx.font='9px sans-serif';s1Ctx.textAlign='center';s1Ctx.textBaseline='middle';s1Ctx.fillText('即時速度',mX-mW/2,mY+14);
+  const spd=flying?(flyP*8+4).toFixed(1):'0.0';
+  s1Ctx.fillStyle='#38BDF8';s1Ctx.font='bold 18px monospace';s1Ctx.fillText(spd+' m/s',mX-mW/2,mY+34);
+  // static label
+  if(p<pc-0.02){s1Ctx.fillStyle='#475569';s1Ctx.font='10px sans-serif';s1Ctx.textAlign='center';s1Ctx.textBaseline='middle';s1Ctx.fillText('靜止',brx,bcy-bR-9);}
+  // xray force arrow
+  if(s1XrayOn&&p>=pc-0.04&&p<=pc+0.15){
+    const al=20+(p>pc?(p-pc)/.15*64:0);
+    s1Arrow(bx-bR-al,bcy,bx-bR-2,bcy,'#EF4444',3.5);
+    const lw=Math.min(al+70,bx-bR-2);
+    const lbx=Math.max(2,bx-bR-al-4);
+    s1Ctx.fillStyle='rgba(28,5,5,.9)';s1rr(lbx,bcy-26,Math.min(lw,W-lbx-2),20,4);s1Ctx.fill();
+    s1Ctx.fillStyle='#FCA5A5';s1Ctx.font='bold 11px sans-serif';s1Ctx.textAlign='center';s1Ctx.textBaseline='middle';
+    s1Ctx.fillText('球拍施力（由左往右）→',lbx+(Math.min(lw,W-lbx-2))/2,bcy-16);
+  }
+  if(p<0.05){s1Ctx.fillStyle='#334155';s1Ctx.font='12px sans-serif';s1Ctx.textAlign='center';s1Ctx.textBaseline='middle';s1Ctx.fillText('等待現象發生…',W/2,H-14);}
+}
+
+function s1Tick(ts){
+  if(!s1LastTs)s1LastTs=ts;
+  s1T+=(ts-s1LastTs)/1000;s1LastTs=ts;
+  const dur=s1Case==='can'?S1_CAN_DUR:S1_BALL_DUR;
+  s1Prog=Math.min(1,(s1T%dur)/dur);
+  document.getElementById('s1-prog-fill').style.width=(s1Prog*100)+'%';
+  s1DrawScene(); s1UpdateHint();
+  if(s1Phase==='observe'&&s1T>dur*0.93)s1SetPhase('qa');
+  if(s1Playing)s1AnimId=requestAnimationFrame(s1Tick);
+}
+function s1TogglePlay(){
+  if(s1Playing){
+    s1Playing=false;cancelAnimationFrame(s1AnimId);s1AnimId=null;s1LastTs=null;
+    const b=document.getElementById('s1-play-btn');b.classList.remove('playing');
+    document.getElementById('s1-pb-icon').textContent='▶';document.getElementById('s1-pb-main').textContent='▶ 播放動畫，開始觀察';b.style.borderColor='#14532d';b.style.background='#0d1f14';
+  } else {
+    s1Playing=true;s1T=0;s1LastTs=null;s1Prog=0;
+    const b=document.getElementById('s1-play-btn');b.classList.add('playing');
+    document.getElementById('s1-pb-icon').textContent='⏸';document.getElementById('s1-pb-main').textContent='動畫播放中——仔細觀察現象';
+    s1AnimId=requestAnimationFrame(s1Tick);
+  }
+}
+function s1SetPhase(p){
+  s1Phase=p;
+  const map={observe:{label:'第一步：觀察現象',col:'#38bdf8',bg:'#071828',bdr:'#1e3a5f'},qa:{label:'第二步：偵探推理',col:'#fbbf24',bg:'#12100a',bdr:'#78350f'},reveal:{label:'第三步：揭開真相',col:'#fca5a5',bg:'#12050a',bdr:'#7f1d1d'}};
+  const b=map[p],bd=document.getElementById('s1-badge');
+  bd.textContent=b.label;bd.style.color=b.col;bd.style.background=b.bg;bd.style.border='1px solid '+b.bdr;
+  document.getElementById('s1-play-btn').style.display=p==='observe'?'flex':'none';
+  document.getElementById('s1-qa-wrap').style.display=(p==='qa'||p==='reveal')?'block':'none';
+  document.getElementById('s1-xray-wrap').style.display=p==='reveal'?'block':'none';
+  if(p==='qa'){s1ResetQA();s1BuildQA();}
+  s1UpdateHint();
+}
+function s1UpdateHint(){
+  const hi=document.getElementById('s1-hint-icon'),ht=document.getElementById('s1-hint-text'),hb=document.getElementById('s1-hint-box');
+  const pf=document.getElementById('s1-prog-fill'),sw=document.getElementById('s1-scene-wrap');
+  if(s1Phase==='reveal'){
+    hi.textContent='🔍';hb.className='reveal';ht.style.color='#fca5a5';ht.style.fontWeight='600';
+    ht.textContent=s1Case==='can'?'真相大白：是看不見的【左右擠壓力】造成了形變！':'真相大白：是看不見的【球拍施力】改變了桌球的運動狀態！';
+    pf.style.background='linear-gradient(90deg,#7f1d1d,#ef4444)';sw.className='reveal';
+  } else {
+    hi.textContent='👁';hb.className='';ht.style.fontWeight='400';
+    pf.style.background='linear-gradient(90deg,#1e3a5f,#38bdf8)';sw.className='';
+    if(s1Prog>0.02){ht.style.color='#93c5fd';ht.textContent=s1Case==='can'?'觀察現象：鐵罐發生了【形狀改變（形變）】。是什麼導致的？':'觀察現象：桌球【運動狀態改變（從靜止到飛出）】。是誰打了它？';}
+    else{ht.style.color='#475569';ht.textContent='按下播放，觀察接下來發生了什麼事…';}
+  }
+}
+function s1ResetQA(){
+  s1QStep=0;s1QChosen=null;
+  document.getElementById('s1-done-box').style.display='none';
+  document.getElementById('s1-qa-box').style.display='block';
+}
+function s1BuildQA(){
+  const qs=S1QA[s1Case];
+  const prog=document.getElementById('s1-qa-prog');prog.innerHTML='';
+  qs.forEach((_,i)=>{const d=document.createElement('div');d.className='s1-qdot'+(i<s1QStep?' done':i===s1QStep?' cur':'');prog.appendChild(d);});
+  document.getElementById('s1-qa-badge').textContent='偵探提問 '+(s1QStep+1)+'/'+qs.length;
+  document.getElementById('s1-qa-q').textContent=qs[s1QStep].q;
+  const oe=document.getElementById('s1-qa-opts');oe.innerHTML='';
+  qs[s1QStep].opts.forEach((o,i)=>{
+    const btn=document.createElement('button');btn.className='qa-opt';
+    btn.innerHTML=`<span class="oc">${String.fromCharCode(65+i)}</span>${o}`;
+    btn.addEventListener('click',()=>s1ChooseOpt(i));oe.appendChild(btn);
+  });
+  document.getElementById('s1-qa-fb').className='';document.getElementById('s1-qa-fb').textContent='';
+  document.getElementById('s1-hint-btn').style.display='inline-block';
+  document.getElementById('s1-hint-show').style.display='none';
+  document.getElementById('s1-next-btn').style.display='none';
+  document.getElementById('s1-retry-btn').style.display='none';
+  s1QChosen=null;
+}
+function s1ChooseOpt(i){
+  if(s1QChosen!==null)return;s1QChosen=i;
+  const q=S1QA[s1Case][s1QStep],ok=i===q.ans;
+  document.querySelectorAll('#s1-qa-opts .qa-opt').forEach((b,idx)=>{
+    b.disabled=true;
+    if(idx===q.ans){b.classList.add('correct');b.querySelector('.oc').textContent='✓';}
+    else if(idx===i&&!ok){b.classList.add('wrong');b.querySelector('.oc').textContent='✗';}
+  });
+  const fb=document.getElementById('s1-qa-fb');fb.textContent=ok?q.fb:'❌ 再想想！'+q.hint;fb.className=ok?'correct':'wrong';
+  document.getElementById('s1-hint-btn').style.display='none';document.getElementById('s1-hint-show').style.display='none';
+  if(ok){if(q.unlock)s1SetPhase('reveal');const nb=document.getElementById('s1-next-btn');nb.style.display='inline-block';nb.textContent=s1QStep+1>=S1QA[s1Case].length?'完成 🎉':'下一題 →';}
+  else{document.getElementById('s1-retry-btn').style.display='inline-block';}
+}
+function s1ShowHint(){document.getElementById('s1-hint-btn').style.display='none';const hs=document.getElementById('s1-hint-show');hs.textContent='💡 '+S1QA[s1Case][s1QStep].hint;hs.style.display='block';}
+function s1NextQ(){
+  if(s1QStep+1>=S1QA[s1Case].length){s1ShowQADone();return;}
+  s1QStep++;document.getElementById('s1-qa-fb').className='';document.getElementById('s1-next-btn').style.display='none';document.getElementById('s1-retry-btn').style.display='none';s1BuildQA();
+}
+function s1RetryQ(){document.getElementById('s1-qa-fb').className='';s1QChosen=null;s1BuildQA();}
+function s1ShowQADone(){
+  document.getElementById('s1-qa-box').style.display='none';const db=document.getElementById('s1-done-box');db.style.display='block';
+  document.getElementById('s1-done-text').textContent='🎉 推理完成！開啟透視鏡，驗證你的推理。';
+  const btn=document.getElementById('s1-case-next-btn');
+  btn.textContent=s1Case==='can'?'前往案件二 →':'完成兩大案件！';
+}
+function s1HandleCaseDone(){
+  if(s1Case==='can'){s1SwitchCase('ball');}
+  else{
+    if(s1AnimId){cancelAnimationFrame(s1AnimId);s1AnimId=null;}s1Playing=false;
+    showLvClear('🔬','第一關破案！','你成功追蹤到隱形力的足跡！','進入第二關：力場屬性解碼 ⚡',2);
+  }
+}
+function s1ToggleXray(){
+  s1XrayOn=!s1XrayOn;const btn=document.getElementById('s1-xray-btn');btn.className=s1XrayOn?'on':'';
+  document.getElementById('s1-xray-icon').textContent=s1XrayOn?'🔴':'🔵';
+  document.getElementById('s1-xray-main').textContent=s1XrayOn?'關閉物理透視鏡':'開啟物理透視鏡——驗證你的推理！';
+  document.getElementById('s1-xray-sub').textContent=s1XrayOn?'▸ 正在顯示隱藏的力':'▸ 你已完成推理，現在來看看力在哪裡';
+  const sl=document.getElementById('s1-scanline');sl.style.display='block';setTimeout(()=>sl.style.display='none',350);
+  s1DrawScene();
+}
+function s1SwitchCase(c){
+  if(s1AnimId){cancelAnimationFrame(s1AnimId);s1AnimId=null;}
+  s1Playing=false;s1T=0;s1LastTs=null;s1Prog=0;s1XrayOn=false;s1Case=c;
+  document.getElementById('s1-tab-can').className='s1-tab'+(c==='can'?' active':'');
+  document.getElementById('s1-tab-ball').className='s1-tab'+(c==='ball'?' active':'');
+  document.getElementById('s1-pb-sub').textContent=c==='can'?'觀察鐵罐從左右被擠壓後的形狀變化':'觀察桌球被揮拍前後，運動狀態如何改變';
+  const pb=document.getElementById('s1-play-btn');pb.classList.remove('playing');
+  document.getElementById('s1-pb-icon').textContent='▶';document.getElementById('s1-pb-main').textContent='▶ 播放動畫，開始觀察';
+  document.getElementById('s1-xray-btn').className='';document.getElementById('s1-xray-icon').textContent='🔵';
+  document.getElementById('s1-prog-fill').style.width='0%';
+  s1SetPhase('observe');s1DrawScene();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SCREEN 2 – FORCE CLASSIFIER
+// ══════════════════════════════════════════════════════════════════
+const S2CARDS=[
+  {id:1,scene:"跳傘員自空中落下",hint:"想想看，地球有摸到跳傘員才把他拉下來嗎？",tip:"受到來自地球的重力",type:"remote",emoji:"🪂"},
+  {id:2,scene:"磁鐵吸起桌上的迴紋針",hint:"磁鐵有沒有碰到迴紋針，就能把它吸起來？",tip:"磁鐵吸引迴紋針的磁力",type:"remote",emoji:"🧲"},
+  {id:3,scene:"帶電氣球讓頭髮站起來",hint:"氣球有沒有接觸到頭髮，就讓它站起來了？",tip:"帶電氣球吸引頭髮的靜電力",type:"remote",emoji:"🎈"},
+  {id:4,scene:"特務用手拉動沉重的行李箱",hint:"手需不需要握住行李箱才能拉它？",tip:"手拉物體的拉力",type:"contact",emoji:"🧳"},
+  {id:5,scene:"大力士用雙手推動大卡車",hint:"大力士需不需要碰到卡車才能推它？",tip:"手推物體的推力",type:"contact",emoji:"🚛"},
+  {id:6,scene:"郵輪穩穩地浮在海面上",hint:"水有沒有接觸到船底，才把船托起來？",tip:"使船浮在水面的浮力",type:"contact",emoji:"🚢"},
+  {id:7,scene:"被拉長的彈簧企圖縮回",hint:"彈簧需不需要接觸物體才能施力？",tip:"彈簧伸縮時的彈力",type:"contact",emoji:"🌀"},
+  {id:8,scene:"急煞車時輪胎阻止車子滑動",hint:"輪胎需不需要接觸地面才能產生阻力？",tip:"阻止物體滑動的摩擦力",type:"contact",emoji:"🛞"},
+];
+function s2Shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+let s2Queue=[],s2Done=[],s2Busy=false;
+const s2CardEl=document.getElementById('s2-ev-card');
+const s2BadgeEl=document.getElementById('s2-card-badge');
+const s2EmojiEl=document.getElementById('s2-card-emoji');
+const s2SceneEl=document.getElementById('s2-card-scene');
+const s2FbEl=document.getElementById('s2-fb');
+const s2ChipsEl=document.getElementById('s2-chips');
+const s2DotsEl=document.getElementById('s2-prog-dots');
+const s2LabelEl=document.getElementById('s2-prog-label');
+const s2CntC=document.getElementById('s2-cnt-c');
+const s2CntR=document.getElementById('s2-cnt-r');
+const s2PortalC=document.getElementById('s2-portal-c');
+const s2PortalR=document.getElementById('s2-portal-r');
+const s2RingC=document.getElementById('s2-ring-c');
+const s2RingR=document.getElementById('s2-ring-r');
+
+function s2Init(){
+  s2Queue=s2Shuffle(S2CARDS);s2Done=[];s2Busy=false;
+  s2ChipsEl.innerHTML='';
+  document.getElementById('s2-game').style.display='block';
+  document.getElementById('s2-summary').classList.remove('show');
+  s2BuildDots();s2RenderCard();s2UpdateCounts();s2HideFb();
+}
+function s2BuildDots(){
+  s2DotsEl.innerHTML='';
+  S2CARDS.forEach((_,i)=>{const d=document.createElement('div');d.className='s2dot';d.id='s2d'+i;s2DotsEl.appendChild(d);});
+  s2UpdateDots();
+}
+function s2UpdateDots(){
+  S2CARDS.forEach((_,i)=>{const d=document.getElementById('s2d'+i);if(!d)return;d.className='s2dot'+(i<s2Done.length?' done':i===s2Done.length?' current':'');});
+  s2LabelEl.textContent=s2Done.length+'/8';
+}
+function s2RenderCard(){
+  if(!s2Queue.length)return;
+  const c=s2Queue[0];
+  s2BadgeEl.textContent='案件 '+(s2Done.length+1)+'/8';
+  s2EmojiEl.textContent=c.emoji;s2SceneEl.textContent=c.scene;
+  s2CardEl.style.opacity='1';s2CardEl.style.transform='';
+}
+function s2UpdateCounts(){
+  const cc=s2Done.filter(d=>d.card.type==='contact').length;
+  const cr=s2Done.filter(d=>d.card.type==='remote').length;
+  s2CntC.textContent=cc+' 張 ✓';s2CntC.className='s2-portal-count'+(cc>0?' has':'');
+  s2CntR.textContent=cr+' 張 ✓';s2CntR.className='s2-portal-count'+(cr>0?' has':'');
+}
+function s2ShowFb(msg,ok){s2FbEl.textContent=msg;s2FbEl.className='show '+(ok?'correct':'wrong');}
+function s2HideFb(){s2FbEl.className='';s2FbEl.textContent='';}
+function s2AddChip(card){
+  const ch=document.createElement('div');ch.className='s2chip '+card.type;
+  ch.innerHTML=card.emoji+'<span class="ctag">'+(card.type==='contact'?'接觸':'超距')+'</span>';s2ChipsEl.appendChild(ch);
+}
+function s2Attempt(zone){
+  if(!s2Queue.length||s2Busy)return;
+  const cur=s2Queue[0],ok=cur.type===zone;
+  if(ok){
+    s2Busy=true;
+    const portal=zone==='contact'?s2PortalC:s2PortalR;
+    const ring=zone==='contact'?s2RingC:s2RingR;
+    portal.classList.add('flash');ring.textContent='💫';
+    s2ShowFb('✅ 正確！'+cur.tip,true);
+    s2CardEl.classList.add('card-fly');
+    setTimeout(()=>{
+      portal.classList.remove('flash');ring.textContent=zone==='contact'?'🤝':'✨';
+      s2CardEl.classList.remove('card-fly');
+      s2Done.push({card:cur});s2Queue=s2Queue.slice(1);
+      s2AddChip(cur);s2UpdateDots();s2UpdateCounts();s2HideFb();
+      if(s2Queue.length===0){s2ShowSummary();}else{s2RenderCard();}
+      s2Busy=false;
+    },1000);
+  } else {
+    s2CardEl.classList.add('card-shake');s2ShowFb('❌ '+cur.hint,false);
+    setTimeout(()=>s2CardEl.classList.remove('card-shake'),500);
+    setTimeout(()=>s2HideFb(),2500);
+  }
+}
+s2PortalC.addEventListener('click',()=>s2Attempt('contact'));
+s2PortalR.addEventListener('click',()=>s2Attempt('remote'));
+s2CardEl.addEventListener('dragstart',e=>{e.dataTransfer.setData('text','card');s2PortalC.classList.add('drag-over');s2PortalR.classList.add('drag-over');});
+s2CardEl.addEventListener('dragend',()=>{s2PortalC.classList.remove('drag-over');s2PortalR.classList.remove('drag-over');});
+[{el:s2PortalC,z:'contact'},{el:s2PortalR,z:'remote'}].forEach(({el,z})=>{
+  el.addEventListener('dragover',e=>e.preventDefault());
+  el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drag-over');s2Attempt(z);});
+});
+function s2ShowSummary(){
+  document.getElementById('s2-game').style.display='none';
+  const sumEl=document.getElementById('s2-summary');sumEl.classList.add('show');
+  const grid=document.getElementById('s2-sum-grid');grid.innerHTML='';
+  const mkCol=(type,col,icon,label)=>{
+    const div=document.createElement('div');div.className='s2sc '+type;
+    div.innerHTML=`<div class="s2sc-hd"><span>${icon}</span>${label}</div>`;
+    S2CARDS.filter(c=>c.type===type).forEach(c=>{
+      const r=document.createElement('div');r.className='s2sc-row';
+      r.innerHTML=`<span class="se">${c.emoji}</span><div><div class="sn">${c.scene}</div><div class="st">${c.tip}</div></div>`;
+      div.appendChild(r);
+    });
+    return div;
+  };
+  grid.appendChild(mkCol('contact','#38bdf8','🤝','接觸力（需要接觸）'));
+  grid.appendChild(mkCol('remote','#a78bfa','✨','超距力（不需接觸）'));
+  setTimeout(()=>{
+    showLvClear('⚡','解碼成功！','成功歸納接觸力與超距力！','前往第三關：虎克天秤的審判 ⚖️',3);
+  },1200);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SCREEN 3 – HOOKE'S LAW
+// ══════════════════════════════════════════════════════════════════
+const S3L0=10,S3K=10;
+let s3CurF=0,s3StepCnt=0,s3Rows=[],s3SpF=0,s3SpOl=false,s3SpDef=false;
+const s3SC=document.getElementById('s3-spring-canvas');
+const s3SCtx=s3SC.getContext('2d');
+const s3CC=document.getElementById('s3-chart');
+const s3CCtx=s3CC.getContext('2d');
+const s3CC2=document.getElementById('s3-chart2');
+const s3CCtx2=s3CC2.getContext('2d');
+
+function s3Init(){
+  s3CurF=0;s3StepCnt=0;s3Rows=[];s3SpF=0;s3SpOl=false;s3SpDef=false;
+  ['s3-ph1','s3-ph2','s3-ph3','s3-ph4'].forEach(id=>{document.getElementById(id).classList.remove('active');});
+  document.getElementById('s3-ph1').classList.add('active');
+  document.getElementById('s3-badge').textContent='第一階段：實驗';
+  // reset UI
+  ['s3wb20','s3wb40','s3wb60','s3wb80'].forEach((id,i)=>{const b=document.getElementById(id);b.disabled=(i>0);b.style.borderColor='#1e3a5f';b.style.color='#38bdf8';});
+  document.getElementById('s3-rec-btn').disabled=true;
+  document.getElementById('s3-goto-chart').disabled=true;
+  document.getElementById('s3-tbody').innerHTML='<tr><td colspan="5" style="color:#334155;font-style:italic;padding:10px">尚無數據</td></tr>';
+  ['s3sd1','s3sd2','s3sd3','s3sd4'].forEach((id,i)=>{document.getElementById(id).className='sdot'+(i===0?' active':'');});
+  document.getElementById('s3-d-f').textContent='0';document.getElementById('s3-d-l').textContent='10.0';document.getElementById('s3-d-dx').textContent='0.0';
+  document.getElementById('s3-pred-result').style.display='none';
+  document.getElementById('s3-ol-action').style.display='block';
+  document.getElementById('s3-ol-qa').style.display='none';
+  document.getElementById('s3-ol-fb').style.display='none';
+  document.getElementById('s3-ol-status').textContent='';
+  setTimeout(s3SizeAll,80);
+}
+function s3SizeAll(){
+  const dpr=window.devicePixelRatio||1;
+  const sp=document.getElementById('s3-spring-panel');
+  s3SC.width=sp.offsetWidth*dpr;s3SC.height=sp.offsetHeight*dpr;
+  s3SCtx.setTransform(dpr,0,0,dpr,0,0);
+  [s3CC,s3CC2].forEach(c=>{
+    if(!c.offsetWidth)return;
+    c.width=c.offsetWidth*dpr;c.height=c.offsetHeight*dpr;
+    (c===s3CC?s3CCtx:s3CCtx2).setTransform(dpr,0,0,dpr,0,0);
+  });
+  s3DrawSpring();s3DrawChart(s3CCtx,s3CC);s3DrawChart(s3CCtx2,s3CC2);
+}
+
+function s3DrawSpring(){
+  const W=s3SC.offsetWidth,H=s3SC.offsetHeight;
+  if(!W||!H)return;
+  const ctx=s3SCtx;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#040e1c';ctx.fillRect(0,0,W,H);
+  const pxPerCm=H/28,cmOff=1,rulerX=W-28,rulerW=22;
+  const rg=ctx.createLinearGradient(rulerX,0,rulerX+rulerW,0);
+  rg.addColorStop(0,'#1e2d3f');rg.addColorStop(.5,'#253545');rg.addColorStop(1,'#1e2d3f');
+  ctx.fillStyle=rg;ctx.fillRect(rulerX,0,rulerW,H);
+  ctx.strokeStyle='#2a3f54';ctx.lineWidth=1;ctx.strokeRect(rulerX,0,rulerW,H);
+  for(let c=0;c<=26;c++){
+    const y=(c+cmOff)*pxPerCm,maj=c%5===0;
+    ctx.strokeStyle=maj?'#38bdf8':'#2a3f54';ctx.lineWidth=maj?1.5:.8;
+    ctx.beginPath();ctx.moveTo(rulerX,y);ctx.lineTo(rulerX+(maj?12:5),y);ctx.stroke();
+    if(maj){ctx.fillStyle='#38bdf8';ctx.font='bold 7px monospace';ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(c,rulerX-2,y);}
+  }
+  const sx=W*.42;
+  const rodG=ctx.createLinearGradient(sx-5,0,sx+5,0);
+  rodG.addColorStop(0,'#1e3a5f');rodG.addColorStop(.5,'#38bdf8');rodG.addColorStop(1,'#1e3a5f');
+  ctx.fillStyle=rodG;ctx.fillRect(sx-4,14,8,H-28);ctx.fillRect(sx-26,12,52,8);
+  ctx.fillStyle='#0f2744';ctx.beginPath();ctx.ellipse(sx,H-16,34,6,0,0,Math.PI*2);ctx.fill();
+  const topY=24;
+  let dispLen,col=s3SpDef?'#eab308':s3SpOl?'#ef4444':'#38bdf8';
+  if(s3SpDef){dispLen=13*pxPerCm;}
+  else if(s3SpOl){dispLen=15*pxPerCm;}
+  else{dispLen=(S3L0+s3SpF/S3K)*pxPerCm;}
+  const botY=topY+dispLen,coils=10,coilH=dispLen/coils,coilW=16;
+  ctx.save();
+  ctx.shadowColor=s3SpDef?'rgba(234,179,8,.4)':s3SpOl?'rgba(239,68,68,.5)':'rgba(56,189,248,.4)';ctx.shadowBlur=s3SpDef?8:s3SpOl?14:6;
+  ctx.strokeStyle=col;ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(sx,topY);
+  for(let i=0;i<coils;i++){
+    const y0=topY+i*coilH,y1=y0+coilH*.25,y2=y0+coilH*.75,y3=y0+coilH;
+    ctx.bezierCurveTo(sx+coilW,y0,sx+coilW,y1,sx,y1);ctx.bezierCurveTo(sx-coilW,y1,sx-coilW,y2,sx,y2);ctx.bezierCurveTo(sx+coilW,y2,sx+coilW,y3,sx,y3);
+  }
+  ctx.stroke();ctx.restore();
+  ctx.strokeStyle='#60a5fa';ctx.lineWidth=2;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(sx,16);ctx.lineTo(sx,topY);ctx.stroke();
+  if(!s3SpDef){
+    ctx.strokeStyle=s3SpOl?'#ef4444':'#93c5fd';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(sx,botY);ctx.lineTo(sx,botY+8);ctx.bezierCurveTo(sx,botY+14,sx+10,botY+14,sx+10,botY+10);ctx.stroke();
+  }
+  const nW=s3SpOl?6:Math.round(s3SpF/20);
+  if(nW>0){
+    const wH=Math.min(16,(H-botY-18)/nW-2),wW=40;
+    for(let i=0;i<nW;i++){
+      const wy=botY+16+i*(wH+2);if(wy+wH>H-4)break;
+      const wg=ctx.createLinearGradient(sx-wW/2,0,sx+wW/2,0);
+      if(s3SpOl){wg.addColorStop(0,'#7f1d1d');wg.addColorStop(.5,'#ef4444');wg.addColorStop(1,'#7f1d1d');}
+      else{wg.addColorStop(0,'#1e3a5f');wg.addColorStop(.5,'#38bdf8');wg.addColorStop(1,'#1e3a5f');}
+      ctx.fillStyle=wg;ctx.shadowColor=s3SpOl?'rgba(239,68,68,.2)':'rgba(56,189,248,.15)';ctx.shadowBlur=4;
+      ctx.beginPath();if(ctx.roundRect){ctx.roundRect(sx-wW/2,wy,wW,wH,3);}else{ctx.rect(sx-wW/2,wy,wW,wH);}ctx.fill();ctx.shadowBlur=0;
+      ctx.strokeStyle=s3SpOl?'#ef4444':'#38bdf8';ctx.lineWidth=.8;ctx.stroke();
+      if(wH>9){ctx.fillStyle='#fff';ctx.font=`bold ${Math.min(7,wH-2)}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('20gw',sx,wy+wH/2);}
+    }
+  }
+  const dx=s3SpF/S3K;
+  if(!s3SpOl&&!s3SpDef&&dx>0){
+    const ax=rulerX-8,ay0=(S3L0+cmOff)*pxPerCm,ay1=(S3L0+dx+cmOff)*pxPerCm;
+    ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(ax,ay0);ctx.lineTo(ax,ay1);ctx.stroke();ctx.setLineDash([]);
+    [{y:ay0,d:-4},{y:ay1,d:4}].forEach(({y,d})=>{ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.moveTo(ax,y);ctx.lineTo(ax-3,y+d);ctx.lineTo(ax+3,y+d);ctx.closePath();ctx.fill();});
+    ctx.fillStyle='#fbbf24';ctx.font='bold 7px monospace';ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText('ΔX='+dx.toFixed(1),(ax-1),(ay0+ay1)/2);
+  }
+  ctx.strokeStyle='rgba(56,189,248,.12)';ctx.lineWidth=1;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(0,(S3L0+cmOff)*pxPerCm);ctx.lineTo(rulerX,(S3L0+cmOff)*pxPerCm);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(56,189,248,.28)';ctx.font='7px monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('原長L₀',3,(S3L0+cmOff)*pxPerCm-5);
+  if(s3SpDef){
+    const defY=(13+cmOff)*pxPerCm;
+    ctx.strokeStyle='#ef4444';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(0,defY);ctx.lineTo(rulerX,defY);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#ef4444';ctx.font='bold 7px monospace';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('永久形變後 13cm',3,defY-5);
+  }
+}
+
+function s3DrawChart(ctx,canvas){
+  const W=canvas.offsetWidth,H=canvas.offsetHeight;
+  if(!W||!H)return;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#030c14';ctx.fillRect(0,0,W,H);
+  const pad={l:36,r:14,t:12,b:28},pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
+  const maxDX=12,maxF=120;
+  ctx.strokeStyle='#1e3a5f';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+ph);ctx.lineTo(pad.l+pw,pad.t+ph);ctx.stroke();
+  for(let x=0;x<=maxDX;x+=2){
+    const px=pad.l+x/maxDX*pw;
+    ctx.strokeStyle='rgba(56,189,248,.06)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(px,pad.t);ctx.lineTo(px,pad.t+ph);ctx.stroke();
+    ctx.fillStyle='#334155';ctx.font='7px monospace';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(x,px,pad.t+ph+3);
+  }
+  for(let f=0;f<=maxF;f+=20){
+    const py=pad.t+ph-f/maxF*ph;
+    ctx.strokeStyle='rgba(56,189,248,.06)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,py);ctx.lineTo(pad.l+pw,py);ctx.stroke();
+    ctx.fillStyle='#334155';ctx.font='7px monospace';ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(f,pad.l-3,py);
+  }
+  ctx.fillStyle='#475569';ctx.font='7px monospace';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('ΔX (cm)',pad.l+pw/2,H-8);
+  ctx.save();ctx.translate(9,pad.t+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('F (gw)',0,0);ctx.restore();
+  if(!s3Rows.length)return;
+  const lastRow=s3Rows[s3Rows.length-1];
+  const ex=lastRow.dx/maxDX*pw+pad.l,ey=pad.t+ph-lastRow.f/maxF*ph;
+  ctx.strokeStyle='rgba(56,189,248,.18)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t+ph);ctx.lineTo(ex,ey);ctx.stroke();ctx.setLineDash([]);
+  const pts=s3Rows.map(r=>({x:r.dx/maxDX*pw+pad.l,y:pad.t+ph-r.f/maxF*ph}));
+  ctx.strokeStyle='#38bdf8';ctx.lineWidth=2;ctx.shadowColor='rgba(56,189,248,.4)';ctx.shadowBlur=5;
+  ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.stroke();ctx.shadowBlur=0;
+  pts.forEach((p,i)=>{
+    ctx.fillStyle='#fbbf24';ctx.shadowColor='rgba(251,191,36,.5)';ctx.shadowBlur=6;
+    ctx.beginPath();ctx.arc(p.x,p.y,4.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle='#fbbf24';ctx.font='bold 7px monospace';ctx.textAlign='left';ctx.textBaseline='bottom';
+    ctx.fillText('('+s3Rows[i].dx+','+s3Rows[i].f+')',p.x+5,p.y-1);
+  });
+}
+
+function s3SetForce(f){
+  s3CurF=f;s3SpF=f;
+  document.getElementById('s3-d-f').textContent=f;
+  document.getElementById('s3-d-l').textContent=(S3L0+f/S3K).toFixed(1);
+  document.getElementById('s3-d-dx').textContent=(f/S3K).toFixed(1);
+  document.getElementById('s3-rec-btn').disabled=false;
+  s3DrawSpring();
+}
+const s3NextF=[20,40,60,80];
+function s3Record(){
+  const f=s3CurF;if(!f)return;
+  s3Rows.push({f,L:S3L0+f/S3K,dx:f/S3K});s3StepCnt++;
+  const tb=document.getElementById('s3-tbody');
+  if(s3StepCnt===1)tb.innerHTML='';
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td style="color:#64748b">${s3StepCnt}</td><td class="row-f">${f}</td><td style="color:#38bdf8">${(S3L0+f/S3K).toFixed(1)}</td><td class="row-dx">${(f/S3K).toFixed(1)}</td><td class="row-ratio">10.0</td>`;
+  tb.appendChild(tr);
+  ['s3sd1','s3sd2','s3sd3','s3sd4'].forEach((id,i)=>{document.getElementById(id).className='sdot'+(i<s3StepCnt?' done':i===s3StepCnt?' active':'');});
+  if(s3StepCnt<4){const nb=document.getElementById('s3wb'+s3NextF[s3StepCnt]);if(nb)nb.disabled=false;}
+  document.getElementById('s3wb'+f).disabled=true;
+  document.getElementById('s3-rec-btn').disabled=true;
+  s3CurF=0;s3SpF=0;s3DrawSpring();
+  document.getElementById('s3-d-f').textContent='0';document.getElementById('s3-d-l').textContent='10.0';document.getElementById('s3-d-dx').textContent='0.0';
+  if(s3StepCnt>=4){document.getElementById('s3-goto-chart').disabled=false;document.querySelectorAll('.wbtn').forEach(b=>b.disabled=true);}
+}
+function s3GotoChart(){
+  s3SwitchPh('s3-ph2','第二階段：圖表');s3SpF=0;s3DrawSpring();setTimeout(()=>s3SizeAll(),60);
+}
+function s3GotoPredict(){
+  s3SwitchPh('s3-ph3','第三階段：預測');
+  const tb=document.getElementById('s3-ref-tbody');tb.innerHTML='';
+  s3Rows.forEach((r,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="color:#64748b">${i+1}</td><td class="row-f">${r.f}</td><td style="color:#38bdf8">${r.L.toFixed(1)}</td><td class="row-dx">${r.dx.toFixed(1)}</td><td class="row-ratio">10.0</td>`;tb.appendChild(tr);});
+  setTimeout(()=>s3SizeAll(),60);
+}
+function s3GotoOverload(){s3SwitchPh('s3-ph4','第四階段：彈性限度');s3SpF=0;s3SpOl=false;s3SpDef=false;s3DrawSpring();}
+function s3SwitchPh(activeId,badge){
+  ['s3-ph1','s3-ph2','s3-ph3','s3-ph4'].forEach(id=>{document.getElementById(id).classList.remove('active');});
+  document.getElementById(activeId).classList.add('active');
+  document.getElementById('s3-badge').textContent=badge;
+}
+function s3CheckPredict(){
+  const pdx=parseFloat(document.getElementById('s3-pred-dx').value);
+  const pl=parseFloat(document.getElementById('s3-pred-l').value);
+  if(isNaN(pdx)||isNaN(pl)){alert('請填入預測數值！');return;}
+  s3SpF=100;s3DrawSpring();
+  document.getElementById('s3-pred-result').style.display='block';
+  const fb=document.getElementById('s3-pred-fb');
+  const dxOk=Math.abs(pdx-10)<0.5,lOk=Math.abs(pl-20)<0.5;
+  if(dxOk&&lOk){fb.style.borderColor='#22c55e';fb.innerHTML=`<div style="color:#22c55e;font-weight:700;font-size:11px">🎉 預測正確！</div><div style="font-size:10px;color:#94a3b8;margin-top:2px">100 gw：ΔX=10cm，L=20cm，你掌握了規律！</div>`;}
+  else{fb.style.borderColor='#f59e0b';fb.innerHTML=`<div style="color:#fbbf24;font-weight:700;font-size:11px">💡 答案揭曉！</div><div style="font-size:10px;color:#94a3b8;margin-top:2px">正確：ΔX=<b style="color:#22c55e">10.0</b>cm，L=<b style="color:#38bdf8">20.0</b>cm<br/>你的預測：ΔX=${pdx}，L=${pl}</div>`;}
+  s3Rows.push({f:100,L:20,dx:10});
+  s3DrawChart(s3CCtx2,s3CC2);
+}
+function s3RunOverload(){
+  document.getElementById('s3-ol-action').style.display='none';
+  const st=document.getElementById('s3-ol-status');
+  st.textContent='⏳ 正在掛上 150 gw…';
+  s3SpF=150;s3SpOl=true;s3SpDef=false;s3DrawSpring();
+  let fc=0;const fiv=setInterval(()=>{document.body.style.background=fc%2?'#080f1e':'#1c0505';fc++;if(fc>=8){clearInterval(fiv);document.body.style.background='#080f1e';}},120);
+  setTimeout(()=>{st.textContent='⚠️ 彈簧已超過彈性限度！';},800);
+  setTimeout(()=>{st.innerHTML='<span style="color:#ef4444">⚠️ 重物已拿掉——彈簧無法恢復原狀！（永久形變）</span>';s3SpF=0;s3SpOl=false;s3SpDef=true;s3DrawSpring();},2800);
+  setTimeout(()=>{st.textContent='';document.getElementById('s3-ol-qa').style.display='flex';},4000);
+}
+function s3OlAnswer(i){
+  document.querySelectorAll('#s3-ol-opts .qa-opt').forEach((b,j)=>{b.disabled=true;if(j===1)b.classList.add('correct');else if(j===i&&i!==1)b.classList.add('wrong');});
+  setTimeout(()=>{document.getElementById('s3-ol-fb').style.display='flex';},500);
+}
+
+// resize listener for screen 3
+window.addEventListener('resize',()=>{if(currentLevel===3)s3SizeAll();});
+
+// ══════════════════════════════════════════════════════════════════
+// STARTUP
+// ══════════════════════════════════════════════════════════════════
+window.addEventListener('load',()=>{showScreen(0);});
+</script>
+</body>
+</html>
