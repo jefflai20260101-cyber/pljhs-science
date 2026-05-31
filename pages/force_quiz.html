@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d1a2e;font-family:'Courier New',monospace,sans-serif;color:#c8d8e8;min-height:100vh;padding-bottom:30px}
+.hdr{background:linear-gradient(135deg,#0d1f3c,#1a0d2e,#0d1f3c);border-bottom:2px solid #00d4ff;padding:12px 18px 9px;position:relative}
+.hdr::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,212,255,.03) 2px,rgba(0,212,255,.03) 4px);pointer-events:none}
+.hdr-badge{font-size:10px;color:#00d4ff;letter-spacing:3px;opacity:.7;margin-bottom:2px}
+.hdr-title{font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;text-shadow:0 0 16px rgba(0,212,255,.5)}
+.hdr-sub{font-size:11px;color:#7a9db8;margin-top:2px}
+
+/* ── screens ── */
+.screen{display:none}.screen.show{display:block}
+
+/* ── title ── */
+.title-wrap{padding:24px 18px;text-align:center}
+.t-icon{font-size:50px;margin-bottom:10px}
+.t-h{font-size:16px;font-weight:700;color:#00d4ff;letter-spacing:2px;margin-bottom:8px}
+.t-p{font-size:12px;color:#7a9db8;line-height:1.8;margin-bottom:20px}
+.info-row{display:flex;gap:10px;margin-bottom:20px}
+.info-box{flex:1;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:8px;padding:12px;text-align:center}
+.info-box .n{font-size:22px;font-weight:700;color:#00d4ff}
+.info-box .l{font-size:10px;color:#7a9db8;margin-top:3px;letter-spacing:1px}
+.start-btn{background:rgba(0,212,255,.15);border:1px solid #00d4ff;color:#00d4ff;padding:10px 32px;border-radius:6px;cursor:pointer;font-family:'Courier New',monospace;font-size:13px;letter-spacing:2px;transition:all .2s}
+.start-btn:hover{background:rgba(0,212,255,.28)}
+
+/* ── quiz ── */
+.quiz-wrap{padding:14px 18px}
+.progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.prog-label{font-size:11px;color:#7a9db8}
+.prog-score{font-size:12px;color:#00d4ff;font-weight:700}
+.prog-bar-bg{height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-bottom:14px}
+.prog-bar-fill{height:4px;background:#00d4ff;border-radius:2px;transition:width .4s;box-shadow:0 0 6px #00d4ff}
+
+.q-card{background:rgba(0,20,50,.6);border:1px solid rgba(0,212,255,.2);border-radius:10px;padding:16px;margin-bottom:14px}
+.q-type-badge{font-size:9px;letter-spacing:2px;padding:3px 8px;border-radius:3px;display:inline-block;margin-bottom:8px}
+.type-a{background:rgba(255,200,0,.1);border:1px solid rgba(255,200,0,.3);color:#ffd700}
+.type-b{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:#00d4ff}
+.q-text{font-size:13px;color:#c8d8e8;line-height:1.8;margin-bottom:12px}
+.q-text strong{color:#ffd700}
+
+/* sub-questions */
+.sub-q{margin-bottom:10px}
+.sub-label{font-size:12px;color:#a8c8e0;margin-bottom:5px}
+.sub-inputs{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sub-inputs input{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.3);color:#00d4ff;padding:5px 10px;border-radius:4px;font-family:'Courier New',monospace;font-size:13px;width:80px;outline:none}
+.sub-inputs input:focus{border-color:#00d4ff;box-shadow:0 0 6px rgba(0,212,255,.3)}
+.sub-inputs select{background:#0d1a2e;border:1px solid rgba(0,212,255,.3);color:#00d4ff;padding:5px 8px;border-radius:4px;font-family:'Courier New',monospace;font-size:12px;outline:none}
+.sub-inputs .unit{font-size:11px;color:#7a9db8;white-space:nowrap}
+.fb{font-size:11px;margin-top:4px;padding:4px 8px;border-radius:4px;display:none}
+.fb.ok{background:rgba(0,255,153,.1);color:#00ff99;display:block}
+.fb.wrong{background:rgba(255,80,80,.1);color:#ff8888;display:block}
+
+/* canvas */
+.canvas-wrap{display:flex;justify-content:center;margin-bottom:10px}
+canvas{border-radius:6px}
+
+.submit-row{text-align:center;margin-top:6px}
+.sub-btn{background:rgba(255,200,0,.12);border:1px solid #ffd700;color:#ffd700;padding:7px 24px;border-radius:5px;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;letter-spacing:1px;transition:all .2s}
+.sub-btn:hover{background:rgba(255,200,0,.22)}
+.sub-btn:disabled{opacity:.4;cursor:not-allowed}
+.next-btn{background:rgba(0,212,255,.12);border:1px solid #00d4ff;color:#00d4ff;padding:7px 24px;border-radius:5px;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;letter-spacing:1px;display:none;margin-left:10px}
+.next-btn:hover{background:rgba(0,212,255,.22)}
+
+/* ── result ── */
+.result-wrap{padding:22px 18px;text-align:center}
+.medal{font-size:56px;margin-bottom:10px}
+.rank-title{font-size:17px;font-weight:700;letter-spacing:2px;margin-bottom:6px}
+.score-big{font-size:42px;font-weight:700;margin-bottom:4px}
+.score-sub{font-size:12px;color:#7a9db8;margin-bottom:18px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.dg-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:10px}
+.dg-n{font-size:18px;font-weight:700}
+.dg-l{font-size:10px;color:#7a9db8;margin-top:2px}
+.review-list{text-align:left;margin-bottom:18px}
+.rv-item{background:rgba(0,20,50,.5);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:10px 12px;margin-bottom:6px;font-size:11px;line-height:1.7}
+.rv-item .rv-q{color:#a8c8e0;margin-bottom:3px}
+.rv-item .rv-ok{color:#00ff99}
+.rv-item .rv-ng{color:#ff8888}
+.retry-btn{background:rgba(0,212,255,.12);border:1px solid #00d4ff;color:#00d4ff;padding:9px 28px;border-radius:6px;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;letter-spacing:2px}
+.retry-btn:hover{background:rgba(0,212,255,.22)}
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div class="screen show" id="sTitle">
+  <div class="hdr">
+    <div class="hdr-badge">▶ FORCE QUIZ SYSTEM</div>
+    <div class="hdr-title">力的合成與平衡</div>
+    <div class="hdr-sub">互動題庫練習系統</div>
+  </div>
+  <div class="title-wrap">
+    <div class="t-icon">⚖️</div>
+    <div class="t-h">FORCE BALANCE QUIZ</div>
+    <div class="t-p">每次從題庫隨機抽取 4 題（兩種題型各 2 題）<br>測驗力的合成、合力計算與平衡條件</div>
+    <div class="info-row">
+      <div class="info-box"><div class="n">20</div><div class="l">題庫總題數</div></div>
+      <div class="info-box"><div class="n">4</div><div class="l">每次練習題數</div></div>
+      <div class="info-box"><div class="n">100</div><div class="l">滿分</div></div>
+    </div>
+    <button class="start-btn" onclick="startQuiz()">▶ 開始練習</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="sQuiz">
+  <div class="hdr">
+    <div class="hdr-badge">▶ FORCE QUIZ</div>
+    <div class="hdr-title">力的合成與平衡</div>
+    <div class="hdr-sub" id="quizSub">題目 1 / 4</div>
+  </div>
+  <div class="quiz-wrap">
+    <div class="progress-row">
+      <span class="prog-label" id="progLabel">第 1 題，共 4 題</span>
+      <span class="prog-score" id="progScore">得分：0 / 100</span>
+    </div>
+    <div class="prog-bar-bg"><div class="prog-bar-fill" id="progFill" style="width:0%"></div></div>
+    <div id="qContainer"></div>
+    <div class="submit-row">
+      <button class="sub-btn" id="subBtn" onclick="submitQ()">✓ 確認作答</button>
+      <button class="next-btn" id="nextBtn" onclick="nextQ()">下一題 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="sResult">
+  <div class="hdr">
+    <div class="hdr-badge">▶ RESULT</div>
+    <div class="hdr-title">練習結果</div>
+    <div class="hdr-sub">作答分析報告</div>
+  </div>
+  <div class="result-wrap" id="resultWrap"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// QUESTION BANK
+// Type A: 氣球/物體受力，畫箭頭＋合力計算（3 sub-q）
+// Type B: 多力靜止，求某力大小（1 sub-q）
+// ══════════════════════════════════════════════════════
+
+// Type A questions: {stem, w(重力), u(向上力名), uv(向上力值), netMag, netDir, ropeF, ropeDir}
+const QA = [
+  {id:'A01', stem:'有一顆 <strong>2 公克重</strong>的氣球，受空氣向上作用力 <strong>5 公克重</strong>而垂直向上飄。', obj:'氣球', w:2, u:'浮力', uv:5, netMag:3, netDir:'上', ropeF:3, ropeDir:'下'},
+  {id:'A02', stem:'有一顆 <strong>4 公克重</strong>的氣球，受空氣向上作用力 <strong>7 公克重</strong>而垂直向上飄。', obj:'氣球', w:4, u:'浮力', uv:7, netMag:3, netDir:'上', ropeF:3, ropeDir:'下'},
+  {id:'A03', stem:'有一顆 <strong>3 公克重</strong>的氣球，受空氣向上作用力 <strong>8 公克重</strong>而垂直向上飄。', obj:'氣球', w:3, u:'浮力', uv:8, netMag:5, netDir:'上', ropeF:5, ropeDir:'下'},
+  {id:'A04', stem:'有一顆 <strong>6 公克重</strong>的氣球，受空氣向上作用力 <strong>10 公克重</strong>而垂直向上飄。', obj:'氣球', w:6, u:'浮力', uv:10, netMag:4, netDir:'上', ropeF:4, ropeDir:'下'},
+  {id:'A05', stem:'有一個 <strong>5 公克重</strong>的物體，受一個向上的推力 <strong>3 公克重</strong>，物體仍向下移動。', obj:'物體', w:5, u:'推力', uv:3, netMag:2, netDir:'下', ropeF:2, ropeDir:'上'},
+  {id:'A06', stem:'有一個 <strong>8 公克重</strong>的金屬球，被水的浮力 <strong>3 公克重</strong>向上托起，球仍向下沉。', obj:'金屬球', w:8, u:'浮力', uv:3, netMag:5, netDir:'下', ropeF:5, ropeDir:'上'},
+  {id:'A07', stem:'有一個 <strong>10 公克重</strong>的石塊，受向上浮力 <strong>4 公克重</strong>，石塊仍往下沉。', obj:'石塊', w:10, u:'浮力', uv:4, netMag:6, netDir:'下', ropeF:6, ropeDir:'上'},
+  {id:'A08', stem:'有一顆 <strong>1 公克重</strong>的肥皂泡，受空氣向上浮力 <strong>4 公克重</strong>而上升。', obj:'肥皂泡', w:1, u:'浮力', uv:4, netMag:3, netDir:'上', ropeF:3, ropeDir:'下'},
+  {id:'A09', stem:'有一個 <strong>9 公克重</strong>的玩具，被向上的彈簧彈力 <strong>15 公克重</strong>推起。', obj:'玩具', w:9, u:'彈力', uv:15, netMag:6, netDir:'上', ropeF:6, ropeDir:'下'},
+  {id:'A10', stem:'有一個 <strong>12 公克重</strong>的箱子，受向上風力 <strong>5 公克重</strong>，箱子仍往下落。', obj:'箱子', w:12, u:'風力', uv:5, netMag:7, netDir:'下', ropeF:7, ropeDir:'上'},
+];
+
+// Type B：動態生成，每次隨機數字，概念固定 W = 彈簧秤 + 磅秤
+function genQB(){
+  const results=[];
+  const used=new Set();
+  // 產生10題，彈簧秤+磅秤各為50的倍數，範圍50~400
+  const vals=[50,100,150,200,250,300,350,400];
+  let attempts=0;
+  while(results.length<10&&attempts<200){
+    attempts++;
+    const ss=vals[Math.floor(Math.random()*vals.length)];
+    const sc=vals[Math.floor(Math.random()*vals.length)];
+    const key=ss+'-'+sc;
+    if(used.has(key))continue;
+    used.add(key);
+    const w=ss+sc;
+    const id='B'+(results.length+1).toString().padStart(2,'0');
+    results.push({
+      id, ss, sc,
+      stem:`一物體置於磅秤上方，同時掛在一彈簧秤下，<strong>彈簧秤讀數 ${ss} 公克重</strong>，<strong>磅秤讀數 ${sc} 公克重</strong>，物體靜止不動。`,
+      question:'物體的重量應為',
+      ans:w,
+      unit:'公克重',
+      explain:`物體靜止 → 合力為 0。<br>重力（下）= 彈簧秤拉力（上）+ 磅秤支撐力（上）<br>W = ${ss} + ${sc} = ${w} 公克重`
+    });
+  }
+  return results;
+}
+const QB=genQB();
+
+// ══════════════════════════════════════════════════════
+// QUIZ STATE
+// ══════════════════════════════════════════════════════
+let session = [];   // 4 selected questions
+let qi = 0;         // current question index
+let score = 0;
+let record = [];    // {qid, pts, earned, subs:[{label,ans,got,ok}]}
+const PER_Q = 25;   // 4 questions × 25 = 100
+
+function shuffle(arr){ return arr.slice().sort(()=>Math.random()-.5); }
+
+function startQuiz(){
+  const aPool = shuffle(QA).slice(0,2);
+  const bPool = shuffle(QB).slice(0,2);
+  // interleave A,B
+  session = [aPool[0], bPool[0], aPool[1], bPool[1]];
+  qi=0; score=0; record=[];
+  showScreen('sQuiz');
+  renderQ();
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+  window.scrollTo(0,0);
+}
+
+function renderQ(){
+  const q = session[qi];
+  const isA = q.id.startsWith('A');
+  document.getElementById('quizSub').textContent=`題目 ${qi+1} / 4`;
+  document.getElementById('progLabel').textContent=`第 ${qi+1} 題，共 4 題`;
+  document.getElementById('progScore').textContent=`得分：${score} / 100`;
+  document.getElementById('progFill').style.width=(qi/4*100)+'%';
+  document.getElementById('subBtn').disabled=false;
+  document.getElementById('subBtn').style.display='inline-block';
+  document.getElementById('nextBtn').style.display='none';
+
+  const div = document.getElementById('qContainer');
+  div.innerHTML = '';
+
+  if(isA){div.innerHTML=buildTypeA(q);drawBalloon(q);}
+  else{
+    div.innerHTML=buildTypeB(q);
+    // 等 canvas 真正掛載到 DOM 後再畫
+    requestAnimationFrame(()=>requestAnimationFrame(()=>drawBScale(q)));
+  }
+}
+
+// ── Type A card ───────────────────────────────────────
+function buildTypeA(q){
+  const pts = Math.round(PER_Q/3); // 3 sub-questions, 8+8+9 pts
+  return `
+<div class="q-card">
+  <span class="q-type-badge type-a">▸ 題型 A｜受力圖與合力計算</span>
+  <div class="q-text">${q.stem}<br>
+    以下圖中的黑點為作用點，畫出 ${q.obj} 所受的作用力。（以 1 格代表 1 公克重）
+  </div>
+  <div class="canvas-wrap"><canvas id="balloonCv" width="220" height="240"></canvas></div>
+
+  <div class="sub-q" id="sq1">
+    <div class="sub-label">（2）此時 ${q.obj} 所受的合力為＿＿公克重，方向向＿＿。</div>
+    <div class="sub-inputs">
+      <input type="number" id="a_mag" placeholder="大小" min="0" max="99">
+      <span class="unit">公克重，方向向</span>
+      <select id="a_dir">
+        <option value="">── 選擇 ──</option>
+        <option value="上">上</option>
+        <option value="下">下</option>
+      </select>
+    </div>
+    <div class="fb" id="fb_a_net"></div>
+  </div>
+
+  <div class="sub-q" id="sq2">
+    <div class="sub-label">（3）若用繩子拉住 ${q.obj} 使其靜止不動，繩子的拉力為＿＿公克重，方向向＿＿。</div>
+    <div class="sub-inputs">
+      <input type="number" id="a_rope" placeholder="大小" min="0" max="99">
+      <span class="unit">公克重，方向向</span>
+      <select id="a_ropeDir">
+        <option value="">── 選擇 ──</option>
+        <option value="上">上</option>
+        <option value="下">下</option>
+      </select>
+    </div>
+    <div class="fb" id="fb_a_rope"></div>
+  </div>
+</div>`;
+}
+
+function drawBalloon(q){
+  const cv=document.getElementById('balloonCv');
+  if(!cv)return;
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  // dynamic cell size: fit both arrows within canvas
+  // max arrow = max(w, uv) gw, each arrow needs maxGw*CELL px, both go from CY
+  // available space: up = CY-60 (leave room for object+label), down = H-CY-20
+  const maxUp=q.uv, maxDown=q.w;
+  const availUp=80, availDown=90; // px budgets
+  const CELL=Math.min(Math.floor(availUp/maxUp), Math.floor(availDown/maxDown), 18);
+  const CX=W/2, CY=130;
+
+  ctx.fillStyle='#0b1929';ctx.fillRect(0,0,W,H);
+  const G=CELL;
+  ctx.strokeStyle='rgba(100,180,255,.18)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=G){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=G){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  ctx.fillStyle='rgba(0,212,255,.45)';ctx.font='9px Courier New';
+  ctx.fillText('1格 = 1 gw',4,H-4);
+
+  // object (ellipse for balloon, rect for others)
+  ctx.save();
+  if(q.obj==='氣球'||q.obj==='肥皂泡'){
+    ctx.strokeStyle='#88bbdd';ctx.lineWidth=2;ctx.fillStyle='rgba(150,200,230,.25)';
+    ctx.beginPath();ctx.ellipse(CX,CY-20,32,40,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(150,200,230,.4)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(CX,CY+20);ctx.lineTo(CX,CY+40);ctx.stroke();
+  } else {
+    ctx.strokeStyle='#00d4ff';ctx.lineWidth=2;ctx.fillStyle='rgba(0,50,100,.5)';
+    ctx.beginPath();ctx.roundRect(CX-28,CY-24,56,48,6);ctx.fill();ctx.stroke();
+  }
+  // center dot
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(CX,CY,5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#333';ctx.beginPath();ctx.arc(CX,CY,3,0,Math.PI*2);ctx.fill();
+
+  // draw force arrows
+  // downward arrow: weight (red)
+  drawFArrow(ctx,CX,CY,CX,CY+q.w*CELL,'#ff6644','W='+q.w+'gw',false);
+  // upward arrow: buoyancy/push (blue)
+  drawFArrow(ctx,CX,CY,CX,CY-q.uv*CELL,'#00ccff',q.u+'='+q.uv+'gw',true);
+  ctx.restore();
+}
+
+function drawFArrow(ctx,x1,y1,x2,y2,color,label,labelUp){
+  const dy=y2-y1,len=Math.abs(dy),hs=10,dir=dy>0?1:-1;
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.shadowColor=color;ctx.shadowBlur=8;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  ctx.fillStyle=color;
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-7,y2-dir*hs);ctx.lineTo(x2+7,y2-dir*hs);ctx.closePath();ctx.fill();
+  ctx.shadowBlur=0;ctx.font='bold 10px Courier New';ctx.fillStyle=color;ctx.textAlign='left';
+  ctx.fillText(label,x2+8,labelUp?y2+4:y2-4);ctx.restore();
+}
+
+// ── Type B card ───────────────────────────────────────
+function drawBScale(q){
+  const cv=document.getElementById('bDiagCv');
+  if(!cv)return;
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,CX=W/2;
+  ctx.fillStyle='#0b1929';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(100,180,255,.12)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=20){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  // 天花板
+  ctx.save();
+  ctx.fillStyle='rgba(80,100,130,.85)';ctx.fillRect(CX-40,0,80,12);
+  ctx.strokeStyle='rgba(0,212,255,.4)';ctx.lineWidth=1;ctx.strokeRect(CX-40,0,80,12);
+  ctx.strokeStyle='rgba(0,212,255,.18)';
+  for(let i=0;i<8;i++){ctx.beginPath();ctx.moveTo(CX-40+i*12,0);ctx.lineTo(CX-48+i*12,12);ctx.stroke();}
+  ctx.restore();
+
+  // 短繩
+  ctx.save();ctx.strokeStyle='#bbb';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(CX,12);ctx.lineTo(CX,26);ctx.stroke();ctx.restore();
+
+  // 彈簧秤
+  const ssT=26,ssB=104,ssW=16;
+  ctx.save();
+  ctx.fillStyle='rgba(220,235,250,.08)';ctx.strokeStyle='#aaccee';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(CX-ssW/2,ssT,ssW,ssB-ssT,4);ctx.fill();ctx.stroke();
+  ctx.strokeStyle='rgba(160,210,240,.35)';ctx.lineWidth=1;
+  for(let y=ssT+10;y<ssB-6;y+=9){ctx.beginPath();ctx.moveTo(CX-ssW/2+3,y);ctx.lineTo(CX+ssW/2-3,y);ctx.stroke();}
+  ctx.strokeStyle='#ff4444';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(CX-ssW/2+3,ssT+40);ctx.lineTo(CX+ssW/2-3,ssT+40);ctx.stroke();
+  ctx.restore();
+  ctx.save();ctx.font='bold 12px Courier New';ctx.fillStyle='#c8d8e8';ctx.textAlign='left';
+  ctx.fillText(q.ss+' gw',CX+ssW/2+10,(ssT+ssB)/2+4);
+  ctx.strokeStyle='rgba(180,180,180,.3)';ctx.lineWidth=1;ctx.setLineDash([2,3]);
+  ctx.beginPath();ctx.moveTo(CX+ssW/2,(ssT+ssB)/2);ctx.lineTo(CX+ssW/2+8,(ssT+ssB)/2);ctx.stroke();
+  ctx.setLineDash([]);ctx.restore();
+
+  // 勾子
+  ctx.save();ctx.strokeStyle='#aaccee';ctx.lineWidth=2;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(CX,ssB);ctx.lineTo(CX,ssB+8);
+  ctx.arc(CX+5,ssB+8,5,Math.PI,0,true);ctx.stroke();ctx.restore();
+
+  // 物體（木箱）
+  const objT=ssB+18,objH=36,objB=objT+objH,objCY=objT+objH/2;
+  ctx.save();
+  ctx.fillStyle='rgba(185,140,70,.5)';ctx.strokeStyle='rgba(220,170,90,.85)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(CX-30,objT,60,objH,3);ctx.fill();ctx.stroke();
+  ctx.strokeStyle='rgba(140,95,35,.28)';ctx.lineWidth=1;
+  for(let y=objT+10;y<objB-4;y+=10){ctx.beginPath();ctx.moveTo(CX-26,y);ctx.lineTo(CX+26,y);ctx.stroke();}
+  ctx.restore();
+  ctx.save();ctx.font='bold 12px Courier New';ctx.fillStyle='#ffd700';ctx.textAlign='left';
+  ctx.fillText('? gw',CX+34,objCY+4);
+  ctx.strokeStyle='rgba(180,180,180,.3)';ctx.lineWidth=1;ctx.setLineDash([2,3]);
+  ctx.beginPath();ctx.moveTo(CX+30,objCY);ctx.lineTo(CX+32,objCY);ctx.stroke();
+  ctx.setLineDash([]);ctx.restore();
+
+  // 磅秤位置
+  const scT=objB+4,diskCY=scT+14;
+
+  // 重力箭頭（從物體中央往下，到磅秤上方）
+  ctx.save();
+  ctx.strokeStyle='#ff6644';ctx.lineWidth=3;ctx.shadowColor='#ff6644';ctx.shadowBlur=10;
+  ctx.beginPath();ctx.moveTo(CX,objCY);ctx.lineTo(CX,scT-2);ctx.stroke();
+  ctx.fillStyle='#ff6644';
+  ctx.beginPath();ctx.moveTo(CX,scT+2);ctx.lineTo(CX-8,scT-10);ctx.lineTo(CX+8,scT-10);ctx.closePath();ctx.fill();
+  ctx.shadowBlur=0;ctx.font='bold 11px Courier New';ctx.fillStyle='#ff6644';ctx.textAlign='left';
+  ctx.fillText('W = ?',CX+10,objCY+22);
+  ctx.restore();
+
+  // 磅秤（圓盤式，只顯示讀數，無箭頭）
+  ctx.save();ctx.fillStyle='rgba(130,130,140,.55)';
+  ctx.beginPath();ctx.roundRect(CX-7,diskCY+10,14,40,2);ctx.fill();ctx.restore();
+  ctx.save();ctx.fillStyle='rgba(100,100,110,.7)';ctx.strokeStyle='rgba(160,160,170,.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.roundRect(CX-28,diskCY+46,56,14,3);ctx.fill();ctx.stroke();ctx.restore();
+  ctx.save();
+  ctx.fillStyle='rgba(200,215,230,.12)';ctx.strokeStyle='#9ab';ctx.lineWidth=2;
+  ctx.beginPath();ctx.ellipse(CX,diskCY,34,11,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.strokeStyle='rgba(160,200,220,.38)';ctx.lineWidth=1;
+  for(let a=-0.8;a<=0.8;a+=0.2){
+    ctx.beginPath();ctx.moveTo(CX+Math.cos(a)*28,diskCY+Math.sin(a)*9);
+    ctx.lineTo(CX+Math.cos(a)*22,diskCY+Math.sin(a)*7);ctx.stroke();
+  }
+  ctx.strokeStyle='rgba(0,212,255,.7)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(CX,diskCY);ctx.lineTo(CX+24,diskCY-2);ctx.stroke();
+  ctx.fillStyle='#aaccee';ctx.beginPath();ctx.arc(CX,diskCY,3,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  ctx.save();ctx.font='bold 12px Courier New';ctx.fillStyle='#c8d8e8';ctx.textAlign='left';
+  ctx.fillText(q.sc+' gw',CX+38,diskCY+4);
+  ctx.strokeStyle='rgba(180,180,180,.3)';ctx.lineWidth=1;ctx.setLineDash([2,3]);
+  ctx.beginPath();ctx.moveTo(CX+34,diskCY);ctx.lineTo(CX+36,diskCY);ctx.stroke();
+  ctx.setLineDash([]);ctx.restore();
+
+  // 地板
+  const floorY=diskCY+62;
+  ctx.save();ctx.fillStyle='rgba(90,90,100,.7)';ctx.fillRect(CX-55,floorY,110,9);
+  ctx.strokeStyle='rgba(150,150,160,.3)';ctx.lineWidth=1;ctx.strokeRect(CX-55,floorY,110,9);
+  ctx.strokeStyle='rgba(150,150,160,.2)';
+  for(let i=0;i<10;i++){ctx.beginPath();ctx.moveTo(CX-55+i*12,floorY);ctx.lineTo(CX-63+i*12,floorY+9);ctx.stroke();}
+  ctx.restore();
+}
+
+function buildTypeB(q){
+  return `
+<div class="q-card">
+  <span class="q-type-badge type-b">▸ 題型 B｜靜止平衡求力</span>
+  <div class="q-text">${q.stem}</div>
+  <div class="canvas-wrap"><canvas id="bDiagCv" width="260" height="260"></canvas></div>
+  <div class="sub-q">
+    <div class="sub-label">${q.question}＿＿＿＿${q.unit}。</div>
+    <div class="sub-inputs">
+      <input type="number" id="b_ans" placeholder="答案" min="0" max="9999">
+      <span class="unit">${q.unit}</span>
+    </div>
+    <div class="fb" id="fb_b"></div>
+  </div>
+</div>`;
+}
+
+function drawBDiagram(q){
+  const cv=document.getElementById('bDiagCv');
+  if(!cv)return;
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const CX=W/2;
+  ctx.fillStyle='#0b1929';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(100,180,255,.12)';ctx.lineWidth=1;
+  const G=20;
+  for(let x=0;x<W;x+=G){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=G){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  // ── shared helpers ────────────────────────────────
+  // vertical arrow with label ON the line (midpoint), arrow at tip
+  function vArrow(cx,y1,y2,color,label){
+    const dir=y2>y1?1:-1,hs=9;
+    ctx.save();
+    ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.shadowColor=color;ctx.shadowBlur=8;
+    ctx.beginPath();ctx.moveTo(cx,y1);ctx.lineTo(cx,y2);ctx.stroke();
+    ctx.fillStyle=color;
+    ctx.beginPath();ctx.moveTo(cx,y2);ctx.lineTo(cx-7,y2-dir*hs);ctx.lineTo(cx+7,y2-dir*hs);ctx.closePath();ctx.fill();
+    if(label){
+      ctx.shadowBlur=0;ctx.font='bold 10px Courier New';ctx.fillStyle=color;
+      ctx.textAlign='left';ctx.fillText(label,cx+8,(y1+y2)/2+4);
+    }
+    ctx.restore();
+  }
+  // object box
+  function box(cx,cy,w,h,label){
+    ctx.save();ctx.shadowColor='#00d4ff';ctx.shadowBlur=8;
+    ctx.fillStyle='rgba(5,25,55,.92)';ctx.strokeStyle='#00d4ff';ctx.lineWidth=2;
+    ctx.beginPath();ctx.roundRect(cx-w/2,cy-h/2,w,h,5);ctx.fill();ctx.stroke();
+    ctx.shadowBlur=0;ctx.fillStyle='rgba(0,212,255,.85)';ctx.font='bold 10px Courier New';
+    ctx.textAlign='center';ctx.fillText(label,cx,cy+4);ctx.restore();
+  }
+  // rope line (solid) with reading label at mid
+  function rope(cx,y1,y2,color,reading){
+    ctx.save();ctx.strokeStyle=color;ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(cx,y1);ctx.lineTo(cx,y2);ctx.stroke();
+    if(reading){
+      ctx.font='bold 9px Courier New';ctx.fillStyle=color;
+      ctx.textAlign='left';ctx.fillText(reading,cx+5,(y1+y2)/2+4);
+    }
+    ctx.restore();
+  }
+  // ceiling
+  function ceiling(y){
+    ctx.save();ctx.fillStyle='rgba(80,100,130,.85)';ctx.fillRect(CX-60,y-10,120,10);
+    ctx.strokeStyle='rgba(0,212,255,.4)';ctx.lineWidth=1;ctx.strokeRect(CX-60,y-10,120,10);
+    ctx.restore();
+  }
+  // spring symbol (zigzag)
+  function spring(cx,y1,y2,color){
+    const segs=6,dy=(y2-y1)/segs,amp=6;
+    ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(cx,y1);
+    for(let i=0;i<segs;i++){
+      ctx.lineTo(cx+(i%2===0?amp:-amp),y1+(i+0.5)*dy);
+      ctx.lineTo(cx,y1+(i+1)*dy);
+    }
+    ctx.stroke();ctx.restore();
+  }
+  // scale (磅秤) box with reading inside
+  function scale(cx,cy,reading){
+    const sw=60,sh=28;
+    ctx.save();ctx.fillStyle='rgba(60,40,20,.7)';ctx.strokeStyle='rgba(200,150,60,.7)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.roundRect(cx-sw/2,cy-sh/2,sw,sh,5);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#ffd700';ctx.font='bold 10px Courier New';ctx.textAlign='center';
+    ctx.fillText(reading,cx,cy+4);ctx.restore();
+  }
+  // floor strip
+  function floor(y){
+    ctx.save();ctx.fillStyle='rgba(60,40,20,.6)';ctx.fillRect(CX-75,y,150,10);
+    ctx.strokeStyle='rgba(180,120,60,.4)';ctx.lineWidth=1;ctx.strokeRect(CX-75,y,150,10);ctx.restore();
+  }
+
+  const id=q.id;
+
+  if(id==='B01'){
+    // layout: ceiling(10)→spring→彈簧秤box→rope→物體→rope→磅秤→floor
+    const ceilY=10,sprT=ceilY,sprB=50,boxT=50,boxB=72,objY=115,scaleY=165,floorY=182;
+    ceiling(ceilY);
+    spring(CX,sprT,sprB,'#cc88ff');
+    // 彈簧秤 box
+    ctx.save();ctx.fillStyle='rgba(100,40,140,.35)';ctx.strokeStyle='#cc88ff';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(CX-22,boxT,44,22,4);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#cc88ff';ctx.font='bold 9px Courier New';ctx.textAlign='center';ctx.fillText('彈簧秤',CX,boxT+14);ctx.restore();
+    // rope: 彈簧秤 bottom → 物體 top, label with reading
+    rope(CX,boxB,objY-15,'#cc88ff','100 gw');
+    // arrow on rope pointing up
+    vArrow(CX,objY,objY-34,'#cc88ff',null);
+    box(CX,objY,54,30,'物體 ?');
+    // rope: 物體 bottom → 磅秤
+    rope(CX,objY+15,scaleY-14,'rgba(200,150,60,.8)','200 gw');
+    vArrow(CX,scaleY-14,objY+15,'rgba(200,150,60,.8)',null);
+    scale(CX,scaleY,'200 gw');
+    floor(floorY);
+    // W arrow
+    vArrow(CX-28,objY,objY+50,'#ff6644','W = ?');
+
+  } else if(id==='B02'){
+    ceiling(10);
+    rope(CX-18,10,65,'#00ccff','150 gw');vArrow(CX-18,65,30,'#00ccff',null);
+    rope(CX+18,10,65,'#cc88ff','80 gw');vArrow(CX+18,65,30,'#cc88ff',null);
+    box(CX,100,60,32,'物體 ?');
+    vArrow(CX,100,155,'#ff6644','W = ?');
+
+  } else if(id==='B03'){
+    floor(155);
+    box(CX,115,58,32,'物體 ?');
+    // support arrow up from floor
+    vArrow(CX+20,152,115,'rgba(200,150,60,.8)','N=500 gw');
+    // downward push
+    ctx.save();ctx.strokeStyle='#ff8866';ctx.lineWidth=2;ctx.shadowColor='#ff8866';ctx.shadowBlur=5;
+    ctx.beginPath();ctx.moveTo(CX-20,30);ctx.lineTo(CX-20,95);ctx.stroke();
+    ctx.fillStyle='#ff8866';ctx.beginPath();ctx.moveTo(CX-20,99);ctx.lineTo(CX-27,88);ctx.lineTo(CX-13,88);ctx.closePath();ctx.fill();
+    ctx.shadowBlur=0;ctx.fillStyle='#ff8866';ctx.font='bold 10px Courier New';ctx.textAlign='left';ctx.fillText('F=120 gw↓',CX-14,58);ctx.restore();
+    vArrow(CX,115,170,'#ff6644','W = ?');
+
+  } else if(id==='B04'){
+    ctx.save();ctx.fillStyle='rgba(0,80,160,.25)';ctx.fillRect(18,95,W-36,H-105);
+    ctx.strokeStyle='rgba(0,180,255,.5)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(18,95);ctx.lineTo(W-18,95);ctx.stroke();
+    ctx.fillStyle='rgba(0,180,255,.35)';ctx.font='9px Courier New';ctx.textAlign='right';ctx.fillText('水面',W-20,91);ctx.restore();
+    ctx.save();ctx.fillStyle='rgba(80,160,80,.5)';ctx.strokeStyle='#00ff99';ctx.lineWidth=2;
+    ctx.beginPath();ctx.roundRect(CX-28,74,56,52,6);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#00ff99';ctx.font='bold 9px Courier New';ctx.textAlign='center';ctx.fillText('木塊 ?',CX,105);ctx.restore();
+    vArrow(CX-16,100,155,'#ff6644','W = ?');
+    vArrow(CX+16,100,45,'#00ccff','浮力=250 gw');
+
+  } else if(id==='B05'){
+    ceiling(10);
+    spring(CX,10,48,'#cc88ff');
+    ctx.save();ctx.fillStyle='rgba(100,40,140,.35)';ctx.strokeStyle='#cc88ff';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(CX-22,48,44,22,4);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#cc88ff';ctx.font='bold 9px Courier New';ctx.textAlign='center';ctx.fillText('彈簧秤',CX,62);ctx.restore();
+    rope(CX,70,95,'#cc88ff','450 gw');
+    vArrow(CX,95,70,'#cc88ff',null);
+    box(CX,120,58,32,'物體 ?');
+    vArrow(CX-20,120,175,'#ff6644','W = ?');
+
+  } else if(id==='B06'){
+    ceiling(10);
+    rope(CX-28,10,58,'#00ccff','80 gw');vArrow(CX-28,58,28,'#00ccff',null);
+    rope(CX,10,58,'#cc88ff','60 gw');vArrow(CX,58,28,'#cc88ff',null);
+    rope(CX+28,10,58,'#ffd700','40 gw');vArrow(CX+28,58,28,'#ffd700',null);
+    box(CX,95,62,32,'物體 ?');
+    vArrow(CX,95,155,'#ff6644','W = ?');
+
+  } else if(id==='B07'){
+    ceiling(10);
+    rope(CX-18,10,58,'#00ccff','50 gw');vArrow(CX-18,58,28,'#00ccff',null);
+    rope(CX+18,10,58,'#cc88ff','30 gw');vArrow(CX+18,58,28,'#cc88ff',null);
+    box(CX,88,58,30,'物體 ?');
+    rope(CX,103,130,'rgba(200,150,60,.8)','120 gw');
+    vArrow(CX,130,103,'rgba(200,150,60,.8)',null);
+    scale(CX,148,'120 gw');
+    floor(164);
+    vArrow(CX-32,88,145,'#ff6644','W = ?');
+
+  } else if(id==='B08'){
+    ceiling(10);
+    rope(CX,10,60,'#cc88ff','600 gw');
+    vArrow(CX,60,25,'#cc88ff',null);
+    box(CX,90,56,30,'物體 ?');
+    ctx.save();ctx.strokeStyle='#ff8866';ctx.lineWidth=2;ctx.shadowColor='#ff8866';ctx.shadowBlur=5;
+    ctx.beginPath();ctx.moveTo(CX+10,32);ctx.lineTo(CX+10,72);ctx.stroke();
+    ctx.fillStyle='#ff8866';ctx.beginPath();ctx.moveTo(CX+10,76);ctx.lineTo(CX+3,65);ctx.lineTo(CX+17,65);ctx.closePath();ctx.fill();
+    ctx.shadowBlur=0;ctx.fillStyle='#ff8866';ctx.font='bold 10px Courier New';ctx.textAlign='left';ctx.fillText('F=100 gw↓',CX+14,50);ctx.restore();
+    vArrow(CX-22,90,148,'#ff6644','W = ?');
+
+  } else if(id==='B09'){
+    ctx.save();ctx.strokeStyle='#88bbdd';ctx.lineWidth=2;ctx.fillStyle='rgba(150,200,230,.2)';
+    ctx.beginPath();ctx.ellipse(CX,72,32,40,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='rgba(0,212,255,.6)';ctx.font='bold 9px Courier New';ctx.textAlign='center';ctx.fillText('氣球',CX,75);ctx.restore();
+    rope(CX,112,150,'rgba(220,220,220,.7)','繩=7 gw');
+    vArrow(CX,150,118,'rgba(220,220,220,.7)',null);
+    vArrow(CX-20,72,115,'#ff6644','W=3 gw');
+    vArrow(CX+20,72,28,'#00ccff','浮力=?');
+
+  } else if(id==='B10'){
+    ctx.save();ctx.fillStyle='rgba(80,60,30,.55)';ctx.strokeStyle='rgba(180,140,60,.5)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(25,H-25);ctx.lineTo(W-25,H-25);ctx.lineTo(W-25,75);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='rgba(180,140,60,.4)';ctx.font='9px Courier New';ctx.textAlign='center';ctx.fillText('斜面',CX+18,H-8);ctx.restore();
+    const bx=CX+8,by=138;
+    ctx.save();ctx.translate(bx,by);ctx.rotate(-0.44);
+    ctx.fillStyle='rgba(5,25,55,.92)';ctx.strokeStyle='#00d4ff';ctx.lineWidth=2;
+    ctx.beginPath();ctx.roundRect(-24,-18,48,36,5);ctx.fill();ctx.stroke();ctx.restore();
+    vArrow(bx-22,by,by+50,'#ff6644','W=400 gw');
+    vArrow(bx+22,by,by-48,'#00ccff','N=346 gw');
+    ctx.save();ctx.strokeStyle='#ffd700';ctx.lineWidth=2.5;ctx.shadowColor='#ffd700';ctx.shadowBlur=6;
+    ctx.beginPath();ctx.moveTo(bx-10,by-8);ctx.lineTo(bx+52,by-8);ctx.stroke();
+    ctx.fillStyle='#ffd700';ctx.beginPath();ctx.moveTo(bx+56,by-8);ctx.lineTo(bx+42,by-15);ctx.lineTo(bx+42,by-1);ctx.closePath();ctx.fill();
+    ctx.shadowBlur=0;ctx.fillStyle='#ffd700';ctx.font='bold 10px Courier New';ctx.textAlign='left';ctx.fillText('F=?',bx+58,by-4);ctx.restore();
+    ctx.save();ctx.strokeStyle='#ff88cc';ctx.lineWidth=2;ctx.shadowColor='#ff88cc';ctx.shadowBlur=5;
+    ctx.beginPath();ctx.moveTo(bx-10,by+8);ctx.lineTo(bx-52,by+8);ctx.stroke();
+    ctx.fillStyle='#ff88cc';ctx.beginPath();ctx.moveTo(bx-56,by+8);ctx.lineTo(bx-42,by+1);ctx.lineTo(bx-42,by+15);ctx.closePath();ctx.fill();
+    ctx.shadowBlur=0;ctx.fillStyle='#ff88cc';ctx.font='bold 10px Courier New';ctx.textAlign='right';ctx.fillText('f=200 gw',bx-58,by+6);ctx.restore();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// SUBMIT & SCORING
+// ══════════════════════════════════════════════════════
+function submitQ(){
+  const q=session[qi];
+  const isA=q.id.startsWith('A');
+  document.getElementById('subBtn').disabled=true;
+
+  let earned=0, subs=[];
+  const sub=Math.round(PER_Q/3); // ~8 pts each sub; adjust
+  const pts=[9,8,8]; // A: (1)canvas given=9pts, (2)net=8, (3)rope=8; total=25
+
+  if(isA){
+    // sub (1): canvas shown = auto 9 pts
+    const mag=parseInt(document.getElementById('a_mag').value);
+    const dir=document.getElementById('a_dir').value;
+    const okMag=mag===q.netMag, okDir=dir===q.netDir;
+    showFb('fb_a_net', okMag&&okDir,
+      `正確！合力 = ${q.netMag} 公克重，方向向${q.netDir}。`,
+      `答案：合力 = ${q.netMag} 公克重，方向向${q.netDir}。<br>（${q.uv} - ${q.w} = ${q.netMag} 公克重，較大的力方向為${q.netDir}）`);
+    const net8 = (okMag&&okDir)?9:0;
+
+    const rope=parseInt(document.getElementById('a_rope').value);
+    const ropeDir=document.getElementById('a_ropeDir').value;
+    const okRope=rope===q.ropeF, okRD=ropeDir===q.ropeDir;
+    showFb('fb_a_rope', okRope&&okRD,
+      `正確！繩子拉力 = ${q.ropeF} 公克重，方向向${q.ropeDir}。`,
+      `答案：繩子拉力 = ${q.ropeF} 公克重，方向向${q.ropeDir}。<br>（要使 ${q.obj} 靜止，繩子須抵消合力 ${q.netMag} 公克重）`);
+    const rope8 = (okRope&&okRD)?8:0;
+
+    earned = 9 + net8 + rope8; // canvas 9 + net 8 + rope 8 = 25, we give 8 for net
+    // fix: 9+8+8=25
+    earned = 9 + net8 + rope8;
+    // actually let's be precise: canvas always 8, net 9, rope 8
+    earned = 8 + (okMag&&okDir?9:0) + (okRope&&okRD?8:0);
+    subs=[
+      {label:'（1）受力圖（已顯示）',ans:'自動給分',got:'✓',ok:true},
+      {label:'（2）合力',ans:`${q.netMag} gw 向${q.netDir}`,got:`${mag||'?'} gw 向${dir||'?'}`,ok:okMag&&okDir},
+      {label:'（3）繩子拉力',ans:`${q.ropeF} gw 向${q.ropeDir}`,got:`${rope||'?'} gw 向${ropeDir||'?'}`,ok:okRope&&okRD}
+    ];
+
+  } else {
+    const ans=parseInt(document.getElementById('b_ans').value);
+    const ok=ans===q.ans;
+    showFb('fb_b', ok, `正確！${q.explain}`, `答案：${q.ans} ${q.unit}。<br>${q.explain}`);
+    earned = ok?25:0;
+    subs=[{label:q.question,ans:`${q.ans} ${q.unit}`,got:`${ans||'?'} ${q.unit}`,ok}];
+  }
+
+  score+=earned;
+  record.push({qid:q.id,stem:q.stem,earned,total:25,subs});
+  document.getElementById('progScore').textContent=`得分：${score} / 100`;
+
+  document.getElementById('nextBtn').style.display='inline-block';
+  document.getElementById('nextBtn').textContent = qi<3 ? '下一題 →' : '查看結果 →';
+}
+
+function showFb(id,ok,okMsg,ngMsg){
+  const el=document.getElementById(id);if(!el)return;
+  el.className='fb '+(ok?'ok':'wrong');
+  el.innerHTML=(ok?'✓ ':'✗ ')+(ok?okMsg:ngMsg);
+}
+
+function nextQ(){
+  qi++;
+  if(qi<4) renderQ();
+  else showResult();
+}
+
+// ══════════════════════════════════════════════════════
+// RESULT
+// ══════════════════════════════════════════════════════
+function showResult(){
+  document.getElementById('progFill').style.width='100%';
+  showScreen('sResult');
+  const pct=score;
+  let medal,rank,rankColor,comment;
+  if(pct>=90){medal='🏆';rank='S　力學達人';rankColor='#ffd700';comment='完美掌握力的合成與平衡！概念滿分！';}
+  else if(pct>=75){medal='🥇';rank='A　優秀偵探';rankColor='#00ff99';comment='表現優異！核心概念掌握扎實，繼續加油！';}
+  else if(pct>=60){medal='🥈';rank='B　見習特工';rankColor='#00d4ff';comment='概念大致正確，部分計算需再練習。';}
+  else{medal='🥉';rank='C　力學學員';rankColor='#ff8866';comment='建議複習力的合成公式，再多練習幾次！';}
+
+  const correct=record.filter(r=>r.earned===r.total).length;
+
+  let rvHTML='';
+  record.forEach((r,i)=>{
+    const dot=r.earned===r.total?'🟢':(r.earned>0?'🟡':'🔴');
+    rvHTML+=`<div class="rv-item">
+      <div class="rv-q">${dot} 第 ${i+1} 題（${r.qid}）　得分：${r.earned} / ${r.total}</div>`;
+    r.subs.forEach(s=>{
+      rvHTML+=`<div class="${s.ok?'rv-ok':'rv-ng'}">　${s.label}　→　${s.ok?'✓ 正確':'✗ 你答：'+s.got+'　正確：'+s.ans}</div>`;
+    });
+    rvHTML+='</div>';
+  });
+
+  document.getElementById('resultWrap').innerHTML=`
+    <div class="medal">${medal}</div>
+    <div class="rank-title" style="color:${rankColor}">${rank}</div>
+    <div class="score-big" style="color:${rankColor}">${score} <span style="font-size:18px;color:#7a9db8">/ 100</span></div>
+    <div class="score-sub">${comment}</div>
+    <div class="detail-grid">
+      <div class="dg-box"><div class="dg-n" style="color:#00ff99">${correct}</div><div class="dg-l">全對題數</div></div>
+      <div class="dg-box"><div class="dg-n" style="color:#ff8866">${4-correct}</div><div class="dg-l">有失分題數</div></div>
+      <div class="dg-box"><div class="dg-n" style="color:#00d4ff">${score}</div><div class="dg-l">本次得分</div></div>
+      <div class="dg-box"><div class="dg-n" style="color:#ffd700">${pct >= 60 ? '及格 ✓' : '未及格'}</div><div class="dg-l">及格標準 60分</div></div>
+    </div>
+    <div style="font-size:11px;color:#00d4ff;letter-spacing:2px;margin-bottom:10px;text-align:left">▸ 作答明細</div>
+    <div class="review-list">${rvHTML}</div>
+    <button class="retry-btn" onclick="startQuiz()">↩ 再練一次</button>
+    <button class="retry-btn" style="margin-left:10px;border-color:#ffd700;color:#ffd700;background:rgba(255,215,0,.1)" onclick="showScreen('sTitle')">回主選單</button>
+  `;
+}
+</script>
+</body>
+</html>
