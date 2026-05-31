@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d1a2e;font-family:'Courier New',monospace;color:#c8d8e8;min-height:100vh;overflow-x:hidden}
+
+/* ── header ── */
+.hdr{background:linear-gradient(135deg,#0d1f3c 0%,#1a0d2e 50%,#0d1f3c 100%);border-bottom:2px solid #00d4ff;padding:13px 20px 9px;position:relative;overflow:hidden}
+.hdr::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,212,255,0.03) 2px,rgba(0,212,255,0.03) 4px);pointer-events:none}
+.hdr-badge{font-size:10px;color:#00d4ff;letter-spacing:3px;opacity:.7;margin-bottom:3px}
+.hdr-title{font-size:20px;font-weight:700;color:#fff;letter-spacing:2px;text-shadow:0 0 20px rgba(0,212,255,.5)}
+.hdr-sub{font-size:11px;color:#7a9db8;margin-top:2px;letter-spacing:1px}
+
+/* ── global progress bar ── */
+.prog-bar{display:flex;gap:6px;margin:10px 16px}
+.pb{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:3px;transition:background .4s;cursor:pointer}
+.pb.active{background:#00d4ff;box-shadow:0 0 8px #00d4ff}
+.pb.done{background:#00ff99}
+
+/* ── screens ── */
+.screen{display:none}.screen.show{display:block}
+
+/* ── title screen ── */
+.title-screen{padding:24px 20px;text-align:center}
+.title-icon{font-size:56px;margin-bottom:12px}
+.title-h{font-size:18px;font-weight:700;color:#00d4ff;letter-spacing:2px;margin-bottom:8px}
+.title-p{font-size:12px;color:#7a9db8;line-height:1.8;margin-bottom:20px}
+.stage-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.stage-card{background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-left:3px solid #00d4ff;border-radius:6px;padding:10px 14px;text-align:left;cursor:pointer;transition:background .2s}
+.stage-card:hover{background:rgba(0,212,255,.12)}
+.stage-card.locked{opacity:.4;cursor:not-allowed;border-left-color:#444}
+.stage-card.done-card{border-left-color:#00ff99}
+.sc-num{font-size:10px;color:#00d4ff;letter-spacing:2px;margin-bottom:2px}
+.sc-title{font-size:13px;color:#c8d8e8;font-weight:700}
+.sc-desc{font-size:11px;color:#7a9db8;margin-top:2px}
+.start-btn{background:rgba(0,212,255,.15);border:1px solid #00d4ff;color:#00d4ff;padding:10px 32px;border-radius:6px;cursor:pointer;font-family:'Courier New',monospace;font-size:13px;letter-spacing:2px;transition:all .2s}
+.start-btn:hover{background:rgba(0,212,255,.28)}
+
+/* ── shared game ui ── */
+.hint-box{margin:0 16px 8px;border-radius:6px;padding:8px 13px;font-size:12px;line-height:1.7}
+.hint-a{background:rgba(255,200,0,.07);border:1px solid rgba(255,200,0,.3);border-left:3px solid #ffd700;color:#ffe08a}
+.hint-a strong{color:#ffd700}
+.hint-b{background:rgba(255,100,50,.07);border:1px solid rgba(255,100,50,.3);border-left:3px solid #ff6644;color:#ffb89a}
+.hint-b strong{color:#ff8866}
+
+.canvas-wrap{display:flex;justify-content:center;margin:0 16px}
+canvas{display:block;border-radius:6px;background:#0b1929;max-width:100%}
+#cv1{border:1px solid rgba(0,212,255,.25);cursor:crosshair;touch-action:none}
+#cv2{border:1px solid rgba(255,68,102,.25);cursor:default}
+#cv3{border:1px solid rgba(255,68,102,.25);cursor:crosshair;touch-action:none}
+
+.step-bar{display:flex;gap:6px;margin:8px 16px}
+.sd{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;transition:background .4s}
+.sd.active{background:#00d4ff;box-shadow:0 0 8px #00d4ff}
+.sd.done{background:#00ff99}
+
+.prompt-box{margin:0 16px 8px;background:rgba(255,200,0,.08);border:1px solid rgba(255,200,0,.35);border-radius:6px;padding:9px 14px;font-size:13px;color:#ffd700;line-height:1.5}
+
+/* ── l2 answer row ── */
+.answer-row{display:flex;align-items:center;gap:8px;margin:8px 16px;flex-wrap:wrap}
+.answer-row label{font-size:12px;color:#7a9db8;white-space:nowrap}
+.answer-row input[type=number]{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.4);color:#00d4ff;padding:5px 10px;border-radius:4px;font-family:'Courier New',monospace;font-size:14px;width:80px;outline:none}
+.answer-row input:focus{border-color:#00d4ff;box-shadow:0 0 8px rgba(0,212,255,.3)}
+.dir-btns{display:flex;gap:6px}
+.dir-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.2);color:#a8c8e0;padding:5px 14px;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;transition:all .2s}
+.dir-btn.sel{background:rgba(0,212,255,.2);border-color:#00d4ff;color:#00d4ff}
+
+/* ── l3 toolbar ── */
+.toolbar{display:flex;gap:8px;margin:8px 16px;align-items:center;flex-wrap:wrap}
+.tool-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);color:#a8c8e0;padding:5px 14px;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:11px}
+.tool-btn:hover{background:rgba(255,255,255,.1)}
+.seal-btn{background:rgba(0,255,153,.1);border:1px solid #00ff99;color:#00ff99;padding:6px 18px;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;letter-spacing:1px;margin-left:auto}
+.seal-btn:hover{background:rgba(0,255,153,.2)}
+
+/* ── shared buttons ── */
+.action-btn{background:rgba(255,68,102,.15);border:1px solid #ff4466;color:#ff8899;padding:6px 18px;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;letter-spacing:1px;transition:background .2s}
+.action-btn:hover{background:rgba(255,68,102,.3)}
+.action-btn:disabled{opacity:.4;cursor:not-allowed}
+
+.warn{font-size:12px;color:#ff6b6b;margin:2px 16px;min-height:18px}
+
+/* ── force name menu ── */
+.force-menu{position:fixed;display:none;background:#0a1628;border:1px solid #00d4ff;border-radius:8px;padding:10px 14px;z-index:500;min-width:180px;box-shadow:0 0 20px rgba(0,212,255,.25)}
+.force-menu.show{display:block}
+.fm-title{font-size:10px;color:#7a9db8;letter-spacing:2px;margin-bottom:6px}
+.fm-sub{font-size:11px;color:#ffd700;margin-bottom:8px}
+.fm-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.fm-btn{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.3);color:#a8c8e0;padding:5px 12px;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;transition:all .2s}
+.fm-btn:hover{background:rgba(0,212,255,.2)}
+.fm-cancel{background:rgba(255,100,50,.08);border:1px solid rgba(255,100,50,.3);color:#ff9980;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:11px;width:100%;margin-top:2px}
+
+/* ── overlay ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,5,20,.9);z-index:900;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.ov-card{background:#080f1e;border-radius:14px;padding:26px 30px;max-width:400px;width:90%;text-align:center;animation:popIn .45s ease}
+@keyframes popIn{from{transform:scale(.55);opacity:0}to{transform:scale(1);opacity:1}}
+.ov-icon{font-size:44px;margin-bottom:10px}
+.ov-title{font-size:15px;font-weight:700;letter-spacing:2px;margin-bottom:10px}
+.ov-body{font-size:12px;color:#a8c8e0;line-height:1.9;margin-bottom:16px}
+.ov-btn{padding:7px 20px;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:12px;border:1px solid;margin:4px}
+.ov-btn.cyan{background:rgba(0,212,255,.12);border-color:#00d4ff;color:#00d4ff}
+.ov-btn.green{background:rgba(0,255,153,.12);border-color:#00ff99;color:#00ff99}
+.ov-btn.gold{background:rgba(255,215,0,.12);border-color:#ffd700;color:#ffd700}
+
+.err-overlay{display:none;position:fixed;inset:0;background:rgba(255,0,30,.1);z-index:800;pointer-events:none}
+@keyframes flash{0%{opacity:1}100%{opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- ══ TITLE SCREEN ══ -->
+<div class="screen show" id="screenTitle">
+  <div class="hdr">
+    <div class="hdr-badge">▶ GHOST FORCE SQUAD</div>
+    <div class="hdr-title">抓鬼特攻隊</div>
+    <div class="hdr-sub">力學除靈任務 ▸ 三關全破</div>
+  </div>
+  <div class="title-screen">
+    <div class="title-icon">👁</div>
+    <div class="title-h">GHOST FORCE SQUAD</div>
+    <div class="title-p">力鬼潛伏在生活中的每個角落<br>學會看穿牠們——用力的箭頭讓牠們現形！</div>
+    <div class="stage-cards">
+      <div class="stage-card" id="card0" onclick="goLevel(1)">
+        <div class="sc-num">▶ 第一關</div>
+        <div class="sc-title">顯像鏡校正（抓鬼三要素）</div>
+        <div class="sc-desc">學習力的作用點、方向、大小</div>
+      </div>
+      <div class="stage-card locked" id="card1" onclick="goLevel(2)">
+        <div class="sc-num">▶ 第二關</div>
+        <div class="sc-title">雙鬼對決（力的合成與消滅）</div>
+        <div class="sc-desc">同向相加、反向相減、兩力平衡</div>
+      </div>
+      <div class="stage-card locked" id="card2" onclick="goLevel(3)">
+        <div class="sc-num">▶ 第三關</div>
+        <div class="sc-title">生活現場除靈（受力圖）</div>
+        <div class="sc-desc">親手畫出二力平衡的受力圖</div>
+      </div>
+    </div>
+    <button class="start-btn" onclick="goLevel(1)">▶ 開始任務</button>
+  </div>
+</div>
+
+<!-- ══ LEVEL 1 ══ -->
+<div class="screen" id="screenL1">
+  <div class="hdr" style="border-bottom-color:#00d4ff">
+    <div class="hdr-badge">▶ STAGE 01</div>
+    <div class="hdr-title">顯像鏡校正系統</div>
+    <div class="hdr-sub">抓鬼三要素 ▸ 作用點 / 方向 / 大小</div>
+  </div>
+  <div class="hint-box hint-a" id="l1Hint"></div>
+  <div class="step-bar">
+    <div class="sd active" id="l1sd1"></div>
+    <div class="sd" id="l1sd2"></div>
+    <div class="sd" id="l1sd3"></div>
+  </div>
+  <div class="prompt-box" id="l1Prompt">🔴 請點擊力鬼附身在寶箱上的起點核心！</div>
+  <div class="canvas-wrap"><canvas id="cv1" width="580" height="280"></canvas></div>
+  <div class="warn" id="l1Warn"></div>
+  <div class="answer-row" id="l1InputArea" style="display:none">
+    <label>這隻力鬼的大小是多少 gw？</label>
+    <input type="number" id="l1Mag" placeholder="gw" min="1" max="200">
+    <button class="action-btn" onclick="l1CheckSize()">確認</button>
+  </div>
+</div>
+
+<!-- ══ LEVEL 2 ══ -->
+<div class="screen" id="screenL2">
+  <div class="hdr" style="border-bottom-color:#ffd700">
+    <div class="hdr-badge">▶ STAGE 02</div>
+    <div class="hdr-title">雙鬼對決系統</div>
+    <div class="hdr-sub">力的合成 ▸ 同向相加 / 反向相減 / 兩力平衡</div>
+  </div>
+  <div class="step-bar">
+    <div class="sd active" id="l2sb1"></div>
+    <div class="sd" id="l2sb2"></div>
+    <div class="sd" id="l2sb3"></div>
+  </div>
+  <div class="hint-box hint-b" id="l2Challenge"></div>
+  <div class="canvas-wrap"><canvas id="cv2" width="580" height="240"></canvas></div>
+  <div class="warn" id="l2Warn"></div>
+  <div class="answer-row">
+    <label>合力大小：</label>
+    <input type="number" id="l2Mag" placeholder="gw" min="0">
+    <span id="l2DirGroup" style="display:flex;align-items:center;gap:8px">
+      <label>方向：</label>
+      <div class="dir-btns">
+        <button class="dir-btn" id="l2BtnL" onclick="l2SelDir('left')">← 向左</button>
+        <button class="dir-btn" id="l2BtnR" onclick="l2SelDir('right')">向右 →</button>
+      </div>
+    </span>
+    <button class="action-btn" id="l2FireBtn" onclick="l2Fire()">👁 顯靈！力鬼現身</button>
+  </div>
+</div>
+
+<!-- ══ LEVEL 3 ══ -->
+<div class="screen" id="screenL3">
+  <div class="hdr" style="border-bottom-color:#ff4466">
+    <div class="hdr-badge">▶ STAGE 03 FINAL BOSS</div>
+    <div class="hdr-title">生活現場除靈</div>
+    <div class="hdr-sub">親手畫出受力圖 ▸ 二力平衡封印</div>
+  </div>
+  <div class="step-bar">
+    <div class="sd active" id="l3sb0"></div>
+    <div class="sd" id="l3sb1"></div>
+  </div>
+  <div class="hint-box hint-a" id="l3Hint"></div>
+  <div class="canvas-wrap"><canvas id="cv3" width="580" height="280"></canvas></div>
+  <div class="warn" id="l3Warn"></div>
+  <div class="toolbar">
+    <button class="tool-btn" onclick="l3Undo()">↩ 撤銷</button>
+    <button class="tool-btn" onclick="l3Clear()">🗑 清除</button>
+    <button class="seal-btn" onclick="l3TrySeal()">🔮 啟動量子封印</button>
+  </div>
+</div>
+
+<!-- shared overlays -->
+<div class="force-menu" id="forceMenu">
+  <div class="fm-title">▸ 這是哪隻力鬼？</div>
+  <div class="fm-sub" id="fmSub"></div>
+  <div class="fm-btns" id="fmBtns"></div>
+  <button class="fm-cancel" onclick="l3CancelArrow()">✕ 取消重畫</button>
+</div>
+<div class="overlay" id="overlay">
+  <div class="ov-card" id="ovCard">
+    <div class="ov-icon" id="ovIcon"></div>
+    <div class="ov-title" id="ovTitle"></div>
+    <div class="ov-body" id="ovBody"></div>
+    <div id="ovBtns"></div>
+  </div>
+</div>
+<div class="err-overlay" id="errOverlay"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// GLOBAL
+// ══════════════════════════════════════════════════════
+const done=[false,false,false]; // level completion flags
+let currentLevel=0;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+}
+
+function goLevel(n){
+  currentLevel=n;
+  if(n===1){showScreen('screenL1');l1Init();}
+  else if(n===2){showScreen('screenL2');l2Init();}
+  else if(n===3){showScreen('screenL3');l3Init();}
+}
+
+function unlockCard(idx){
+  const c=document.getElementById('card'+idx);
+  c.classList.remove('locked');
+}
+function markCardDone(idx){
+  document.getElementById('card'+idx).classList.add('done-card');
+}
+
+function showOverlay({icon,title,titleColor,body,border,btns}){
+  document.getElementById('ovCard').style.border=`2px solid ${border}`;
+  document.getElementById('ovIcon').textContent=icon;
+  document.getElementById('ovTitle').style.color=titleColor;
+  document.getElementById('ovTitle').textContent=title;
+  document.getElementById('ovBody').innerHTML=body;
+  document.getElementById('ovBtns').innerHTML=btns;
+  document.getElementById('overlay').classList.add('show');
+}
+function closeOverlay(){document.getElementById('overlay').classList.remove('show');}
+
+// ══════════════════════════════════════════════════════
+// LEVEL 1 — 顯像鏡校正
+// ══════════════════════════════════════════════════════
+const c1=document.getElementById('cv1'),x1=c1.getContext('2d');
+const W1=c1.width,H1=c1.height;
+const L1_GRID=55;
+const L1_BOX={x:80,y:H1/2-45,w:90,h:90};
+const L1_ORIGIN={x:L1_BOX.x+L1_BOX.w/2,y:L1_BOX.y+L1_BOX.h/2};
+const L1_END={x:L1_ORIGIN.x+3*L1_GRID,y:L1_ORIGIN.y};
+const L1_HIT=26;
+let l1Step=1,l1AnimRaf=0;
+
+function l1Init(){
+  l1Step=1;l1Errors=0;
+  cancelAnimationFrame(l1AnimRaf);
+  document.getElementById('l1Hint').innerHTML='<strong>【啟動顯像鏡】</strong>力鬼看不到也摸不到，但會用「力的箭頭」現形。<br>鎖定牠的 <strong>作用點</strong>、<strong>方向</strong>、<strong>大小</strong>！';
+  document.getElementById('l1Prompt').innerHTML='🔴 請點擊力鬼附身在寶箱上的起點核心！';
+  document.getElementById('l1Warn').textContent='';
+  document.getElementById('l1InputArea').style.display='none';
+  document.getElementById('l1Mag').value='';
+  ['l1sd1','l1sd2','l1sd3'].forEach((id,i)=>{
+    document.getElementById(id).className='sd'+(i===0?' active':'');
+  });
+  l1Render();
+}
+
+function l1DrawBg(){
+  x1.fillStyle='#0b1929';x1.fillRect(0,0,W1,H1);
+  x1.save();x1.strokeStyle='rgba(100,180,255,0.2)';x1.lineWidth=1;
+  for(let x=0;x<W1;x+=L1_GRID){x1.beginPath();x1.moveTo(x,0);x1.lineTo(x,H1);x1.stroke()}
+  for(let y=0;y<H1;y+=L1_GRID){x1.beginPath();x1.moveTo(0,y);x1.lineTo(W1,y);x1.stroke()}
+  x1.restore();
+  // scale
+  x1.save();x1.fillStyle='rgba(5,20,45,.85)';x1.fillRect(W1-150,6,144,22);
+  x1.strokeStyle='rgba(0,212,255,.4)';x1.lineWidth=1;x1.strokeRect(W1-150,6,144,22);
+  x1.fillStyle='#00d4ff';x1.font='10px Courier New';x1.fillText('⊞  1 格 = 10 gw',W1-146,21);
+  x1.restore();
+}
+
+function l1DrawBox(){
+  const {x,y,w,h}=L1_BOX,cx=x+w/2,cy=y+h/2;
+  x1.save();
+  x1.shadowColor='#00d4ff';x1.shadowBlur=12;
+  x1.fillStyle='rgba(5,25,55,.92)';x1.strokeStyle='#00d4ff';x1.lineWidth=2;
+  x1.beginPath();x1.roundRect(x,y,w,h,7);x1.fill();x1.stroke();
+  x1.shadowBlur=0;
+  x1.strokeStyle='rgba(0,212,255,.25)';x1.lineWidth=1;x1.strokeRect(x+8,y+8,w-16,h-16);
+  x1.strokeStyle='rgba(0,212,255,.2)';
+  x1.beginPath();x1.moveTo(cx,y+8);x1.lineTo(cx,y+h-8);x1.stroke();
+  x1.beginPath();x1.moveTo(x+8,cy);x1.lineTo(x+w-8,cy);x1.stroke();
+  x1.fillStyle='rgba(0,212,255,.5)';x1.beginPath();x1.arc(cx,cy,5,0,Math.PI*2);x1.fill();
+  x1.fillStyle='rgba(0,212,255,.4)';x1.font='8px Courier New';
+  x1.fillText('CARGO-7X',x+10,y+14);x1.fillText('LOCKED',x+14,y+h-9);
+  x1.restore();
+}
+
+function l1DrawArrow(done2){
+  const col=done2?'#00ff88':'#ff3355';
+  x1.save();
+  x1.shadowColor=done2?'#00ff88':'#ff2244';x1.shadowBlur=18;
+  x1.strokeStyle=col;x1.lineWidth=3;
+  x1.beginPath();x1.moveTo(L1_ORIGIN.x,L1_ORIGIN.y);x1.lineTo(L1_END.x,L1_END.y);x1.stroke();
+  x1.fillStyle=col;
+  x1.beginPath();x1.moveTo(L1_END.x,L1_END.y);x1.lineTo(L1_END.x-16,L1_END.y-9);x1.lineTo(L1_END.x-16,L1_END.y+9);x1.closePath();x1.fill();
+  x1.restore();
+}
+
+function l1GreenDot(px,py,label){
+  x1.save();x1.shadowColor='#00ff88';x1.shadowBlur=16;
+  x1.fillStyle='#00ff88';x1.beginPath();x1.arc(px,py,9,0,Math.PI*2);x1.fill();
+  x1.strokeStyle='#fff';x1.lineWidth=2;x1.beginPath();x1.arc(px,py,9,0,Math.PI*2);x1.stroke();
+  x1.shadowBlur=0;x1.font='bold 11px Courier New';x1.fillStyle='#00ff88';
+  x1.fillText(label,px+13,py-8);x1.restore();
+}
+
+function l1Render(done2){
+  x1.clearRect(0,0,W1,H1);l1DrawBg();l1DrawBox();l1DrawArrow(done2||false);
+  if(l1Step>=2)l1GreenDot(L1_ORIGIN.x,L1_ORIGIN.y,'✓ 作用點');
+  if(l1Step>=3)l1GreenDot(L1_END.x,L1_END.y,'✓ 方向');
+}
+
+function l1Dist(ax,ay,bx,by){return Math.sqrt((ax-bx)**2+(ay-by)**2)}
+
+c1.addEventListener('click',e=>{
+  if(l1Step>2)return;
+  const r=c1.getBoundingClientRect();
+  const cx=(e.clientX-r.left)*(W1/r.width),cy=(e.clientY-r.top)*(H1/r.height);
+  if(l1Step===1){
+    if(l1Dist(cx,cy,L1_ORIGIN.x,L1_ORIGIN.y)<L1_HIT+10){
+      l1Step=2;
+      document.getElementById('l1Prompt').innerHTML='🟢 <strong>定位成功：作用點</strong><br><span style="color:#7a9db8;font-size:11px">步驟二 ▸ 請點擊箭頭的尖端！</span>';
+      document.getElementById('l1sd1').className='sd done';
+      document.getElementById('l1sd2').className='sd active';
+      document.getElementById('l1Warn').textContent='';
+      l1Render();
+    } else {document.getElementById('l1Warn').textContent='⚠ 未命中！請點擊寶箱中心的紅線起點。';l1Errors++;}
+  } else if(l1Step===2){
+    if(l1Dist(cx,cy,L1_END.x,L1_END.y)<L1_HIT+10){
+      l1Step=3;
+      document.getElementById('l1Prompt').innerHTML='🟢 <strong>定位成功：方向（向右）</strong><br><span style="color:#7a9db8;font-size:11px">步驟三 ▸ 根據網格，這隻力鬼的大小是多少 gw？</span>';
+      document.getElementById('l1sd2').className='sd done';
+      document.getElementById('l1sd3').className='sd active';
+      document.getElementById('l1Warn').textContent='';
+      document.getElementById('l1InputArea').style.display='flex';
+      l1Render();
+    } else {document.getElementById('l1Warn').textContent='⚠ 未命中！請點擊紅色箭頭的尖端。';l1Errors++;}
+  }
+});
+
+document.getElementById('l1Mag').addEventListener('keydown',e=>{if(e.key==='Enter')l1CheckSize();});
+
+function l1CheckSize(){
+  const v=parseInt(document.getElementById('l1Mag').value);
+  if(isNaN(v)||v<=0){document.getElementById('l1Warn').textContent='⚠ 請輸入有效數字';return}
+  if(v===30){
+    document.getElementById('l1sd3').className='sd done';
+    document.getElementById('l1Warn').textContent='';
+    document.getElementById('l1InputArea').style.display='none';
+    done[0]=true;unlockCard(1);markCardDone(0);
+    l1SuccessAnim();
+  } else {
+    document.getElementById('l1Warn').textContent=v<30?'⚠ 再數一次格子！':'⚠ 數字太大，仔細數紅線跨越幾格？';
+    l1Errors++;
+  }
+}
+
+function l1SuccessAnim(){
+  let t=0;
+  function anim(){
+    x1.clearRect(0,0,W1,H1);l1DrawBg();l1DrawBox();
+    const p=Math.abs(Math.sin(t*.08));
+    x1.save();x1.shadowColor='#00ff88';x1.shadowBlur=20+p*20;
+    x1.strokeStyle='#00ff88';x1.lineWidth=3;
+    x1.beginPath();x1.moveTo(L1_ORIGIN.x,L1_ORIGIN.y);x1.lineTo(L1_END.x,L1_END.y);x1.stroke();
+    x1.fillStyle='#00ff88';
+    x1.beginPath();x1.moveTo(L1_END.x,L1_END.y);x1.lineTo(L1_END.x-16,L1_END.y-9);x1.lineTo(L1_END.x-16,L1_END.y+9);x1.closePath();x1.fill();
+    x1.restore();
+    l1GreenDot(L1_ORIGIN.x,L1_ORIGIN.y,'✓ 作用點');
+    l1GreenDot(L1_END.x,L1_END.y,'✓ 方向');
+    x1.save();x1.font='bold 13px Courier New';
+    x1.fillStyle=`rgba(0,255,136,${.6+p*.4})`;
+    x1.fillText('30 gw',L1_ORIGIN.x+(L1_END.x-L1_ORIGIN.x)/2-18,L1_ORIGIN.y-16);
+    x1.restore();
+    t++;l1AnimRaf=requestAnimationFrame(anim);
+  }
+  cancelAnimationFrame(l1AnimRaf);anim();
+  setTimeout(()=>{
+    cancelAnimationFrame(l1AnimRaf);
+    showOverlay({
+      icon:'⚡',title:'// 鎖定成功！//',titleColor:'#00ff99',border:'#00ff99',
+      body:'成功鎖定！已鑑定目標力鬼：<br><br><span style="color:#00ff99;font-size:15px;font-weight:700">大小 = 30 gw　方向 → 向右</span><br><br>這是一隻 <strong style="color:#ffd700">推力鬼</strong>！<br><span style="font-size:11px;color:#7a9db8">作用點 / 方向 / 大小 全數鎖定 ✓</span>',
+      btns:`<button class="ov-btn green" onclick="closeOverlay();goLevel(2)">前往第二關 →</button>`
+    });
+  },2500);
+}
+
+// ══════════════════════════════════════════════════════
+// LEVEL 2 — 雙鬼對決
+// ══════════════════════════════════════════════════════
+const c2=document.getElementById('cv2'),x2=c2.getContext('2d');
+const W2=c2.width,H2=c2.height,CX2=W2/2,CY2=H2/2;
+const GRID2=44;
+const BOX2=64;
+
+const L2_CHALLENGES=[
+  {desc:'<strong>【挑戰 1：同向鬼力量相加】</strong><br>兩隻向右的力鬼：20 gw + 10 gw。合力多大？方向呢？',
+   forces:[{mag:20,dir:1,offset:-16,color:'#ff3366'},{mag:10,dir:1,offset:16,color:'#ff6633'}],
+   ansMag:30,ansDir:'right',needDir:true,
+   msg:'<span style="color:#00ff99;font-size:15px;font-weight:700">合力 = 30 gw，方向向右 →</span><br><br>顯像成功！同向力直接相加——兩隻鬼合體現形！',anim:'merge'},
+  {desc:'<strong>【挑戰 2：反向鬼互相拉扯】</strong><br>左邊 10 gw 向左，右邊 20 gw 向右。最終合力？',
+   forces:[{mag:10,dir:-1,offset:0,color:'#aa44ff'},{mag:20,dir:1,offset:0,color:'#ff3366'}],
+   ansMag:10,ansDir:'right',needDir:true,
+   msg:'<span style="color:#00ff99;font-size:15px;font-weight:700">合力 = 10 gw，方向向右 →</span><br><br>顯像成功！反向相減，較大的鬼勝出！',anim:'cancel'},
+  {desc:'<strong>【挑戰 3：雙鬼相剋！兩力平衡】</strong><br>左邊 20 gw 向左，右邊 20 gw 向右。最終合力大小？',
+   forces:[{mag:20,dir:-1,offset:0,color:'#aa44ff'},{mag:20,dir:1,offset:0,color:'#ff3366'}],
+   ansMag:0,ansDir:null,needDir:false,
+   msg:'<span style="color:#ffd700;font-size:15px;font-weight:700">兩力平衡！合力為 0 ⚖</span><br><br>兩個力同時存在、同時作用在物體上。<br>物體靜止，<strong style="color:#ff8888">不是沒有受力</strong>，<br>而是兩力互相抵銷，合力為零！',anim:'balance'}
+];
+let l2ci=0,l2Dir=null,l2Raf=0;
+
+function l2Init(){
+  l2ci=0;l2Dir=null;l2Errors=0;
+  document.getElementById('l2BtnL').classList.remove('sel');
+  document.getElementById('l2BtnR').classList.remove('sel');
+  document.getElementById('l2Mag').value='';
+  document.getElementById('l2Warn').textContent='';
+  document.getElementById('l2FireBtn').disabled=false;
+  l2SetChallenge();
+}
+
+function l2SetChallenge(){
+  const c=L2_CHALLENGES[l2ci];
+  document.getElementById('l2Challenge').innerHTML=c.desc;
+  document.getElementById('l2DirGroup').style.display=c.needDir?'flex':'none';
+  document.getElementById('l2Mag').value='';
+  document.getElementById('l2BtnL').classList.remove('sel');
+  document.getElementById('l2BtnR').classList.remove('sel');
+  document.getElementById('l2Warn').textContent='';
+  document.getElementById('l2FireBtn').disabled=false;
+  l2Dir=null;
+  for(let i=1;i<=3;i++){
+    document.getElementById('l2sb'+i).className='sd'+(i-1<l2ci?' done':i-1===l2ci?' active':'');
+  }
+  cancelAnimationFrame(l2Raf);
+  l2Render(c.forces,1,null);
+}
+
+function l2SelDir(d){
+  l2Dir=d;
+  document.getElementById('l2BtnL').classList.toggle('sel',d==='left');
+  document.getElementById('l2BtnR').classList.toggle('sel',d==='right');
+}
+
+function l2DrawBg(){
+  x2.fillStyle='#0b1929';x2.fillRect(0,0,W2,H2);
+  x2.save();x2.strokeStyle='rgba(100,180,255,0.18)';x2.lineWidth=1;
+  for(let x=0;x<W2;x+=GRID2){x2.beginPath();x2.moveTo(x,0);x2.lineTo(x,H2);x2.stroke()}
+  for(let y=0;y<H2;y+=GRID2){x2.beginPath();x2.moveTo(0,y);x2.lineTo(W2,y);x2.stroke()}
+  x2.restore();
+  x2.save();x2.fillStyle='rgba(5,20,45,.85)';x2.fillRect(W2-150,6,144,22);
+  x2.strokeStyle='rgba(0,212,255,.4)';x2.lineWidth=1;x2.strokeRect(W2-150,6,144,22);
+  x2.fillStyle='#00d4ff';x2.font='10px Courier New';x2.fillText('⊞  1 格 = 10 gw',W2-146,21);
+  x2.restore();
+}
+
+function l2DrawBox(shakeX){
+  const ox=shakeX||0,bx=CX2-BOX2/2+ox,by=CY2-BOX2/2;
+  x2.save();
+  x2.shadowColor='#00d4ff';x2.shadowBlur=12;
+  x2.fillStyle='rgba(5,25,55,.92)';x2.strokeStyle='#00d4ff';x2.lineWidth=2;
+  x2.beginPath();x2.roundRect(bx,by,BOX2,BOX2,7);x2.fill();x2.stroke();
+  x2.shadowBlur=0;
+  x2.strokeStyle='rgba(0,212,255,.25)';x2.lineWidth=1;x2.strokeRect(bx+8,by+8,BOX2-16,BOX2-16);
+  x2.fillStyle='rgba(0,212,255,.4)';x2.beginPath();x2.arc(CX2+ox,CY2,5,0,Math.PI*2);x2.fill();
+  x2.fillStyle='rgba(0,212,255,.35)';x2.font='8px Courier New';x2.fillText('TARGET',bx+10,by+13);
+  x2.restore();
+}
+
+function l2Arrow(sx,y,len,dir,color,alpha,label){
+  if(len<=1)return;
+  const ex=sx+len*dir,hs=Math.min(13,len*.3);
+  x2.save();x2.globalAlpha=Math.max(0,Math.min(1,alpha));
+  x2.shadowColor=color;x2.shadowBlur=14;
+  x2.strokeStyle=color;x2.lineWidth=3;
+  x2.beginPath();x2.moveTo(sx,y);x2.lineTo(ex,y);x2.stroke();
+  x2.fillStyle=color;
+  x2.beginPath();
+  if(dir>0){x2.moveTo(ex,y);x2.lineTo(ex-hs,y-8);x2.lineTo(ex-hs,y+8);}
+  else{x2.moveTo(ex,y);x2.lineTo(ex+hs,y-8);x2.lineTo(ex+hs,y+8);}
+  x2.closePath();x2.fill();
+  if(label){x2.shadowBlur=0;x2.font='bold 11px Courier New';x2.fillStyle=color;
+    x2.textAlign=dir>0?'left':'right';x2.fillText(label,ex+(dir>0?5:-5),y-10);}
+  x2.restore();
+}
+
+function l2Render(forces,alpha,result){
+  x2.clearRect(0,0,W2,H2);l2DrawBg();l2DrawBox();
+  forces.forEach(f=>l2Arrow(CX2,CY2+f.offset,f.mag/10*GRID2,f.dir,f.color,alpha,f.mag+' gw'));
+  if(result&&result.mag>0){
+    const len=result.mag/10*GRID2;
+    l2Arrow(CX2,CY2,len,result.dir,'#00ff99',result.alpha||1,result.mag+' gw 合力');
+  }
+}
+
+function l2Fire(){
+  const c=L2_CHALLENGES[l2ci];
+  const mv=parseInt(document.getElementById('l2Mag').value);
+  if(isNaN(mv)||mv<0){l2Warn('⚠ 請輸入合力大小');return}
+  if(c.needDir&&!l2Dir){l2Warn('⚠ 請選擇合力方向');return}
+  if(mv!==c.ansMag){l2Warn(mv<c.ansMag?'⚠ 力道不足！':'⚠ 力道過強！注意反向力要相減。');l2Errors++;return}
+  if(c.needDir&&l2Dir!==c.ansDir){l2Warn('⚠ 方向錯誤！合力方向跟較大的鬼相同。');l2Errors++;return}
+  document.getElementById('l2Warn').textContent='';
+  document.getElementById('l2FireBtn').disabled=true;
+  if(c.anim==='merge')l2AnimMerge(c);
+  else if(c.anim==='cancel')l2AnimCancel(c);
+  else l2AnimBalance(c);
+}
+function l2Warn(m){document.getElementById('l2Warn').textContent=m;}
+
+function l2AnimMerge(c){
+  let t=0;const DUR=60,f1=c.forces[0],f2=c.forces[1];
+  function loop(){
+    const p=Math.min(t/DUR,1),e=1-Math.pow(1-p,3);
+    x2.clearRect(0,0,W2,H2);l2DrawBg();l2DrawBox(p>.7&&p<.95?(Math.random()-.5)*4:0);
+    l2Arrow(CX2,CY2+f1.offset*(1-e),f1.mag/10*GRID2,1,f1.color,1-e,f1.mag+' gw');
+    l2Arrow(CX2,CY2+f2.offset*(1-e),f2.mag/10*GRID2,1,f2.color,1-e,f2.mag+' gw');
+    if(e>.3)l2Arrow(CX2,CY2,c.ansMag/10*GRID2*e,1,'#00ff99',e-.3,e>.9?c.ansMag+' gw 合力':null);
+    t++;if(p<1)l2Raf=requestAnimationFrame(loop);else setTimeout(()=>l2ShowSuccess(c),300);
+  }loop();
+}
+function l2AnimCancel(c){
+  let t=0;const DUR=70,fL=c.forces[0],fR=c.forces[1];
+  function loop(){
+    const p=Math.min(t/DUR,1),e=1-Math.pow(1-p,3);
+    const lenL=fL.mag/10*GRID2*(1-e),finalR=c.ansMag/10*GRID2;
+    const lenR=fR.mag/10*GRID2-(fR.mag/10*GRID2-finalR)*e;
+    x2.clearRect(0,0,W2,H2);l2DrawBg();l2DrawBox(p>.5&&p<.9?(Math.random()-.5)*4:0);
+    l2Arrow(CX2,CY2,lenL,fL.dir,fL.color,1-e,lenL>6?fL.mag+' gw':null);
+    l2Arrow(CX2,CY2,lenR,fR.dir,fR.color,1,fR.mag+' gw');
+    const ra=e>.6?(e-.6)/.4:0;
+    if(ra>0)l2Arrow(CX2,CY2,finalR,1,'#00ff99',Math.min(ra*2,1),ra>.9?c.ansMag+' gw 合力':null);
+    t++;if(p<1)l2Raf=requestAnimationFrame(loop);else setTimeout(()=>l2ShowSuccess(c),300);
+  }loop();
+}
+function l2AnimBalance(c){
+  let t=0;const DUR=90,fL=c.forces[0],fR=c.forces[1];
+  function loop(){
+    const p=Math.min(t/DUR,1),sh=1-Math.pow(p,1.8);
+    const cl=p>.4&&p<.75?Math.sin((p-.4)*Math.PI*7)*4*(1-p):0;
+    x2.clearRect(0,0,W2,H2);l2DrawBg();l2DrawBox(p<.85?(Math.random()-.5)*5*(1-p):0);
+    l2Arrow(CX2+cl,CY2,fL.mag/10*GRID2*sh,fL.dir,fL.color,sh,sh>0.2?fL.mag+' gw':null);
+    l2Arrow(CX2-cl,CY2,fR.mag/10*GRID2*sh,fR.dir,fR.color,sh,sh>0.2?fR.mag+' gw':null);
+    if(p>.42&&p<.62){
+      const fl=1-Math.abs(p-.52)/.1;
+      x2.save();x2.globalAlpha=fl*.5;x2.fillStyle='#fff';
+      x2.beginPath();x2.arc(CX2,CY2,50*fl,0,Math.PI*2);x2.fill();x2.restore();
+    }
+    t++;if(p<1)l2Raf=requestAnimationFrame(loop);else l2DrawBalanceEnd(c);
+  }loop();
+}
+function l2DrawBalanceEnd(c){
+  x2.clearRect(0,0,W2,H2);l2DrawBg();l2DrawBox();
+  l2Arrow(CX2,CY2,c.forces[0].mag/10*GRID2*.4,c.forces[0].dir,c.forces[0].color,.3,null);
+  l2Arrow(CX2,CY2,c.forces[1].mag/10*GRID2*.4,c.forces[1].dir,c.forces[1].color,.3,null);
+  x2.save();x2.textAlign='center';
+  x2.font='bold 14px Courier New';x2.fillStyle='#ffd700';x2.fillText('⚖ 兩力平衡',CX2,CY2-48);
+  x2.font='12px Courier New';x2.fillStyle='#00ff99';x2.fillText('合力 = 0 gw，物體靜止',CX2,CY2+52);
+  x2.restore();
+  setTimeout(()=>l2ShowSuccess(c),400);
+}
+
+function l2ShowSuccess(c){
+  const isLast=l2ci===L2_CHALLENGES.length-1;
+  if(isLast){done[1]=true;unlockCard(2);markCardDone(1);}
+  showOverlay({
+    icon:isLast?'🏆':'✅',
+    title:isLast?'// 全挑戰完成！//':'// 顯靈成功！//',
+    titleColor:isLast?'#ffd700':'#00ff99',
+    border:isLast?'#ffd700':'#00ff99',
+    body:c.msg+(isLast?'<br><br><span style="color:#ffd700;font-size:11px">🎉 第二關完成！力鬼沒有消失——你已看穿牠們！</span>':''),
+    btns:isLast
+      ?`<button class="ov-btn gold" onclick="closeOverlay();goLevel(3)">前往第三關 →</button>`
+      :`<button class="ov-btn cyan" onclick="closeOverlay();l2ci++;l2SetChallenge()">下一隻力鬼 →</button>`
+  });
+}
+
+document.getElementById('l2Mag').addEventListener('keydown',e=>{if(e.key==='Enter')l2Fire();});
+
+// ══════════════════════════════════════════════════════
+// LEVEL 3 — 生活現場除靈
+// ══════════════════════════════════════════════════════
+const c3=document.getElementById('cv3'),x3=c3.getContext('2d');
+const W3=c3.width,H3=c3.height;
+const GRID3=50;
+
+const L3_SCENES=[
+  {hint:'<strong>【場景 A：科技木箱靜置桌面】</strong><br>兩隻平衡的力鬼——<strong>重力 W</strong>（往下）與<strong>支撐力 F</strong>（桌面往上頂）。<br>從物體中心往上或往下拖曳畫出箭頭，選對名字！',
+   forces:['重力 W','支撐力 F'],colors:{'重力 W':'#ff6644','支撐力 F':'#00ccff'},
+   objCenter:()=>({x:W3/2,y:H3*.5}),objRect:()=>({x:W3/2-52,y:H3*.5-52,w:104,h:104}),
+   drawScene:l3DrawSceneA,checkDir:{'重力 W':v=>v.dy>0,'支撐力 F':v=>v.dy<0}},
+  {hint:'<strong>【場景 B：鋼索懸掛重物】</strong><br><strong>重力 W</strong>（往下）與<strong>拉力 T</strong>（鋼索往上）。<br>從物體中心拖曳，選對名字！',
+   forces:['重力 W','拉力 T'],colors:{'重力 W':'#ff6644','拉力 T':'#cc88ff'},
+   objCenter:()=>({x:W3/2,y:H3*.62}),objRect:()=>({x:W3/2-40,y:H3*.62-40,w:80,h:80}),
+   drawScene:l3DrawSceneB,checkDir:{'重力 W':v=>v.dy>0,'拉力 T':v=>v.dy<0}}
+];
+
+let l3si=0,l3Arrows=[],l3Drawing=false,l3DragStart=null,l3DragCur=null,l3Pending=null,l3Raf=0;
+
+function l3Init(){
+  l3si=0;l3Arrows=[];l3Drawing=false;l3Pending=null;l3Errors=0;
+  cancelAnimationFrame(l3Raf);
+  l3HideMenu();
+  document.getElementById('l3Warn').textContent='';
+  document.getElementById('l3sb0').className='sd active';
+  document.getElementById('l3sb1').className='sd';
+  document.getElementById('l3Hint').innerHTML=L3_SCENES[0].hint;
+  l3Render();
+}
+
+function l3DrawBg(){
+  x3.fillStyle='#0b1929';x3.fillRect(0,0,W3,H3);
+  x3.save();x3.strokeStyle='rgba(100,180,255,0.18)';x3.lineWidth=1;
+  for(let x=0;x<W3;x+=GRID3){x3.beginPath();x3.moveTo(x,0);x3.lineTo(x,H3);x3.stroke()}
+  for(let y=0;y<H3;y+=GRID3){x3.beginPath();x3.moveTo(0,y);x3.lineTo(W3,y);x3.stroke()}
+  x3.restore();
+}
+
+function l3Cross(cx,cy){
+  x3.strokeStyle='rgba(0,212,255,.25)';x3.lineWidth=1;
+  x3.beginPath();x3.moveTo(cx-30,cy);x3.lineTo(cx+30,cy);x3.stroke();
+  x3.beginPath();x3.moveTo(cx,cy-30);x3.lineTo(cx,cy+30);x3.stroke();
+  x3.fillStyle='rgba(0,212,255,.55)';x3.beginPath();x3.arc(cx,cy,5,0,Math.PI*2);x3.fill();
+}
+
+function l3DrawSceneA(){
+  const r=L3_SCENES[0].objRect(),cx=W3/2,ty=r.y+r.h;
+  x3.save();
+  x3.fillStyle='rgba(60,40,20,.55)';x3.strokeStyle='rgba(180,120,60,.6)';x3.lineWidth=3;
+  x3.fillRect(cx-150,ty,300,16);x3.strokeRect(cx-150,ty,300,16);
+  x3.strokeStyle='rgba(180,120,60,.35)';x3.lineWidth=8;
+  [[cx-120,ty+16],[cx+120,ty+16]].forEach(([lx,ly])=>{x3.beginPath();x3.moveTo(lx,ly);x3.lineTo(lx,H3-10);x3.stroke()});
+  x3.shadowColor='#00d4ff';x3.shadowBlur=10;
+  x3.fillStyle='rgba(5,25,55,.92)';x3.strokeStyle='#00d4ff';x3.lineWidth=2;
+  x3.beginPath();x3.roundRect(r.x,r.y,r.w,r.h,8);x3.fill();x3.stroke();
+  x3.shadowBlur=0;
+  x3.strokeStyle='rgba(0,212,255,.22)';x3.lineWidth=1;x3.strokeRect(r.x+10,r.y+10,r.w-20,r.h-20);
+  x3.fillStyle='rgba(0,212,255,.4)';x3.font='9px Courier New';x3.fillText('CARGO',r.x+14,r.y+16);
+  l3Cross(cx,r.y+r.h/2);x3.restore();
+}
+
+function l3DrawSceneB(){
+  const r=L3_SCENES[1].objRect(),cx=W3/2,topY=28;
+  x3.save();
+  x3.fillStyle='rgba(30,50,80,.7)';x3.fillRect(0,0,W3,topY);
+  x3.strokeStyle='rgba(0,212,255,.3)';x3.lineWidth=2;
+  x3.beginPath();x3.moveTo(0,topY);x3.lineTo(W3,topY);x3.stroke();
+  x3.strokeStyle='rgba(180,200,220,.7)';x3.lineWidth=3;x3.setLineDash([6,3]);
+  x3.beginPath();x3.moveTo(cx,topY);x3.lineTo(cx,r.y);x3.stroke();x3.setLineDash([]);
+  x3.strokeStyle='rgba(200,220,240,.6)';x3.lineWidth=2;
+  x3.beginPath();x3.arc(cx,topY+4,7,0,Math.PI*2);x3.stroke();
+  x3.shadowColor='#00d4ff';x3.shadowBlur=10;
+  x3.fillStyle='rgba(5,25,55,.92)';x3.strokeStyle='#00d4ff';x3.lineWidth=2;
+  x3.beginPath();x3.roundRect(r.x,r.y,r.w,r.h,8);x3.fill();x3.stroke();
+  x3.shadowBlur=0;
+  x3.strokeStyle='rgba(0,212,255,.22)';x3.lineWidth=1;x3.strokeRect(r.x+8,r.y+8,r.w-16,r.h-16);
+  x3.fillStyle='rgba(0,212,255,.4)';x3.font='9px Courier New';x3.fillText('LOAD',r.x+10,r.y+14);
+  l3Cross(cx,r.y+r.h/2);x3.restore();
+}
+
+function l3DrawArrow(x1a,y1a,x2a,y2a,color,label,alpha,sealed){
+  const dx=x2a-x1a,dy=y2a-y1a,len=Math.sqrt(dx*dx+dy*dy);
+  if(len<4)return;
+  const ux=dx/len,uy=dy/len,hs=Math.min(13,len*.3),c=sealed?'#00ff99':color;
+  x3.save();x3.globalAlpha=Math.max(0,Math.min(1,alpha||1));
+  x3.shadowColor=c;x3.shadowBlur=sealed?18:10;
+  x3.strokeStyle=c;x3.lineWidth=3;
+  x3.beginPath();x3.moveTo(x1a,y1a);x3.lineTo(x2a,y2a);x3.stroke();
+  x3.fillStyle=c;
+  const px=x2a-ux*hs,py=y2a-uy*hs,nx=-uy,ny=ux;
+  x3.beginPath();x3.moveTo(x2a,y2a);x3.lineTo(px+nx*8,py+ny*8);x3.lineTo(px-nx*8,py-ny*8);x3.closePath();x3.fill();
+  if(label){x3.shadowBlur=0;x3.font='bold 12px Courier New';x3.fillStyle=c;
+    x3.textAlign=ux>0?'left':'right';x3.fillText(label,x2a+nx*16,y2a+ny*16);}
+  x3.restore();
+}
+
+function l3Render(sealed){
+  x3.clearRect(0,0,W3,H3);l3DrawBg();L3_SCENES[l3si].drawScene();
+  l3Arrows.forEach(a=>l3DrawArrow(a.x1,a.y1,a.x2,a.y2,L3_SCENES[l3si].colors[a.name]||'#ffcc00',a.name,1,sealed));
+  if(l3Drawing&&l3DragStart&&l3DragCur)
+    l3DrawArrow(l3DragStart.x,l3DragStart.y,l3DragCur.x,l3DragCur.y,'#ffcc00',null,.5,false);
+}
+
+function l3GetPos(e){
+  const r=c3.getBoundingClientRect(),s=e.touches?e.touches[0]:e;
+  return{x:(s.clientX-r.left)*(W3/r.width),y:(s.clientY-r.top)*(H3/r.height)};
+}
+function l3InObj(p){
+  const r=L3_SCENES[l3si].objRect();
+  return p.x>=r.x-12&&p.x<=r.x+r.w+12&&p.y>=r.y-12&&p.y<=r.y+r.h+12;
+}
+
+c3.addEventListener('pointerdown',e=>{
+  const p=l3GetPos(e);
+  if(!l3InObj(p)){document.getElementById('l3Warn').textContent='⚠ 請從物體上開始拖曳！';return}
+  document.getElementById('l3Warn').textContent='';
+  l3Drawing=true;
+  l3DragStart={...L3_SCENES[l3si].objCenter()};
+  l3DragCur={...p};
+  c3.setPointerCapture(e.pointerId);
+});
+c3.addEventListener('pointermove',e=>{
+  if(!l3Drawing)return;
+  const p=l3GetPos(e);
+  l3DragCur={x:l3DragStart.x,y:p.y}; // 強制垂直
+  l3Render();
+});
+c3.addEventListener('pointerup',e=>{
+  if(!l3Drawing)return;
+  l3Drawing=false;
+  const p=l3GetPos(e);
+  const dy=p.y-l3DragStart.y,rawLen=Math.abs(dy);
+  if(rawLen<24){document.getElementById('l3Warn').textContent='⚠ 拖曳太短！請拉長一點。';l3Render();return}
+  // 若已有第一根，鎖定等長
+  let lockedLen=rawLen;
+  if(l3Arrows.length>=1){
+    lockedLen=Math.abs(l3Arrows[0].y2-l3Arrows[0].y1);
+    document.getElementById('l3Warn').textContent='📏 第二根箭頭已自動鎖定與第一根等長！';
+  }
+  const snapY=l3DragStart.y+(dy>0?lockedLen:-lockedLen);
+  const mag=Math.round(lockedLen/GRID3*10);
+  l3Pending={x1:l3DragStart.x,y1:l3DragStart.y,x2:l3DragStart.x,y2:snapY,dy:snapY-l3DragStart.y,mag};
+  l3ShowMenu(e.clientX,e.clientY);
+  l3Render();
+});
+c3.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
+
+function l3ShowMenu(cx,cy){
+  const sc=L3_SCENES[l3si];
+  document.getElementById('fmSub').textContent=`拖曳長度 ≈ ${l3Pending.mag} gw`;
+  const btns=document.getElementById('fmBtns');btns.innerHTML='';
+  sc.forces.forEach(f=>{
+    const b=document.createElement('button');b.className='fm-btn';b.textContent=f;
+    b.onclick=()=>l3ConfirmArrow(f);btns.appendChild(b);
+  });
+  const m=document.getElementById('forceMenu');m.classList.add('show');
+  const vw=window.innerWidth,vh=window.innerHeight;
+  let lx=cx+12,ly=cy+12;
+  if(lx+200>vw)lx=cx-210;if(ly+150>vh)ly=cy-155;
+  m.style.left=lx+'px';m.style.top=ly+'px';
+}
+function l3HideMenu(){document.getElementById('forceMenu').classList.remove('show');l3Pending=null;}
+function l3CancelArrow(){l3HideMenu();l3Render();}
+
+function l3ConfirmArrow(name){
+  const sc=L3_SCENES[l3si];
+  if(!sc.checkDir[name]({dy:l3Pending.dy})){
+    document.getElementById('l3Warn').textContent=`⚠「${name}」方向不對！請反方向重畫。`;
+    l3HideMenu();l3Render();return;
+  }
+  l3Arrows.push({x1:l3Pending.x1,y1:l3Pending.y1,x2:l3Pending.x2,y2:l3Pending.y2,name,mag:l3Pending.mag});
+  l3HideMenu();
+  document.getElementById('l3Warn').textContent='';
+  l3Render();
+}
+
+function l3Undo(){l3HideMenu();if(l3Arrows.length)l3Arrows.pop();l3Render();}
+function l3Clear(){l3HideMenu();l3Arrows=[];document.getElementById('l3Warn').textContent='';l3Render();}
+
+function l3TrySeal(){
+  l3HideMenu();
+  const sc=L3_SCENES[l3si],needed=sc.forces;
+  for(const n of needed){
+    if(!l3Arrows.find(a=>a.name===n))
+      return l3TriggerError(`缺少「${n}」——請補上這隻力鬼！`);
+  }
+  const a=l3Arrows.filter(a=>a.name===needed[0]).at(-1);
+  const b=l3Arrows.filter(a=>a.name===needed[1]).at(-1);
+  if((a.y2-a.y1)*(b.y2-b.y1)>=0)
+    return l3TriggerError('封印失敗！兩隻力鬼方向相同——一隻往上、一隻往下！');
+  const la=Math.abs(a.y2-a.y1),lb=Math.abs(b.y2-b.y1),ratio=la/lb;
+  if(ratio<0.75||ratio>1.33)
+    return l3TriggerError('封印失敗！兩隻力鬼大小不對等——箭頭要等長！');
+  l3SealAnim();
+}
+
+function l3TriggerError(msg){
+  l3Errors++;
+  document.getElementById('l3Warn').textContent='⚠ '+msg;
+  const eo=document.getElementById('errOverlay');
+  eo.style.display='block';eo.style.animation='none';
+  requestAnimationFrame(()=>{eo.style.animation='flash .4s ease forwards';});
+  setTimeout(()=>{eo.style.display='none';},400);
+  try{const ac=new AudioContext(),o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);o.frequency.value=180;g.gain.value=0.25;o.start();
+    g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.45);o.stop(ac.currentTime+.45);}catch(e){}
+}
+
+function l3SealAnim(){
+  let t=0;const DUR=75,oc=L3_SCENES[l3si].objCenter();
+  function loop(){
+    l3Render(true);
+    const p=Math.abs(Math.sin(t*.12));
+    x3.save();
+    x3.strokeStyle=`rgba(0,255,153,${.3+p*.5})`;x3.lineWidth=2+p*2;
+    x3.beginPath();x3.arc(oc.x,oc.y,50+p*10,t*.04,Math.PI*2+t*.04);x3.stroke();
+    x3.beginPath();x3.arc(oc.x,oc.y,68+p*6,-t*.06,Math.PI*2-t*.06);x3.stroke();
+    x3.font='bold 12px Courier New';x3.fillStyle='#ffd700';x3.textAlign='center';
+    x3.fillText('合力 = 0',oc.x+100,oc.y);x3.restore();
+    t++;
+    if(t<DUR)l3Raf=requestAnimationFrame(loop);
+    else{
+      l3Render(true);
+      const oc2=L3_SCENES[l3si].objCenter();
+      x3.save();x3.textAlign='center';
+      x3.font='bold 12px Courier New';x3.fillStyle='#ffd700';
+      x3.fillText('合力 = 0，物體靜止',oc2.x+100,oc2.y-10);
+      x3.font='10px Courier New';x3.fillStyle='rgba(255,215,0,.6)';
+      x3.fillText('兩力同時存在，各自作用',oc2.x+100,oc2.y+8);
+      x3.restore();
+      l3ShowStageResult();
+    }
+  }cancelAnimationFrame(l3Raf);loop();
+}
+
+function l3ShowStageResult(){
+  document.getElementById('l3sb'+l3si).className='sd done';
+  if(l3si===0){
+    showOverlay({
+      icon:'✅',title:'// 場景 A 封印成功！//',titleColor:'#00ff99',border:'#00ff99',
+      body:'<span style="color:#00ff99;font-size:14px;font-weight:700">兩力平衡——合力為零！</span><br><br>'+
+           '重力 W 與支撐力 F <strong style="color:#ffd700">同時存在、同時作用</strong>在木箱上。<br>'+
+           '物體靜止，<strong style="color:#ff8888">不是因為沒有受力</strong>，<br>'+
+           '而是兩力大小相等、方向相反，互相抵銷，合力為零。<br><br>'+
+           '<span style="color:#ffd700;font-size:11px">💡 箭頭等長 = 大小相等 = 兩力抵銷 = 合力為零！</span>',
+      btns:`<button class="ov-btn cyan" onclick="closeOverlay();l3GoSceneB()">前往場景 B →</button>`
+    });
+  } else {
+    done[2]=true;markCardDone(2);
+    showOverlay({
+      icon:'🏆',title:'// 傳奇特攻隊長 //',titleColor:'#ffd700',border:'#ffd700',
+      body:'<span style="color:#ffd700;font-size:14px;font-weight:700">🎖 全關完成！你已掌握受力的眼睛！</span><br><br>'+
+           '重力 W 持續往下拉，拉力 T 持續往上撐，<br>'+
+           '兩個力<strong style="color:#ffd700">同時存在、同時作用</strong>在重物上。<br>'+
+           '物體靜止，<strong style="color:#ff8888">不是因為沒有受力</strong>，<br>'+
+           '而是兩力互相抵銷，合力為零。<br><br>'+
+           '<span style="color:#00d4ff;font-size:11px">二力平衡：① 大小相等　② 方向相反<br>③ 作用在同一物體　④ 在同一直線上</span>',
+      btns:`<button class="ov-btn gold" onclick="showFinalReview()">查看除靈報告 →</button>`
+    });
+  }
+}
+
+function l3GoSceneB(){
+  l3si=1;l3Arrows=[];
+  document.getElementById('l3sb1').className='sd active';
+  document.getElementById('l3Hint').innerHTML=L3_SCENES[1].hint;
+  document.getElementById('l3Warn').textContent='';
+  l3Render();
+}
+
+function backToTitle(){
+  showScreen('screenTitle');
+}
+
+// ══════════════════════════════════════════════════════
+// FINAL REVIEW SCREEN
+// ══════════════════════════════════════════════════════
+function showFinalReview(){
+  closeOverlay();
+  // build review screen dynamically if not exist
+  let scr=document.getElementById('screenFinal');
+  if(!scr){
+    scr=document.createElement('div');
+    scr.id='screenFinal';scr.className='screen';
+    scr.innerHTML=`
+<div class="hdr" style="border-bottom-color:#ffd700">
+  <div class="hdr-badge">▶ MISSION COMPLETE — 任務總結</div>
+  <div class="hdr-title">特攻隊除靈報告</div>
+  <div class="hdr-sub">概念複習 ▸ 作戰等級評定</div>
+</div>
+<div id="finalContent" style="padding:16px 16px 30px"></div>`;
+    document.body.appendChild(scr);
+  }
+  document.getElementById('finalContent').innerHTML=buildReview();
+  showScreen('screenFinal');
+}
+
+function buildReview(){
+  // ── score calculation ──────────────────────────────
+  // l1: attempts tracked per step
+  // l2: wrong attempts per challenge
+  // l3: seal failures per scene
+  // We track these via global counters set during gameplay
+  const total = l1Errors + l2Errors + l3Errors;
+  let rank,rankColor,rankIcon,rankDesc;
+  if(total===0){
+    rank='S　傳奇特攻隊長';rankColor='#ffd700';rankIcon='🏆';
+    rankDesc='完美除靈！所有概念一次就答對，力學直覺滿分！';
+  } else if(total<=3){
+    rank='A　精英力學偵探';rankColor='#00ff99';rankIcon='🥇';
+    rankDesc='表現優異！偶有小失誤，但核心概念掌握扎實。';
+  } else if(total<=7){
+    rank='B　資深除靈特工';rankColor='#00d4ff';rankIcon='🥈';
+    rankDesc='概念大致正確，部分地方需要再加強練習。';
+  } else {
+    rank='C　見習除靈學員';rankColor='#ff8866';rankIcon='🥉';
+    rankDesc='力鬼還沒完全被看穿！複習以下概念後再挑戰一次吧！';
+  }
+
+  return `
+<!-- 等級卡 -->
+<div style="background:rgba(255,215,0,.06);border:2px solid ${rankColor};border-radius:12px;padding:20px;text-align:center;margin-bottom:20px">
+  <div style="font-size:48px;margin-bottom:8px">${rankIcon}</div>
+  <div style="font-size:18px;font-weight:700;color:${rankColor};letter-spacing:2px;margin-bottom:6px">作戰等級：${rank}</div>
+  <div style="font-size:12px;color:#a8c8e0;line-height:1.7">${rankDesc}</div>
+  <div style="margin-top:10px;font-size:11px;color:#7a9db8">失誤次數：${total} 次（第一關 ${l1Errors} / 第二關 ${l2Errors} / 第三關 ${l3Errors}）</div>
+</div>
+
+<!-- 概念複習 -->
+<div style="font-size:11px;color:#00d4ff;letter-spacing:3px;margin-bottom:12px">▸ 概念複習報告</div>
+
+<!-- 第一關 -->
+<div style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.2);border-left:3px solid #00d4ff;border-radius:8px;padding:14px;margin-bottom:12px">
+  <div style="font-size:12px;font-weight:700;color:#00d4ff;margin-bottom:8px">第一關｜力的三要素</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+    ${reviewChip('作用點','力施加在物體上的位置，箭頭必須從物體出發','#00d4ff')}
+    ${reviewChip('方向','箭頭所指的方向，代表力的推進路線','#00d4ff')}
+    ${reviewChip('大小','箭頭的長度，對應比例尺計算（1格＝10 gw）','#00d4ff')}
+  </div>
+  <div style="font-size:11px;color:#7a9db8;line-height:1.7;border-top:1px solid rgba(0,212,255,.15);padding-top:8px">
+    💡 描述一個力，必須同時說明這三件事，缺一不可。<br>
+    畫力的箭頭時，起點＝作用點，箭頭方向＝力的方向，長度＝力的大小。
+  </div>
+</div>
+
+<!-- 第二關 -->
+<div style="background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.2);border-left:3px solid #ffd700;border-radius:8px;padding:14px;margin-bottom:12px">
+  <div style="font-size:12px;font-weight:700;color:#ffd700;margin-bottom:8px">第二關｜力的合成</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+    ${reviewChip('同向相加','兩力方向相同時，合力 = 兩力相加，方向不變','#ffd700')}
+    ${reviewChip('反向相減','兩力方向相反時，合力 = 較大力 − 較小力，方向跟較大的力相同','#ffd700')}
+    ${reviewChip('兩力平衡','大小相等、方向相反，合力為零，物體靜止','#ffd700')}
+  </div>
+  <div style="font-size:11px;color:#7a9db8;line-height:1.7;border-top:1px solid rgba(255,215,0,.15);padding-top:8px">
+    💡 合力是所有力的總效果。物體靜止 <strong style="color:#ff8888">不代表沒有受力</strong>，<br>
+    而是所有力的合力為零——兩力互相抵銷達到平衡。
+  </div>
+</div>
+
+<!-- 第三關 -->
+<div style="background:rgba(255,68,102,.05);border:1px solid rgba(255,68,102,.2);border-left:3px solid #ff4466;border-radius:8px;padding:14px;margin-bottom:16px">
+  <div style="font-size:12px;font-weight:700;color:#ff8899;margin-bottom:8px">第三關｜二力平衡條件</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+    ${reviewChip('大小相等','兩力的大小必須完全相同（箭頭等長）','#ff8899')}
+    ${reviewChip('方向相反','兩力方向必須完全相反（一上一下 / 一左一右）','#ff8899')}
+    ${reviewChip('同一物體','兩力都作用在同一個物體上','#ff8899')}
+    ${reviewChip('同一直線','兩力必須在同一條直線上，不能偏移','#ff8899')}
+  </div>
+  <div style="font-size:11px;color:#7a9db8;line-height:1.7;border-top:1px solid rgba(255,68,102,.15);padding-top:8px">
+    💡 二力平衡時，每個力<strong style="color:#ffd700">依然存在</strong>，依然作用在物體上。<br>
+    物體靜止是因為合力為零，不是因為力消失了。
+  </div>
+</div>
+
+<div style="text-align:center">
+  <button class="start-btn" onclick="backToTitle()" style="margin-right:10px">↩ 回主選單</button>
+</div>`;
+}
+
+function reviewChip(title,desc,color){
+  return `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:8px 10px">
+    <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:4px">${title}</div>
+    <div style="font-size:10px;color:#7a9db8;line-height:1.5">${desc}</div>
+  </div>`;
+}
+
+document.addEventListener('pointerdown',e=>{
+  const m=document.getElementById('forceMenu');
+  if(m.classList.contains('show')&&!m.contains(e.target)&&e.target!==c3)l3CancelArrow();
+});
+
+// ── init ─────────────────────────────────────────────
+showScreen('screenTitle');
+</script>
+</body>
+</html>
