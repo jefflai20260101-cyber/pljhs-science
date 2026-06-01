@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>力之界驅魔錄：摩擦力鬼怪三變身</title>
+<style>
+/* ===================== 全域深色主題變數 ===================== */
+:root{
+  --bg:#0a0e1a;            /* 主背景 */
+  --panel:#141a2e;         /* 面板背景 */
+  --panel-2:#1c2440;       /* 次面板 */
+  --line:#2a3358;          /* 邊框線 */
+  --txt:#e8ecf8;           /* 主文字 */
+  --muted:#8b94b8;         /* 次要文字 */
+  --accent:#7c5cff;        /* 紫色主調 */
+  --accent2:#22d3ee;       /* 青色 */
+  --good:#34d399;          /* 成功綠 */
+  --bad:#fb7185;           /* 失敗紅 */
+  --warn:#fbbf24;          /* 警告黃 */
+  --ghost:#a78bfa;         /* 鬼怪色 */
+  --shadow:0 8px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  background:radial-gradient(1200px 600px at 50% -10%,#1a2142 0%,var(--bg) 60%);
+  color:var(--txt);min-height:100%;
+  -webkit-font-smoothing:antialiased;line-height:1.6;
+}
+
+/* ===================== 版面總框架 ===================== */
+#game{
+  max-width:760px;margin:0 auto;padding:14px;
+  display:flex;flex-direction:column;gap:14px;min-height:100vh;
+}
+header.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;flex-wrap:wrap;
+}
+.title{font-size:1.05rem;font-weight:800;letter-spacing:.5px}
+.title .sub{color:var(--accent2);font-weight:700}
+.progress{display:flex;gap:6px}
+.pip{
+  width:34px;height:6px;border-radius:99px;background:var(--line);
+  transition:.4s;
+}
+.pip.on{background:linear-gradient(90deg,var(--accent),var(--accent2));box-shadow:0 0 10px var(--accent)}
+
+/* ===================== 上方：劇情 + 怪獸狀態 ===================== */
+.stage{
+  background:linear-gradient(180deg,#0e1428,#0b1020);
+  border:1px solid var(--line);border-radius:18px;padding:16px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.stage::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(400px 200px at 80% 0%,rgba(124,92,255,.12),transparent 70%);
+  pointer-events:none;
+}
+.level-tag{
+  display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:1px;
+  color:var(--accent2);border:1px solid var(--accent2);
+  padding:2px 10px;border-radius:99px;margin-bottom:8px;
+}
+.story{font-size:.92rem;color:#cfd6f0;min-height:48px}
+
+/* 怪獸顯示舞台 */
+.monster-zone{
+  display:flex;align-items:center;justify-content:center;gap:18px;
+  flex-wrap:wrap;margin-top:14px;
+}
+.monster{
+  font-size:64px;line-height:1;filter:drop-shadow(0 0 16px var(--ghost));
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),filter .3s;
+  user-select:none;will-change:transform;
+}
+.monster.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0) scale(var(--mscale,1))}25%{transform:translateX(-6px) scale(var(--mscale,1))}75%{transform:translateX(6px) scale(var(--mscale,1))}}
+.monster.run{animation:run 0.6s infinite}
+@keyframes run{0%,100%{transform:translateY(0) scale(var(--mscale,1)) rotate(-4deg)}50%{transform:translateY(-8px) scale(var(--mscale,1)) rotate(4deg)}}
+
+.monster-info{min-width:180px;flex:1}
+.monster-name{font-weight:800;font-size:1rem;color:var(--ghost)}
+.bar-wrap{margin-top:8px}
+.bar-label{font-size:.78rem;color:var(--muted);display:flex;justify-content:space-between}
+.bar{height:14px;background:#0a0f22;border-radius:99px;overflow:hidden;border:1px solid var(--line);margin-top:4px}
+.bar > span{
+  display:block;height:100%;width:0%;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent),var(--bad));
+  transition:width .25s ease;
+}
+
+/* ===================== 中間：實驗 / 圖表互動區 ===================== */
+.lab{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:18px;padding:16px;box-shadow:var(--shadow);
+}
+.lab h3{font-size:.92rem;color:var(--accent2);margin-bottom:12px;font-weight:800}
+
+/* 木櫃 + 推力示意 */
+.scene{
+  position:relative;height:90px;background:#0a0f22;border-radius:12px;
+  border:1px solid var(--line);overflow:hidden;margin-bottom:14px;
+}
+.ground{position:absolute;left:0;right:0;bottom:0;height:18px;
+  background:repeating-linear-gradient(90deg,#22305a 0 12px,#1a2545 12px 24px)}
+.cabinet{
+  position:absolute;bottom:18px;left:20px;width:64px;height:50px;border-radius:6px;
+  background:linear-gradient(180deg,#8b5e34,#5c3d1f);
+  border:2px solid #3a2713;transition:left .3s linear;
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+}
+.push-arrow{
+  position:absolute;bottom:34px;left:0;color:var(--accent2);font-weight:800;
+  font-size:.8rem;transition:left .25s,opacity .25s;opacity:0;
+}
+
+/* 數值面板 */
+.readouts{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+.readout{
+  flex:1;min-width:120px;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:12px;padding:10px 12px;text-align:center;
+}
+.readout .k{font-size:.74rem;color:var(--muted)}
+.readout .v{font-size:1.4rem;font-weight:800;margin-top:2px}
+.readout .v small{font-size:.8rem;color:var(--muted);font-weight:600}
+.v.applied{color:var(--accent2)}
+.v.friction{color:var(--bad)}
+
+/* 滑桿 */
+.slider-row label{font-size:.82rem;color:var(--muted);display:block;margin-bottom:6px}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent2),var(--bad));outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:26px;height:26px;border-radius:50%;
+  background:#fff;border:4px solid var(--accent);cursor:pointer;
+  box-shadow:0 0 12px var(--accent);
+}
+input[type=range]::-moz-range-thumb{
+  width:22px;height:22px;border-radius:50%;background:#fff;
+  border:4px solid var(--accent);cursor:pointer;
+}
+
+/* 變因開關（關卡二） */
+.toggles{display:grid;gap:10px;margin-bottom:10px}
+.toggle-card{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;
+}
+.toggle-card .tname{font-size:.8rem;color:var(--muted);margin-bottom:8px;font-weight:700}
+.seg{display:flex;gap:6px}
+.seg button{
+  flex:1;background:#0a0f22;color:var(--muted);border:1px solid var(--line);
+  border-radius:9px;padding:8px;font-size:.82rem;cursor:pointer;transition:.2s;font-weight:700;
+}
+.seg button.active{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;box-shadow:0 0 12px rgba(124,92,255,.5)}
+.hint-line{font-size:.78rem;color:var(--warn);min-height:20px;margin-top:6px;font-weight:600}
+
+/* 折線圖 canvas */
+canvas#chart{width:100%;height:200px;background:#0a0f22;border-radius:12px;border:1px solid var(--line)}
+
+/* 結關選圖題 */
+.graph-choices{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.graph-choices .gc{
+  background:var(--panel-2);border:2px solid var(--line);border-radius:12px;padding:8px;
+  cursor:pointer;transition:.2s;text-align:center;
+}
+.graph-choices .gc:hover{border-color:var(--accent2)}
+.graph-choices .gc.correct{border-color:var(--good);box-shadow:0 0 14px rgba(52,211,153,.5)}
+.graph-choices .gc.wrong{border-color:var(--bad);opacity:.55}
+.graph-choices .gc svg{width:100%;height:64px}
+.graph-choices .gc span{font-size:.74rem;color:var(--muted);display:block;margin-top:4px}
+
+/* ===================== 下方：對話 + 選擇按鈕 ===================== */
+.dialogue{
+  background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  padding:16px;box-shadow:var(--shadow);
+}
+.npc{display:flex;gap:10px;align-items:flex-start}
+.npc .face{font-size:30px}
+.npc .bubble{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+  padding:10px 14px;font-size:.9rem;flex:1;min-height:24px;
+}
+.choices{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn{
+  flex:1;min-width:130px;border:none;border-radius:12px;padding:14px;
+  font-size:.95rem;font-weight:800;cursor:pointer;transition:.18s;color:#fff;
+  background:var(--panel-2);border:1px solid var(--line);
+}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(0)}
+.btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));border-color:transparent;box-shadow:0 6px 18px rgba(124,92,255,.4)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn.flash-good{background:var(--good)!important;border-color:transparent}
+.btn.flash-bad{animation:badshake .4s}
+@keyframes badshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* 通關特效遮罩 */
+.fx{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+  background:rgba(5,8,18,.85);z-index:50;text-align:center;padding:20px;
+}
+.fx.show{display:flex;animation:fadein .3s}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.fx .big{font-size:2.2rem;font-weight:900;
+  background:linear-gradient(90deg,var(--accent2),var(--accent),var(--good));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:pop .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.fx p{color:#cfd6f0;margin:14px 0 20px;max-width:420px}
+
+/* 撒花粒子 */
+.spark{position:fixed;width:10px;height:10px;border-radius:2px;z-index:60;pointer-events:none}
+
+@media (max-width:560px){
+  .monster{font-size:52px}
+  .graph-choices{grid-template-columns:repeat(3,1fr)}
+  .btn{min-width:110px}
+}
+</style>
+</head>
+<body>
+<div id="game">
+
+  <!-- 頂部標題 + 關卡進度 -->
+  <header class="topbar">
+    <div class="title">⚔️ 力之界驅魔錄 <span class="sub">摩擦力 · 三變身</span></div>
+    <div class="progress">
+      <div class="pip on" id="pip1"></div>
+      <div class="pip" id="pip2"></div>
+      <div class="pip" id="pip3"></div>
+    </div>
+  </header>
+
+  <!-- 上方：劇情 + 怪獸狀態 -->
+  <section class="stage">
+    <span class="level-tag" id="levelTag">關卡一</span>
+    <div class="story" id="story"></div>
+    <div class="monster-zone">
+      <div class="monster" id="monster" style="--mscale:1">👻</div>
+      <div class="monster-info">
+        <div class="monster-name" id="monsterName">靜摩擦鬼</div>
+        <div class="bar-wrap">
+          <div class="bar-label"><span id="barName">鬼怪力量</span><span id="barVal">0 gw</span></div>
+          <div class="bar"><span id="barFill"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 中間：互動實驗 / 圖表區（各關卡動態替換） -->
+  <section class="lab" id="lab"></section>
+
+  <!-- 下方：對話 + 選擇按鈕 -->
+  <section class="dialogue">
+    <div class="npc">
+      <div class="face" id="npcFace">🧙</div>
+      <div class="bubble" id="npcText">準備好了嗎？踏入「力」之界，收服三形態的摩擦力鬼怪吧！</div>
+    </div>
+    <div class="choices" id="choices"></div>
+  </section>
+</div>
+
+<!-- 通關特效層 -->
+<div class="fx" id="fx">
+  <div>
+    <div class="big" id="fxBig"></div>
+    <p id="fxText"></p>
+    <button class="btn primary" id="fxBtn" style="max-width:240px;margin:0 auto">繼續</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   力之界驅魔錄 — 國中理化 6-2 摩擦力 互動闖關
+   三種鬼怪形態：靜摩擦鬼 → 最大靜摩擦鬼 → 動摩擦鬼
+   ========================================================================= */
+
+/* ---- 全域狀態（語意化命名） ---- */
+const state = {
+  currentLevel: 1,
+  appliedForce: 0,        // 玩家施加的外力 (gw)
+  staticFriction: 0,      // 靜摩擦力 (gw)
+  maxStaticFriction: 50,  // 最大靜摩擦力 (gw)
+  kineticFriction: 35,    // 動摩擦力（固定值 gw）
+  isMoving: false,        // 木櫃是否已開始移動
+  // 關卡二的三個控制變因
+  contactArea: 'max',     // 'max' | 'min'  接觸面積
+  surfaceMaterial: 'smooth', // 'smooth' | 'sandpaper' 接觸面材質
+  hasWeight: false        // 是否加上 500g 砝碼（增加正向力）
+};
+
+/* ---- DOM 快取 ---- */
+const $ = id => document.getElementById(id);
+const els = {
+  story:$('story'), monster:$('monster'), monsterName:$('monsterName'),
+  barName:$('barName'), barVal:$('barVal'), barFill:$('barFill'),
+  lab:$('lab'), npcFace:$('npcFace'), npcText:$('npcText'), choices:$('choices'),
+  levelTag:$('levelTag'), pip:[null,$('pip1'),$('pip2'),$('pip3')]
+};
+
+/* ---- 共用：更新怪獸力量條 + 體型 ---- */
+function renderMonsterBar(force, maxForRatio){
+  const ratio = Math.min(100, (force / maxForRatio) * 100);
+  els.barFill.style.width = ratio + '%';
+  els.barVal.textContent = Math.round(force) + ' gw';
+  // 鬼怪體型隨力量放大（視覺回饋）
+  const scale = 1 + (force / maxForRatio) * 0.9;
+  els.monster.style.setProperty('--mscale', scale.toFixed(2));
+  els.monster.style.transform = 'scale(' + scale.toFixed(2) + ')';
+}
+
+/* ---- 共用：對話與旁白 ---- */
+function say(text, face){ els.npcText.textContent = text; if(face) els.npcFace.textContent = face; }
+function setStory(text){ els.story.textContent = text; }
+
+/* ---- 共用：通關特效 ---- */
+function showFx(big, text, onNext){
+  $('fxBig').textContent = big;
+  $('fxText').textContent = text;
+  $('fx').classList.add('show');
+  launchSparks();
+  $('fxBtn').onclick = ()=>{ $('fx').classList.remove('show'); onNext && onNext(); };
+}
+function launchSparks(){
+  const colors=['#7c5cff','#22d3ee','#34d399','#fbbf24','#fb7185'];
+  for(let i=0;i<28;i++){
+    const s=document.createElement('div');
+    s.className='spark';
+    s.style.background=colors[i%colors.length];
+    s.style.left=(50+(Math.random()*40-20))+'%';
+    s.style.top='40%';
+    document.body.appendChild(s);
+    const dx=(Math.random()*2-1)*300, dy=(Math.random()*-1-0.2)*400;
+    s.animate([
+      {transform:'translate(0,0) rotate(0)',opacity:1},
+      {transform:`translate(${dx}px,${dy+300}px) rotate(${Math.random()*720}deg)`,opacity:0}
+    ],{duration:900+Math.random()*500,easing:'cubic-bezier(.2,.6,.4,1)'}).onfinish=()=>s.remove();
+  }
+}
+
+/* ---- 切換關卡進度燈 ---- */
+function setProgress(level){
+  for(let i=1;i<=3;i++) els.pip[i].classList.toggle('on', i<=level);
+}
+
+/* =========================================================================
+   關卡一：現形吧！平行結界的靜摩擦鬼
+   課本概念：物體受外力卻不動時 → 靜摩擦力 = 外力，方向相反。
+   ========================================================================= */
+function loadLevel1(){
+  state.currentLevel = 1; setProgress(1);
+  els.levelTag.textContent = '關卡一 · 靜摩擦鬼';
+  els.monster.textContent = '👻';
+  els.monsterName.textContent = '靜摩擦鬼';
+  els.barName.textContent = '靜摩擦力';
+  setStory('你推開石門，發現一具沉重的木櫃，裡面似乎封印著寶物。你伸手用力推，木櫃卻紋絲不動……一隻緊貼著接觸面、平行於桌面的鬼怪現形了！');
+  say('「哼，你推得動我才怪！我會緊貼桌面，給你『大小相等、方向相反』的反抗力——這就是靜摩擦力！」','👻');
+
+  els.lab.innerHTML = `
+    <h3>🧪 互動實驗：推推看木櫃</h3>
+    <div class="scene">
+      <div class="push-arrow" id="arrow">推力 →</div>
+      <div class="cabinet" id="cabinet">📦</div>
+      <div class="ground"></div>
+    </div>
+    <div class="readouts">
+      <div class="readout"><div class="k">你的推力（外力）</div><div class="v applied"><span id="r-applied">0</span> <small>gw</small></div></div>
+      <div class="readout"><div class="k">靜摩擦鬼的力量</div><div class="v friction"><span id="r-friction">0</span> <small>gw</small></div></div>
+    </div>
+    <div class="slider-row">
+      <label>拖動滑桿，調整你的推力（0 ~ 30 gw）</label>
+      <input type="range" id="forceSlider" min="0" max="30" value="0" step="1">
+    </div>
+  `;
+
+  const slider = $('forceSlider');
+  // 課本概念：木櫃不動 → 靜摩擦力恆等於外力
+  slider.oninput = ()=>{
+    state.appliedForce = Number(slider.value);
+    state.staticFriction = state.appliedForce; // 靜摩擦力 = 外力（物體靜止）
+    $('r-applied').textContent = state.appliedForce;
+    $('r-friction').textContent = state.staticFriction;
+    renderMonsterBar(state.staticFriction, 30);
+    // 推力箭頭隨力量變化
+    const arrow=$('arrow');
+    arrow.style.opacity = state.appliedForce>0?1:0;
+    arrow.style.left = Math.min(18,4+state.appliedForce*0.5)+'px';
+    if(state.appliedForce>0) els.monster.classList.add('shake');
+    setTimeout(()=>els.monster.classList.remove('shake'),350);
+  };
+
+  // 進入答題挑戰
+  els.choices.innerHTML = '';
+  const askBtn = makeBtn('我看穿你了！開始挑戰結界', true, ()=>askLevel1());
+  els.choices.appendChild(askBtn);
+}
+
+function askLevel1(){
+  say('「想破解我的結界？回答我：當你用 25 gw 的力推木櫃，木櫃依然不動——此時我的靜摩擦力是多少？」','👻');
+  els.choices.innerHTML = '';
+  // 選項：正解 25（= 外力大小）
+  const options = [
+    {t:'0 gw（沒在出力）', ok:false},
+    {t:'25 gw', ok:true},
+    {t:'30 gw（我最大）', ok:false},
+    {t:'無法判斷', ok:false}
+  ];
+  options.forEach(o=>{
+    const b = makeBtn(o.t, false, ()=>{
+      if(o.ok){
+        flash(b,true);
+        say('「可惡……被你算準了！物體不動時，靜摩擦力的確等於外力 25 gw，方向相反！」','😵');
+        disableAll();
+        setTimeout(()=>showFx('結界破解！','靜摩擦力 = 外力（物體靜止時）。但鬼怪還沒消失，牠開始進入「最大靜摩擦」形態……',loadLevel2),700);
+      }else{
+        flash(b,false);
+        say('「哈哈！再想想：木櫃靜止不動，代表外力和摩擦力剛好平衡喔。」','👻');
+      }
+    });
+    els.choices.appendChild(b);
+  });
+}
+
+/* =========================================================================
+   關卡二：極限突破！最大靜摩擦鬼的試煉
+   課本概念（實驗 6.2）：
+     • 最大靜摩擦力與「接觸面積」無關
+     • 與「接觸面性質（粗糙程度）」有關 → 越粗糙越大
+     • 與「正向力（垂直作用力）」有關 → 正向力越大越大
+   ========================================================================= */
+function loadLevel2(){
+  state.currentLevel = 2; setProgress(2);
+  state.appliedForce = 0;
+  // 重置變因
+  state.contactArea='max'; state.surfaceMaterial='smooth'; state.hasWeight=false;
+  els.levelTag.textContent = '關卡二 · 最大靜摩擦鬼';
+  els.monster.textContent = '👹';
+  els.monsterName.textContent = '最大靜摩擦鬼';
+  els.barName.textContent = '極限防禦力';
+  setStory('鬼怪暴怒膨脹！牠把全身力量灌注到「臨界點」——這是物體開始滑動前的最後防線：最大靜摩擦力。');
+  say('「別高興得太早！只要你的推力突破不了我的『最大防禦』，木櫃就絕對打不開！想辦法讓我最虛弱，再一舉突破吧！」','👹');
+
+  els.lab.innerHTML = `
+    <h3>🔬 控制變因實驗（驗證實驗 6.2）</h3>
+    <div class="toggles">
+      <div class="toggle-card">
+        <div class="tname">① 接觸面積</div>
+        <div class="seg" id="segArea">
+          <button data-v="max" class="active">最大面</button>
+          <button data-v="min">最小面</button>
+        </div>
+      </div>
+      <div class="toggle-card">
+        <div class="tname">② 接觸面材質</div>
+        <div class="seg" id="segMat">
+          <button data-v="smooth" class="active">光滑桌面</button>
+          <button data-v="sandpaper">粗糙砂紙</button>
+        </div>
+      </div>
+      <div class="toggle-card">
+        <div class="tname">③ 正向力（鬼怪詛咒）</div>
+        <div class="seg" id="segWeight">
+          <button data-v="off" class="active">不放砝碼</button>
+          <button data-v="on">放上 500g 砝碼</button>
+        </div>
+      </div>
+    </div>
+    <div class="hint-line" id="hint">調整變因，觀察最大靜摩擦力如何變化。</div>
+    <div class="readouts">
+      <div class="readout"><div class="k">你的推力</div><div class="v applied"><span id="r2-applied">0</span> <small>gw</small></div></div>
+      <div class="readout"><div class="k">鬼怪極限防禦</div><div class="v friction"><span id="r2-max">50</span> <small>gw</small></div></div>
+    </div>
+    <div class="slider-row">
+      <label>推力滑桿（0 ~ 60 gw）：把它拉到「超過」鬼怪的極限防禦！</label>
+      <input type="range" id="forceSlider2" min="0" max="60" value="0" step="1">
+    </div>
+  `;
+
+  // ---- 計算最大靜摩擦力：面積無關；材質、正向力有關 ----
+  function recomputeMax(){
+    let base = 50; // 光滑 + 不放砝碼 的基準值
+    if(state.surfaceMaterial==='sandpaper') base = 125; // 越粗糙越大
+    if(state.hasWeight){
+      // 正向力（垂直作用力）越大，最大靜摩擦力越大
+      base = state.surfaceMaterial==='sandpaper' ? 300 : 200;
+    }
+    state.maxStaticFriction = base;
+    $('r2-max').textContent = base;
+    renderMonsterBar(base, 300);
+  }
+
+  // ---- 變因開關綁定 ----
+  bindSeg('segArea', v=>{
+    state.contactArea=v;
+    setHint('接觸面積改變，但最大靜摩擦力不變（與接觸面積無關）。');
+    recomputeMax(); checkLevel2();
+  });
+  bindSeg('segMat', v=>{
+    state.surfaceMaterial=v;
+    setHint(v==='sandpaper' ? '接觸面越粗糙，最大靜摩擦力越大！' : '換回光滑桌面，最大靜摩擦力下降。');
+    recomputeMax(); checkLevel2();
+  });
+  bindSeg('segWeight', v=>{
+    state.hasWeight = (v==='on');
+    setHint(state.hasWeight ? '垂直作用力（正向力）越大，最大靜摩擦力越大！' : '移除砝碼，正向力減少。');
+    recomputeMax(); checkLevel2();
+  });
+
+  // ---- 推力滑桿：嘗試突破極限 ----
+  const slider2 = $('forceSlider2');
+  slider2.oninput = ()=>{
+    state.appliedForce = Number(slider2.value);
+    $('r2-applied').textContent = state.appliedForce;
+    if(state.appliedForce>0){
+      els.monster.classList.add('shake');
+      setTimeout(()=>els.monster.classList.remove('shake'),300);
+    }
+    checkLevel2();
+  };
+
+  recomputeMax();
+  els.choices.innerHTML = '';
+  els.choices.appendChild(makeBtn('提示：先讓鬼怪最虛弱（光滑 + 不放砝碼 = 50 gw），再把推力拉過 50！', false, ()=>{
+    say('「哼，就算你知道我最虛是 50 gw，你拉得到 51 嗎？接觸面積怎麼換都救不了我喔。」','👹');
+  }));
+
+  function checkLevel2(){
+    // 闖關條件：在最低防禦(50)狀態下，推力 > 最大靜摩擦力 → 突破
+    if(state.appliedForce > state.maxStaticFriction){
+      state.isMoving = true;
+      disableSliders();
+      $('cabinet'); // 視覺：木櫃移動於下一關呈現
+      showFx('轟！突破極限！','你的推力超過了最大靜摩擦力，木櫃終於開始移動！鬼怪被迫變身為「動摩擦鬼」……',loadLevel3);
+    }
+  }
+  function setHint(t){ $('hint').textContent = t; }
+}
+
+/* =========================================================================
+   關卡三：奔跑吧！削弱的動摩擦鬼
+   課本概念：物體移動後受動摩擦力；動摩擦力 < 最大靜摩擦力，
+             且「不隨外力或快慢改變，維持定值」。
+   ========================================================================= */
+function loadLevel3(){
+  state.currentLevel = 3; setProgress(3);
+  state.isMoving = true;
+  state.appliedForce = 50;
+  els.levelTag.textContent = '關卡三 · 動摩擦鬼';
+  els.monster.textContent = '😭';
+  els.monster.classList.add('run');
+  els.monsterName.textContent = '動摩擦鬼';
+  els.barName.textContent = '動摩擦力';
+  setStory('木櫃滑動了！鬼怪被削弱，化身為一路哭嚎追趕的「動摩擦鬼」。牠的力量明顯變小，而且不論你推得多用力，牠都維持同樣的阻力。');
+  say('「嗚嗚……雖然我變弱了（動摩擦力 < 最大靜摩擦力），但我會用『固定不變』的阻力一直纏著你！推快推慢都一樣！」','😭');
+
+  els.lab.innerHTML = `
+    <h3>📈 即時關係圖：外力 vs 摩擦力</h3>
+    <canvas id="chart" width="700" height="200"></canvas>
+    <div class="readouts">
+      <div class="readout"><div class="k">移動中的推力</div><div class="v applied"><span id="r3-applied">50</span> <small>gw</small></div></div>
+      <div class="readout"><div class="k">動摩擦力（鎖定）</div><div class="v friction"><span id="r3-kin">35</span> <small>gw</small></div></div>
+    </div>
+    <div class="slider-row">
+      <label>調整移動中的推力（50 ~ 80 gw）— 觀察動摩擦力會不會變</label>
+      <input type="range" id="forceSlider3" min="50" max="80" value="50" step="1">
+    </div>
+  `;
+
+  renderMonsterBar(state.kineticFriction, 80);
+
+  const slider3 = $('forceSlider3');
+  const canvas = $('chart');
+  drawFrictionChart(canvas, state.appliedForce);
+
+  slider3.oninput = ()=>{
+    state.appliedForce = Number(slider3.value);
+    $('r3-applied').textContent = state.appliedForce;
+    // 核心概念：動摩擦力固定，不隨外力改變
+    state.staticFriction = state.kineticFriction;
+    $('r3-kin').textContent = state.kineticFriction; // 永遠 35
+    renderMonsterBar(state.kineticFriction, 80);     // 體型也不變
+    drawFrictionChart(canvas, state.appliedForce);
+  };
+
+  els.choices.innerHTML = '';
+  els.choices.appendChild(makeBtn('動摩擦力真的都不變！進入最終收服考驗', true, ()=>finalQuiz()));
+}
+
+/* ---- 繪製「外力與摩擦力關係圖」 ---- */
+function drawFrictionChart(canvas, applied){
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, pad=34;
+  ctx.clearRect(0,0,W,H);
+  // 座標軸
+  ctx.strokeStyle='#2a3358'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(pad,10); ctx.lineTo(pad,H-pad); ctx.lineTo(W-10,H-pad); ctx.stroke();
+  ctx.fillStyle='#8b94b8'; ctx.font='12px sans-serif';
+  ctx.fillText('摩擦力(gw)',6,18); ctx.fillText('外力(gw)',W-70,H-12);
+
+  const maxX=90, maxY=90;
+  const x = v => pad + (v/maxX)*(W-pad-14);
+  const y = v => (H-pad) - (v/maxY)*(H-pad-14);
+  const peak=50, kin=35; // 最大靜摩擦 50、動摩擦 35
+
+  // 區段一：靜止 → 靜摩擦力 = 外力（45°線，到達最大靜摩擦 50）
+  ctx.strokeStyle='#22d3ee'; ctx.lineWidth=3; ctx.beginPath();
+  ctx.moveTo(x(0),y(0)); ctx.lineTo(x(peak),y(peak)); ctx.stroke();
+  // 區段二：開始移動 → 摩擦力驟降為動摩擦力，並維持定值
+  ctx.strokeStyle='#fb7185'; ctx.beginPath();
+  ctx.moveTo(x(peak),y(peak)); ctx.lineTo(x(peak),y(kin));   // 驟降
+  ctx.lineTo(x(maxX),y(kin)); ctx.stroke();                  // 維持水平定值
+  // 標註
+  ctx.fillStyle='#fbbf24'; ctx.fillText('最大靜摩擦 50',x(peak)-10,y(peak)-8);
+  ctx.fillStyle='#fb7185'; ctx.fillText('動摩擦 35（定值）',x(70),y(kin)-8);
+
+  // 目前推力的指示點（落在水平定值段）
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(x(applied),y(kin),6,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.beginPath();
+  ctx.moveTo(x(applied),y(kin)); ctx.lineTo(x(applied),H-pad); ctx.stroke();
+}
+
+/* ---- 結關選圖題：選出正確的關係圖 ---- */
+function finalQuiz(){
+  say('「最後的考驗！選出正確的『外力與摩擦力關係圖』，你就能把我收服為守護靈……」','😭');
+  setStory('收服在即！請判讀：外力由 0 慢慢增加、物體由靜止到滑動，摩擦力的變化應該長什麼樣子？');
+
+  // 三張小圖：A=正解（斜升到峰值後驟降為定值）、B=持續上升、C=從頭就是定值
+  const svgRise = `<svg viewBox="0 0 100 60"><polyline points="8,52 8,52 50,18 50,30 92,30" fill="none" stroke="#22d3ee" stroke-width="3"/><line x1="8" y1="52" x2="50" y2="18" stroke="#22d3ee" stroke-width="3"/></svg>`;
+  const svgLinear = `<svg viewBox="0 0 100 60"><line x1="8" y1="52" x2="92" y2="10" stroke="#fb7185" stroke-width="3"/></svg>`;
+  const svgFlat = `<svg viewBox="0 0 100 60"><line x1="8" y1="30" x2="92" y2="30" stroke="#fbbf24" stroke-width="3"/></svg>`;
+
+  els.lab.innerHTML = `
+    <h3>🏁 結關測驗：選出正確的關係圖</h3>
+    <div class="graph-choices" id="gchoices">
+      <div class="gc" data-ok="false">${svgFlat}<span>A：一直維持定值</span></div>
+      <div class="gc" data-ok="true">${svgRise}<span>B：斜升至峰值後驟降定值</span></div>
+      <div class="gc" data-ok="false">${svgLinear}<span>C：隨外力持續上升</span></div>
+    </div>
+  `;
+  els.choices.innerHTML = '';
+
+  document.querySelectorAll('#gchoices .gc').forEach(card=>{
+    card.onclick = ()=>{
+      const ok = card.dataset.ok==='true';
+      if(ok){
+        card.classList.add('correct');
+        document.querySelectorAll('#gchoices .gc').forEach(c=>c.style.pointerEvents='none');
+        say('「啊……被你看透了！靜止時摩擦力隨外力增加到最大靜摩擦，一旦滑動就驟降為固定的動摩擦力。我認輸，願成為你的守護靈！」','✨');
+        setTimeout(()=>showFx('🎉 收服成功！','你完成了「靜摩擦 → 最大靜摩擦 → 動摩擦」三形態的全部考驗，摩擦力鬼怪已成為守護靈！',()=>endGame()),700);
+      }else{
+        card.classList.add('wrong');
+        say('「再想想：物體還沒動的時候，摩擦力會跟著外力一起變大喔；動了以後才會驟降變定值。」','😏');
+        setTimeout(()=>card.classList.remove('wrong'),900);
+      }
+    };
+  });
+}
+
+/* ---- 完成全部關卡 ---- */
+function endGame(){
+  setStory('「力」之界恢復平靜。你已徹底理解摩擦力的三種形態與它們的規律！');
+  els.monster.textContent='😇'; els.monster.classList.remove('run');
+  els.monsterName.textContent='摩擦力守護靈';
+  els.barName.textContent='契約完成度'; renderMonsterBar(100,100);
+  els.lab.innerHTML = `
+    <h3>📖 知識統整：摩擦力三形態</h3>
+    <div class="toggles">
+      <div class="toggle-card"><div class="tname">靜摩擦力</div>物體靜止時，靜摩擦力＝外力，方向相反（會隨外力變化）。</div>
+      <div class="toggle-card"><div class="tname">最大靜摩擦力</div>滑動前的臨界值。與接觸面積無關；接觸面越粗糙、正向力越大則越大。</div>
+      <div class="toggle-card"><div class="tname">動摩擦力</div>物體滑動後出現，通常小於最大靜摩擦力，且不隨外力或快慢改變，維持定值。</div>
+    </div>
+  `;
+  say('恭喜通關！你可以按下方按鈕重新挑戰，或闔上書本休息一下 ✨','🧙');
+  els.choices.innerHTML='';
+  els.choices.appendChild(makeBtn('🔄 再玩一次', true, ()=>{ resetAll(); loadLevel1(); }));
+}
+
+/* =========================================================================
+   工具函式
+   ========================================================================= */
+function makeBtn(text, primary, onClick){
+  const b=document.createElement('button');
+  b.className='btn'+(primary?' primary':'');
+  b.textContent=text; b.onclick=onClick; return b;
+}
+function flash(btn, good){
+  if(good){ btn.classList.add('flash-good'); }
+  else{ btn.classList.add('flash-bad'); setTimeout(()=>btn.classList.remove('flash-bad'),420); }
+}
+function disableAll(){ document.querySelectorAll('#choices .btn').forEach(b=>b.disabled=true); }
+function disableSliders(){ document.querySelectorAll('input[type=range]').forEach(s=>s.disabled=true); }
+function bindSeg(id, cb){
+  const seg=$(id);
+  seg.querySelectorAll('button').forEach(btn=>{
+    btn.onclick=()=>{
+      seg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      btn.classList.add('active');
+      cb(btn.dataset.v);
+    };
+  });
+}
+function resetAll(){
+  Object.assign(state,{currentLevel:1,appliedForce:0,staticFriction:0,maxStaticFriction:50,
+    kineticFriction:35,isMoving:false,contactArea:'max',surfaceMaterial:'smooth',hasWeight:false});
+  document.querySelectorAll('input[type=range]').forEach(s=>s.disabled=false);
+  els.monster.classList.remove('run');
+}
+
+/* ---- 啟動遊戲 ---- */
+loadLevel1();
+</script>
+</body>
+</html>
