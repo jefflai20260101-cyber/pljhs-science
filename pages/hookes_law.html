@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>虎克定律與受力平衡 練習題庫</title>
+<style>
+  :root {
+    --primary: #4a90d9;
+    --primary-dark: #2c6fad;
+    --secondary: #7ec8c8;
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --correct: #27ae60;
+    --wrong: #e74c3c;
+    --pending: #f39c12;
+    --text: #2d3748;
+    --sub: #718096;
+    --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', '微軟正黑體', sans-serif; font-size: 16px; }
+
+  .header { background: linear-gradient(135deg, var(--primary-dark), var(--secondary)); color: #fff; padding: 18px 20px 14px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.18); }
+  .header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 1px; }
+  .header .sub { font-size: .82rem; opacity: .88; margin-top: 2px; }
+
+  .scorebar { display: flex; align-items: center; gap: 12px; background: #fff; padding: 10px 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .score-label { font-size: .9rem; color: var(--sub); white-space: nowrap; }
+  .score-value { font-size: 1.3rem; font-weight: 800; color: var(--primary-dark); min-width: 54px; }
+  .progress-wrap { flex: 1; min-width: 120px; }
+  .progress-bg { background: var(--border); border-radius: 99px; height: 10px; overflow: hidden; }
+  .progress-fill { background: linear-gradient(90deg, var(--primary), var(--secondary)); height: 100%; border-radius: 99px; transition: width .4s ease; }
+  .progress-text { font-size: .78rem; color: var(--sub); margin-top: 3px; }
+
+  .main { max-width: 820px; margin: 0 auto; padding: 18px 14px 40px; }
+
+  .section-title { background: linear-gradient(90deg, var(--primary), var(--secondary)); color: #fff; border-radius: 10px; padding: 10px 18px; font-size: 1rem; font-weight: 700; margin: 24px 0 14px; letter-spacing: .5px; }
+
+  .card { background: var(--card); border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.07); padding: 20px 22px 18px; margin-bottom: 16px; border: 2px solid transparent; transition: border-color .2s; }
+  .card.answered-correct { border-color: var(--correct); }
+  .card.answered-wrong { border-color: var(--wrong); }
+
+  .q-num { display: inline-block; background: var(--primary); color: #fff; font-size: .78rem; font-weight: 700; padding: 2px 10px; border-radius: 99px; margin-bottom: 8px; }
+  .q-text { font-size: .97rem; line-height: 1.7; margin-bottom: 12px; }
+
+  .spring-table { border-collapse: collapse; margin: 10px 0 14px; font-size: .9rem; }
+  .spring-table th { background: var(--primary); color: #fff; padding: 6px 16px; border: 1px solid #aac; }
+  .spring-table td { padding: 5px 16px; border: 1px solid var(--border); text-align: center; background: #f7faff; }
+  .spring-table tr:nth-child(even) td { background: #eef4fb; }
+
+  .graph-wrap { background: #f7faff; border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin: 10px 0 14px; display: flex; justify-content: center; }
+  canvas.graph { display: block; }
+
+  /* 題組小題 */
+  .subq { border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-top: 12px; background: #fcfdff; transition: border-color .2s; }
+  .subq.answered-correct { border-color: var(--correct); }
+  .subq.answered-wrong { border-color: var(--wrong); }
+  .subq-text { font-size: .92rem; font-weight: 600; margin-bottom: 8px; line-height: 1.6; }
+
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 9px 13px; border-radius: 9px; border: 1.5px solid var(--border); transition: background .15s, border-color .15s; font-size: .93rem; line-height: 1.55; }
+  .opt-label:hover { background: #e8f0fb; border-color: var(--primary); }
+  .opt-label input[type=radio] { margin-top: 3px; accent-color: var(--primary); flex-shrink: 0; }
+  .opt-label.selected-correct { background: #eafaf1; border-color: var(--correct); color: var(--correct); font-weight: 600; }
+  .opt-label.selected-wrong { background: #fdedec; border-color: var(--wrong); color: var(--wrong); font-weight: 600; }
+  .opt-label.reveal-correct { background: #eafaf1; border-color: var(--correct); }
+
+  .feedback { margin-top: 12px; padding: 12px 15px; border-radius: 9px; font-size: .88rem; line-height: 1.65; display: none; }
+  .feedback.correct { background: #eafaf1; border-left: 4px solid var(--correct); color: #1e8449; display: block; }
+  .feedback.wrong { background: #fdedec; border-left: 4px solid var(--wrong); color: #922b21; display: block; }
+  .feedback .fb-icon { font-size: 1.1rem; margin-right: 4px; }
+  .feedback .analysis { margin-top: 6px; color: var(--text); border-top: 1px dashed #ccc; padding-top: 6px; font-size: .86rem; }
+
+  .refresh-btn { display: block; margin: 30px auto 0; padding: 12px 36px; background: linear-gradient(135deg, var(--primary-dark), var(--secondary)); color: #fff; border: none; border-radius: 99px; font-size: 1rem; font-weight: 700; cursor: pointer; box-shadow: 0 3px 12px rgba(74,144,217,.35); transition: transform .15s, box-shadow .15s; }
+  .refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(74,144,217,.4); }
+
+  /* 成果面板 */
+  .result-panel { background:#fff; border:3px solid var(--primary); border-radius:16px; padding:24px 22px; margin:26px 0 4px; text-align:center; box-shadow:0 4px 18px rgba(0,0,0,.12); animation:pop .4s ease; }
+  @keyframes pop { from{transform:scale(.9);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .result-icon { font-size:2.8rem; line-height:1; }
+  .result-grade { font-size:1.55rem; font-weight:800; margin:6px 0 2px; }
+  .result-score { font-size:1.05rem; color:var(--text); }
+  .result-score strong { font-size:1.4rem; color:var(--primary-dark); }
+  .result-desc { font-size:.9rem; color:var(--sub); margin:8px auto 4px; line-height:1.6; max-width:360px; }
+  .result-panel .refresh-btn { margin-top:16px; }
+
+  @media(max-width:540px){
+    .header h1 { font-size: 1.05rem; }
+    .card { padding: 14px 13px; }
+    .spring-table th, .spring-table td { padding: 5px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔬 虎克定律與受力平衡 練習題庫</h1>
+  <div class="sub">國中自然科・每次重新整理題目數字隨機變換</div>
+</div>
+
+<div class="scorebar">
+  <span class="score-label">目前得分</span>
+  <span class="score-value" id="scoreVal">0</span>
+  <span class="score-label">/ 100 分</span>
+  <div class="progress-wrap">
+    <div class="progress-bg"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-text" id="progressText">已答 0 / 10 題</div>
+  </div>
+</div>
+
+<div class="main" id="mainContent"></div>
+
+<script>
+/* ========== 工具函式 ========== */
+const rng = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const shuffle = arr => { let a=[...arr]; for(let i=a.length-1;i>0;i--){let j=rng(0,i);[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+// 產生四個選項（一答案 + 三干擾），全整數、皆為正、不重複
+function genOptions(answer, candidates){
+  const set=new Set();
+  candidates.forEach(c=>{ if(c>0 && c!==answer) set.add(c); });
+  let arr=[...set];
+  let off=1;
+  while(arr.length<3){ const v=answer+off; if(v>0 && v!==answer && !arr.includes(v)) arr.push(v); off++; }
+  arr=arr.slice(0,3);
+  const opts=shuffle([answer,...arr]);
+  return { opts, correctIdx:opts.indexOf(answer) };
+}
+
+let score=0, answeredCount=0, totalItems=10;
+const PT_PER=10; // 每項 10 分
+let itemData={}, itemCount=0, pendingGraphs=[];
+
+const scoreVal=document.getElementById('scoreVal');
+const progressFill=document.getElementById('progressFill');
+const progressText=document.getElementById('progressText');
+const mainContent=document.getElementById('mainContent');
+
+function updateScore(delta){
+  score+=delta; answeredCount++;
+  scoreVal.textContent=score;
+  const pct=Math.round(answeredCount/totalItems*100);
+  progressFill.style.width=pct+'%';
+  progressText.textContent=`已答 ${answeredCount} / ${totalItems} 題`;
+  if(answeredCount===totalItems) showResult();
+}
+
+/* ========== 成果等級面板 ========== */
+function gradeOf(s){
+  if(s>=90) return { icon:'🏆', title:'物理高手（精熟）', desc:'虎克定律與受力平衡完全掌握，表現太棒了！', color:'#27ae60' };
+  if(s>=70) return { icon:'🌟', title:'表現優良（良好）', desc:'觀念掌握得很好，再補強少數細節就完美了。', color:'#4a90d9' };
+  if(s>=50) return { icon:'💪', title:'繼續加油（基礎）', desc:'基礎已建立，多練習圖形判讀與計算會更穩固。', color:'#f39c12' };
+  return { icon:'📚', title:'再接再厲（待加強）', desc:'別氣餒，回顧每題解析後再練一次一定會進步！', color:'#e74c3c' };
+}
+
+function showResult(){
+  const g=gradeOf(score);
+  const bottomBtn=mainContent.querySelector('.refresh-btn');
+  const panel=document.createElement('div');
+  panel.className='result-panel';
+  panel.style.borderColor=g.color;
+  panel.innerHTML=`
+    <div class="result-icon">${g.icon}</div>
+    <div class="result-grade" style="color:${g.color}">${g.title}</div>
+    <div class="result-score">得分 <strong>${score}</strong> / 100 分</div>
+    <div class="result-desc">${g.desc}</div>
+    <button class="refresh-btn" onclick="buildAll()">🔄 再練習一次（換新題目）</button>`;
+  if(bottomBtn){ mainContent.insertBefore(panel, bottomBtn); bottomBtn.remove(); }
+  else { mainContent.appendChild(panel); }
+  panel.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+/* ========== 題型一：彈簧連結鐵盤表 ========== */
+function makeType1(){
+  const L0   = pick([8,10,12,15,18,20]);          // 彈簧原長 cm
+  const Wp   = pick([10,15,20,25,30,40]);          // 空鐵盤重 gw
+  const k    = pick([1,2]);                        // 每 gw 伸長幾 cm
+  const bases= [[10,30,50],[20,40,60],[10,20,40],[15,30,45],[20,50,80]];
+  const [W1,W2,W3]=pick(bases);
+  const fullLen=W=>L0+(Wp+W)*k;
+  const F1=fullLen(W1), F2=fullLen(W2), F3=fullLen(W3);
+  const answerVal=fullLen(0);
+
+  const cand=[L0, answerVal+k*Wp, answerVal-k*10, answerVal+k*5, answerVal-k*5];
+  const {opts, correctIdx}=genOptions(answerVal, cand);
+
+  const qText=`某同學利用彈簧與鐵盤進行實驗，記錄「盤內物重 (gw)」與「彈簧全長 (cm)」如下表，請問當鐵盤中<strong>未放置任何物體</strong>時（盤內物重為 0 gw），彈簧全長為多少公分？`;
+  const tableHTML=`
+    <table class="spring-table">
+      <tr><th>盤內物重 (gw)</th><th>彈簧全長 (cm)</th></tr>
+      <tr><td>${W1}</td><td>${F1}</td></tr>
+      <tr><td>${W2}</td><td>${F2}</td></tr>
+      <tr><td>${W3}</td><td>${F3}</td></tr>
+    </table>`;
+  const analysis=`
+    ・彈簧全長 = 原長 + 伸長量 = L₀ + (鐵盤重 + 盤內物重) × k<br>
+    ・由表中任兩點：每增加 ${W2-W1} gw，全長增加 ${F2-F1} cm，故 k = ${k} cm/gw<br>
+    ・代入盤內物重 = ${W1} gw（全長 ${F1} cm）：解得鐵盤重 = ${Wp} gw、原長 L₀ = ${L0} cm<br>
+    ・盤內物重 = 0 gw：全長 = ${L0} + (${Wp}+0) × ${k} = <strong>${answerVal} cm</strong><br>
+    ・注意：答案是 ${answerVal} cm，<em>不是</em>原長 ${L0} cm（常見錯誤）。`;
+  return { qText, tableHTML, opts, correctIdx, analysis };
+}
+
+/* ========== 題型二：砝碼重與全長關係圖（一圖四小題） ========== */
+function makeType2(){
+  // 預先驗證的整數組合：原長與所有資料點都落在格線交點上，方便對應判讀
+  const combos=[
+    {L0:10,k:1,xMax:50},
+    {L0:20,k:1,xMax:50},
+    {L0:30,k:1,xMax:50},
+    {L0:20,k:2,xMax:50},
+    {L0:20,k:1,xMax:100},
+    {L0:40,k:1,xMax:100},
+  ];
+  const {L0,k,xMax}=pick(combos);
+  const step=xMax/5;                            // x 軸格線間距（整數）
+  const qW  =pick([step,2*step,3*step,4*step]); // 砝碼重取在格線上
+  const fullLen=L0+k*qW;
+  const ext   =k*qW;
+
+  const subQs=[];
+
+  // (1) 原長
+  {
+    const ans=L0;
+    const {opts,correctIdx}=genOptions(ans,[L0+2,L0-2,L0+5,L0-3,L0+3]);
+    subQs.push({ text:`(1) 由圖形判斷，此彈簧的<strong>原長</strong>為多少公分？`, opts, correctIdx,
+      analysis:`圖形與縱軸的交點（砝碼重 = 0 時）即為原長，故原長 = ${L0} 公分。` });
+  }
+  // (2) 全長
+  {
+    const ans=fullLen;
+    const {opts,correctIdx}=genOptions(ans,[ext, L0, fullLen+k*10, fullLen-k*10, fullLen+k*20]);
+    subQs.push({ text:`(2) 當掛上 ${qW} gw 的砝碼時，彈簧的<strong>全長</strong>為多少公分？`, opts, correctIdx,
+      analysis:`全長 = 原長 + 伸長量 = ${L0} + ${k}×${qW} = ${fullLen} 公分。` });
+  }
+  // (3) 伸長量
+  {
+    const ans=ext;
+    const {opts,correctIdx}=genOptions(ans,[fullLen, L0, ext+k*10, ext-k*10, ext+5]);
+    subQs.push({ text:`(3) 當掛上 ${qW} gw 的砝碼時，彈簧的<strong>伸長量</strong>為多少公分？`, opts, correctIdx,
+      analysis:`伸長量 = 全長 − 原長 = ${fullLen} − ${L0} = ${ext} 公分（勿與全長混淆）。` });
+  }
+  // (4) 彈性係數
+  {
+    const ans=k;
+    const {opts,correctIdx}=genOptions(ans,[1,2,3,4].filter(v=>v!==k));
+    subQs.push({ text:`(4) 此彈簧每增加 1 gw 砝碼，全長會<strong>伸長</strong>多少公分？`, opts, correctIdx,
+      analysis:`斜率（彈性係數）= 全長變化量 ÷ 砝碼重變化量 = ${k} 公分/gw。` });
+  }
+
+  const intro=`某同學根據彈簧實驗繪製以下「砝碼重量 (gw) − 彈簧全長 (cm)」關係圖，請依圖回答下列四小題：`;
+  return { intro, graphData:{L0,k,xMax,step}, subQs };
+}
+
+/* ========== 繪製關係圖 ========== */
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a; }
+
+function drawGraph(canvasId, {L0, k, xMax, step}){
+  const canvas=document.getElementById(canvasId);
+  if(!canvas) return;
+  const W=canvas.width, H=canvas.height, ctx=canvas.getContext('2d');
+  const pad={top:22,right:18,bottom:44,left:50};
+  const gW=W-pad.left-pad.right, gH=H-pad.top-pad.bottom;
+  ctx.fillStyle='#f7faff'; ctx.fillRect(0,0,W,H);
+
+  // Y 軸從 0 開始；格線間距取 gcd，使原長與每個資料點都落在格線交點上
+  const yDataMax=L0+k*xMax;
+  const yStep=gcd(L0, k*step);
+  const yTop=yDataMax;
+  const toX=x=>pad.left+x/xMax*gW;
+  const toY=y=>pad.top+gH-(y/yTop)*gH;
+
+  // 格線
+  ctx.strokeStyle='#dde6f0'; ctx.lineWidth=1;
+  for(let x=0;x<=xMax;x+=step){ ctx.beginPath(); ctx.moveTo(toX(x),pad.top); ctx.lineTo(toX(x),pad.top+gH); ctx.stroke(); }
+  for(let y=0;y<=yTop;y+=yStep){ ctx.beginPath(); ctx.moveTo(pad.left,toY(y)); ctx.lineTo(pad.left+gW,toY(y)); ctx.stroke(); }
+
+  // 座標軸（原點 0,0）
+  ctx.strokeStyle='#4a90d9'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(pad.left,pad.top); ctx.lineTo(pad.left,pad.top+gH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left,pad.top+gH); ctx.lineTo(pad.left+gW,pad.top+gH); ctx.stroke();
+
+  // 資料線：(0, L0) → (xMax, L0+k*xMax)
+  ctx.strokeStyle='#e74c3c'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(toX(0),toY(L0)); ctx.lineTo(toX(xMax),toY(yDataMax)); ctx.stroke();
+
+  // 資料點（皆落在格線交點）
+  ctx.fillStyle='#e74c3c';
+  [step,2*step,3*step,4*step].forEach(x=>{ const y=L0+k*x; ctx.beginPath(); ctx.arc(toX(x),toY(y),4,0,Math.PI*2); ctx.fill(); });
+  // 縱軸截距點（原長）
+  ctx.fillStyle='#2c6fad'; ctx.beginPath(); ctx.arc(toX(0),toY(L0),5,0,Math.PI*2); ctx.fill();
+
+  // 刻度數字
+  ctx.fillStyle='#2d3748'; ctx.font='11px Segoe UI,微軟正黑體,sans-serif';
+  ctx.textAlign='center';
+  for(let x=0;x<=xMax;x+=step){ ctx.fillText(x,toX(x),pad.top+gH+14); }
+  ctx.textAlign='right';
+  for(let y=0;y<=yTop;y+=yStep){ ctx.fillText(y,pad.left-5,toY(y)+4); }
+
+  // 軸標題
+  ctx.fillStyle='#4a90d9'; ctx.font='bold 11px Segoe UI,微軟正黑體,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('砝碼重量 (gw)', pad.left+gW/2, H-4);
+  ctx.save(); ctx.translate(11,pad.top+gH/2); ctx.rotate(-Math.PI/2); ctx.fillText('彈簧全長 (cm)',0,0); ctx.restore();
+}
+
+/* ========== 選項 HTML ========== */
+function optionsHTML(idx, opts, correctIdx, unit){
+  const labels=['A','B','C','D'];
+  let h=`<div class="options" id="opts-${idx}">`;
+  opts.forEach((opt,i)=>{
+    h+=`<label class="opt-label" id="optlabel-${idx}-${i}">
+      <input type="radio" name="q${idx}" value="${i}" onchange="checkAns(${idx},${i},${correctIdx})">
+      <span><strong>${labels[i]}.</strong> ${opt}${unit?(' '+unit):''}</span></label>`;
+  });
+  h+=`</div><div class="feedback" id="fb-${idx}"></div>`;
+  return h;
+}
+
+/* ========== 建立題型一卡片 ========== */
+function buildType1Card(q, idx){
+  const div=document.createElement('div');
+  div.className='card'; div.id=`item-${idx}`;
+  let h=`<span class="q-num">第 ${idx+1} 題</span>`;
+  h+=`<div class="q-text">${q.qText}</div>`;
+  h+=q.tableHTML;
+  h+=optionsHTML(idx, q.opts, q.correctIdx, '');
+  div.innerHTML=h;
+  return div;
+}
+
+/* ========== 建立題型二題組 ========== */
+function buildType2Group(q, g){
+  const div=document.createElement('div');
+  div.className='card';
+  const cn=['一','二','三','四','五'];
+  let h=`<span class="q-num">題組（${cn[g]}）</span>`;
+  h+=`<div class="q-text">${q.intro}</div>`;
+  const cid=`cvs-g${g}`;
+  h+=`<div class="graph-wrap"><canvas class="graph" id="${cid}" width="320" height="230"></canvas></div>`;
+  q.subQs.forEach(sub=>{
+    const idx=itemCount++;
+    itemData[idx]={analysis:sub.analysis};
+    h+=`<div class="subq" id="item-${idx}">`;
+    h+=`<div class="subq-text">${sub.text}</div>`;
+    h+=optionsHTML(idx, sub.opts, sub.correctIdx, '公分');
+    h+=`</div>`;
+  });
+  div.innerHTML=h;
+  pendingGraphs.push({cid, graphData:q.graphData});
+  return div;
+}
+
+/* ========== 答題判斷 ========== */
+function checkAns(idx, chosen, correct){
+  const item=document.getElementById(`item-${idx}`);
+  if(item.classList.contains('answered-correct')||item.classList.contains('answered-wrong')) return;
+  const fb=document.getElementById(`fb-${idx}`);
+  const labels=['A','B','C','D'];
+  document.querySelectorAll(`input[name=q${idx}]`).forEach(r=>r.disabled=true);
+
+  if(chosen===correct){
+    item.classList.add('answered-correct');
+    document.getElementById(`optlabel-${idx}-${chosen}`).classList.add('selected-correct');
+    fb.className='feedback correct';
+    fb.innerHTML=`<span class="fb-icon">✅</span><strong>答對了！</strong><div class="analysis">${itemData[idx].analysis}</div>`;
+    updateScore(PT_PER);
+  } else {
+    item.classList.add('answered-wrong');
+    document.getElementById(`optlabel-${idx}-${chosen}`).classList.add('selected-wrong');
+    document.getElementById(`optlabel-${idx}-${correct}`).classList.add('reveal-correct');
+    fb.className='feedback wrong';
+    fb.innerHTML=`<span class="fb-icon">❌</span><strong>答錯了。正確答案是 ${labels[correct]}。</strong><div class="analysis">${itemData[idx].analysis}</div>`;
+    updateScore(0);
+  }
+}
+
+/* ========== 主程式 ========== */
+function buildAll(){
+  score=0; answeredCount=0; itemData={}; itemCount=0; pendingGraphs=[];
+  const TYPE1=2, TYPE2GROUPS=2;
+  totalItems=TYPE1+TYPE2GROUPS*4; // 10
+  scoreVal.textContent='0';
+  progressFill.style.width='0%';
+  progressText.textContent=`已答 0 / ${totalItems} 題`;
+  mainContent.innerHTML='';
+
+  const sec1=document.createElement('div');
+  sec1.className='section-title';
+  sec1.textContent='📋 題型一：彈簧連結鐵盤表（共 2 題）';
+  mainContent.appendChild(sec1);
+  for(let i=0;i<TYPE1;i++){
+    const q=makeType1();
+    const idx=itemCount++;
+    itemData[idx]={analysis:q.analysis};
+    mainContent.appendChild(buildType1Card(q, idx));
+  }
+
+  const sec2=document.createElement('div');
+  sec2.className='section-title';
+  sec2.textContent='📈 題型二：砝碼重與全長關係圖（共 2 組，每組 4 小題）';
+  mainContent.appendChild(sec2);
+  for(let g=0;g<TYPE2GROUPS;g++){
+    const q=makeType2();
+    mainContent.appendChild(buildType2Group(q, g));
+  }
+
+  pendingGraphs.forEach(p=>drawGraph(p.cid, p.graphData));
+}
+
+buildAll();
+</script>
+</body>
+</html>
