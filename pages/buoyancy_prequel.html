@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>浮力前傳：阿基米德的三大發現</title>
+<style>
+:root{
+  --gold:#c9a84c;--gold-light:#f0d080;--marble:#f5f0e8;--marble2:#ece4d0;
+  --ink:#3a2a10;--ink2:#5a4020;--blue:#3a7bd5;--blue-light:#7ab8f5;
+  --water:#4fc3f7;--water-dark:#0288d1;--correct:#4caf50;--wrong:#e53935;
+  --shadow:rgba(60,30,0,0.18);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Serif TC','serif';background:var(--marble);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+header{background:linear-gradient(135deg,#2a1a00 0%,#5a3a10 60%,#3a2a00 100%);
+  padding:18px 24px;text-align:center;position:relative;border-bottom:4px solid var(--gold)}
+header h1{font-size:1.8rem;color:var(--gold-light);text-shadow:0 2px 8px #0008;letter-spacing:2px}
+header p{color:#d4b870;font-size:.9rem;margin-top:4px}
+.laurel{font-size:1.5rem;vertical-align:middle;margin:0 8px}
+
+nav{display:flex;background:#3a2a10;border-bottom:3px solid var(--gold);overflow:hidden}
+nav button{flex:1;padding:12px 6px;background:transparent;border:none;color:#c9a84c88;
+  font-size:.9rem;font-family:inherit;cursor:pointer;transition:.3s;position:relative;
+  border-right:1px solid #5a4020;line-height:1.4}
+nav button:last-child{border-right:none}
+nav button.active{background:linear-gradient(180deg,#5a3a10,#3a2000);color:var(--gold-light);font-weight:bold}
+nav button.locked{opacity:.4;cursor:not-allowed}
+nav button .tab-icon{display:block;font-size:1.3rem;margin-bottom:2px}
+nav button .lock-icon{position:absolute;top:6px;right:6px;font-size:.75rem}
+
+main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+
+.section{display:none;animation:fadeIn .4s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+.card{background:var(--marble2);border:2px solid #c9a84c55;border-radius:12px;
+  padding:20px;margin-bottom:18px;box-shadow:0 4px 16px var(--shadow)}
+.card h2{color:var(--ink2);font-size:1.2rem;margin-bottom:8px;border-bottom:1px solid var(--gold);padding-bottom:6px}
+.card p{line-height:1.8;font-size:.95rem;color:var(--ink2)}
+
+.scene{border:2px solid #c9a84c88;border-radius:10px;background:#e8dfc8;
+  position:relative;overflow:hidden;margin:14px 0}
+
+/* STAGE 1: BALANCE */
+#balance-scene{height:300px}
+.balance-beam{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);
+  width:320px;height:8px;background:linear-gradient(90deg,#8B6914,#c9a84c,#8B6914);
+  border-radius:4px;transition:transform .8s ease}
+.balance-pole{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);
+  width:6px;height:80px;background:#8B6914;border-radius:3px}
+.balance-base{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);
+  width:80px;height:40px;background:linear-gradient(180deg,#8B6914,#5a3a00);border-radius:0 0 8px 8px}
+.pan{position:absolute;bottom:148px;width:90px;height:14px;background:linear-gradient(90deg,#8B6914,#c9a84c);border-radius:50%}
+#pan-left{left:calc(50% - 170px)}
+#pan-right{right:calc(50% - 170px)}
+.weight-obj{position:absolute;bottom:162px;width:60px;height:40px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:.68rem;
+  font-weight:bold;text-align:center;color:#fff;text-shadow:0 1px 3px #0005;line-height:1.2;z-index:6}
+#gold-block{left:calc(50% - 155px);background:linear-gradient(135deg,#d4a017,#f0c040)}
+#crown{right:calc(50% - 155px);background:linear-gradient(135deg,#8B6914,#c9a84c)}
+.bucket{position:absolute;bottom:30px;width:70px;height:80px;
+  background:rgba(100,180,255,.12);border:2px solid var(--blue);border-radius:4px 4px 10px 10px;overflow:hidden;z-index:2}
+#bucket-left{left:calc(50% - 160px)}
+#bucket-right{right:calc(50% - 160px)}
+.water-fill{position:absolute;bottom:0;width:100%;background:linear-gradient(180deg,rgba(79,195,247,.45),rgba(79,195,247,.85));transition:height .8s ease}
+.cylinder{position:absolute;bottom:30px;width:26px;border:2px solid var(--blue-light);
+  border-radius:4px 4px 6px 6px;background:rgba(79,195,247,.1);overflow:hidden;z-index:2}
+#cyl-left{left:calc(50% - 72px);height:70px}
+#cyl-right{right:calc(50% - 72px);height:70px}
+.cyl-water{position:absolute;bottom:0;width:100%;background:rgba(79,195,247,.7);transition:height .8s ease}
+.cyl-label{position:absolute;top:-18px;width:100%;text-align:center;font-size:.68rem;color:var(--blue);font-weight:bold}
+
+/* STAGE 2: BATHTUB */
+.bathtub{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+  width:300px;height:170px;background:rgba(220,200,180,.4);
+  border:3px solid #a08040;border-radius:30px 30px 50px 50px;overflow:hidden}
+.bath-water{position:absolute;bottom:0;width:100%;background:linear-gradient(180deg,rgba(79,195,247,.3),rgba(2,136,209,.6));transition:height .6s ease}
+.bath-scale{position:absolute;right:24px;bottom:30px;height:170px;width:36px;
+  border-left:2px solid #a08040;display:flex;flex-direction:column-reverse}
+.scale-tick{flex:1;border-top:1px solid #a0804088;font-size:.55rem;color:var(--ink2);padding-left:4px}
+.figure{width:64px;position:absolute;cursor:grab;user-select:none;transition:opacity .4s;
+  display:flex;flex-direction:column;align-items:center;font-size:1.9rem;z-index:10;text-align:center}
+.figure span{font-size:.62rem;font-weight:bold;color:var(--ink2);margin-top:-2px;white-space:nowrap}
+#fig-a{left:10px;top:10px}
+#fig-b{left:10px;top:90px}
+
+.slider-wrap{margin:10px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.slider-wrap label{font-size:.85rem;color:var(--ink2);min-width:80px}
+input[type=range]{flex:1;accent-color:var(--blue)}
+
+/* STAGE 3: TANKS */
+.tank{position:absolute;bottom:30px;width:130px;height:190px;
+  border:3px solid #888;border-radius:6px;overflow:hidden;background:#e8f8ff}
+#tank-fresh{left:70px}
+#tank-salt{right:70px}
+.tank-liquid{position:absolute;bottom:0;width:100%;transition:height .5s}
+.tank-label{position:absolute;top:6px;width:100%;text-align:center;font-size:.72rem;font-weight:bold;color:var(--ink2);z-index:2;line-height:1.3}
+.block-obj{position:absolute;width:58px;height:58px;
+  background:linear-gradient(135deg,#888,#ccc);border:2px solid #555;
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:.6rem;font-weight:bold;color:#333;text-align:center;cursor:pointer;
+  transition:.6s ease;z-index:5;line-height:1.2}
+.scale-display{position:absolute;width:96px;height:54px;
+  background:#f5f5dc;border:2px solid #888;border-radius:6px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:.68rem;font-weight:bold;color:var(--ink2);transition:.5s;opacity:0;z-index:8}
+
+.btn{display:inline-block;padding:10px 22px;border:none;border-radius:8px;
+  font-size:.92rem;font-family:inherit;font-weight:bold;cursor:pointer;transition:.2s;margin:4px}
+.btn-gold{background:linear-gradient(135deg,#c9a84c,#f0d080);color:#3a2000;box-shadow:0 2px 8px #c9a84c55}
+.btn-gold:hover{filter:brightness(1.1)}
+.btn-blue{background:linear-gradient(135deg,#3a7bd5,#7ab8f5);color:#fff;box-shadow:0 2px 8px #3a7bd555}
+.btn-blue:hover{filter:brightness(1.1)}
+.btn-sm{padding:7px 14px;font-size:.82rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.quiz-box{background:linear-gradient(135deg,#fffbe8,#f5ecd0);border:2px solid var(--gold);
+  border-radius:12px;padding:18px;margin-top:16px}
+.quiz-box h3{color:var(--ink2);font-size:1rem;margin-bottom:12px;line-height:1.6}
+.option{display:block;width:100%;text-align:left;padding:10px 14px;margin:6px 0;
+  background:#fff8e8;border:2px solid #c9a84c55;border-radius:8px;
+  font-size:.9rem;font-family:inherit;cursor:pointer;transition:.2s;color:var(--ink)}
+.option:hover{background:#f0e0a0;border-color:var(--gold)}
+.option.correct,.option.multi-correct{background:#c8f5c8;border-color:var(--correct);color:#1b5e20}
+.option.wrong,.option.multi-wrong{background:#ffd0d0;border-color:var(--wrong);color:#b71c1c}
+.option.selected{background:#d0e8ff;border-color:var(--blue)}
+.option:disabled{cursor:default}
+
+.feedback{margin-top:12px;padding:12px 16px;border-radius:10px;font-size:.92rem;display:none;line-height:1.7}
+.feedback.show{display:block;animation:fadeIn .4s}
+.feedback.correct{background:#e8f5e9;border:2px solid var(--correct);color:#1b5e20}
+.feedback.wrong{background:#ffebee;border:2px solid var(--wrong);color:#b71c1c}
+
+#fireworks{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999}
+canvas#fw-canvas{width:100%;height:100%}
+
+.eureka-overlay{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0) rotate(-15deg);
+  background:rgba(50,200,50,.92);color:#fff;font-size:2.3rem;font-weight:900;
+  padding:20px 40px;border-radius:12px;border:4px solid #fff;z-index:9998;
+  transition:.5s cubic-bezier(.34,1.56,.64,1);pointer-events:none;text-align:center}
+.eureka-overlay.show{transform:translate(-50%,-50%) scale(1) rotate(-8deg)}
+
+.progress-bar{display:flex;gap:8px;margin:12px 0;align-items:center}
+.prog-dot{width:18px;height:18px;border-radius:50%;background:#c9a84c44;border:2px solid var(--gold);transition:.4s}
+.prog-dot.done{background:var(--gold)}
+.prog-dot.current{background:var(--gold-light);box-shadow:0 0 8px var(--gold)}
+
+@media(max-width:540px){
+  #balance-scene{height:240px}
+  .balance-beam{width:220px}
+  .pan{width:60px}
+  #pan-left{left:calc(50% - 140px)}
+  #pan-right{right:calc(50% - 140px)}
+  .weight-obj{width:50px;height:34px;font-size:.58rem}
+  #gold-block{left:calc(50% - 135px)}
+  #crown{right:calc(50% - 135px)}
+  .bucket{width:56px;height:64px}
+  #bucket-left{left:calc(50% - 138px)}
+  #bucket-right{right:calc(50% - 138px)}
+  .cylinder{width:22px}
+  #cyl-left{left:calc(50% - 58px)}
+  #cyl-right{right:calc(50% - 58px)}
+  .bathtub{width:230px}
+  .tank{width:100px}
+  #tank-fresh{left:34px}#tank-salt{right:34px}
+  #blk-fresh{left:55px}#blk-salt{right:55px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="laurel">🏛️</span>阿基米德的三大發現<span class="laurel">⚗️</span></h1>
+  <p>浮力課程前傳引導 ─ 觀念複習互動網頁</p>
+</header>
+
+<nav id="main-nav">
+  <button class="active" onclick="goSection(0)" id="tab0">
+    <span class="tab-icon">👑</span>關卡一<br>王冠的祕密
+  </button>
+  <button class="locked" onclick="goSection(1)" id="tab1">
+    <span class="tab-icon">🛁</span>關卡二<br>澡堂大發現
+    <span class="lock-icon">🔒</span>
+  </button>
+  <button class="locked" onclick="goSection(2)" id="tab2">
+    <span class="tab-icon">🌊</span>關卡三<br>浮力密碼
+    <span class="lock-icon">🔒</span>
+  </button>
+</nav>
+
+<main>
+
+<!-- ═══════ SECTION 1 ═══════ -->
+<section class="section active" id="sec0">
+  <div class="card">
+    <h2>👑 關卡一：王冠的祕密</h2>
+    <p>國王懷疑銀匠在打造王冠時摻入了較便宜的銀。天平顯示：<strong>500g 純金塊</strong>與<strong>500g 王冠</strong>重量完全相同。但阿基米德有辦法揭穿真相！</p>
+  </div>
+
+  <div class="progress-bar">
+    <div class="prog-dot current" id="p1-1"></div>
+    <div style="flex:1;height:2px;background:var(--gold);opacity:.3"></div>
+    <div class="prog-dot" id="p1-2"></div>
+    <div style="flex:1;height:2px;background:var(--gold);opacity:.3"></div>
+    <div class="prog-dot" id="p1-3"></div>
+  </div>
+
+  <div class="scene" id="balance-scene">
+    <div class="balance-pole"></div>
+    <div class="balance-base"></div>
+    <div class="balance-beam" id="beam"></div>
+    <div class="pan" id="pan-left"></div>
+    <div class="pan" id="pan-right"></div>
+    <div class="bucket" id="bucket-left"><div class="water-fill" id="wf-left" style="height:76px"></div></div>
+    <div class="bucket" id="bucket-right"><div class="water-fill" id="wf-right" style="height:76px"></div></div>
+    <div class="weight-obj" id="gold-block">🟡<br>純金塊<br>500g</div>
+    <div class="weight-obj" id="crown">👑<br>王冠<br>500g</div>
+    <div class="cylinder" id="cyl-left"><div class="cyl-label" id="cyl-label-left">0 mL</div><div class="cyl-water" id="cw-left" style="height:0"></div></div>
+    <div class="cylinder" id="cyl-right"><div class="cyl-label" id="cyl-label-right">0 mL</div><div class="cyl-water" id="cw-right" style="height:0"></div></div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:10px 0">
+    <button class="btn btn-blue" id="btn-gold" onclick="dropGold()">💧 將純金塊放入滿水桶</button>
+    <button class="btn btn-blue" id="btn-crown" onclick="dropCrown()" disabled>💧 將王冠放入另一個滿水桶</button>
+    <button class="btn btn-gold btn-sm" onclick="resetS1()">↩ 重置</button>
+  </div>
+
+  <div class="quiz-box" id="quiz1" style="display:none">
+    <h3>🤔 觀念檢核：兩者重量相同，為什麼王冠排開的水比較多？</h3>
+    <button class="option" onclick="ans1(this,'A')">(A) 因為王冠比較重</button>
+    <button class="option" onclick="ans1(this,'B')">(B) 因為銀的密度比金小，同樣重量下，摻銀的王冠體積較大，所以排開更多水</button>
+    <div class="feedback" id="fb1"></div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 2 ═══════ -->
+<section class="section" id="sec1">
+  <div class="card">
+    <h2>🛁 關卡二：澡堂大發現</h2>
+    <p>阿基米德洗澡時，發現自己坐入浴缸，水面上升了！他意識到這個現象與<strong>浸入液體的體積</strong>有著神秘的關係。請把角色拖進浴缸，觀察水面變化！</p>
+  </div>
+
+  <div class="progress-bar">
+    <div class="prog-dot current" id="p2-1"></div>
+    <div style="flex:1;height:2px;background:var(--gold);opacity:.3"></div>
+    <div class="prog-dot" id="p2-2"></div>
+    <div style="flex:1;height:2px;background:var(--gold);opacity:.3"></div>
+    <div class="prog-dot" id="p2-3"></div>
+  </div>
+
+  <div class="scene" id="bath-scene" style="height:230px">
+    <div class="figure" id="fig-a" draggable="true" ondragstart="dragStart(event,'a')" onclick="placeFigure('a',100)">🧍<span>阿基米德(瘦)</span></div>
+    <div class="figure" id="fig-b" draggable="true" ondragstart="dragStart(event,'b')" onclick="placeFigure('b',100)">🧍‍♂️<span>將軍(胖)</span></div>
+    <div class="bathtub" id="bathtub" ondragover="event.preventDefault()" ondrop="dropInTub(event)">
+      <div class="bath-water" id="bath-water" style="height:81px"></div>
+      <div id="tub-figure" style="position:absolute;bottom:81px;left:50%;transform:translateX(-50%);font-size:2rem;transition:.5s;display:none">🧍</div>
+    </div>
+    <div class="bath-scale">
+      <div class="scale-tick">0</div><div class="scale-tick">10</div><div class="scale-tick">20</div>
+      <div class="scale-tick">30</div><div class="scale-tick">40</div><div class="scale-tick">50</div>
+      <div class="scale-tick">60</div><div class="scale-tick">70</div><div class="scale-tick">80</div>
+      <div class="scale-tick">90</div><div class="scale-tick">100</div>
+    </div>
+    <div style="position:absolute;top:10px;right:70px;background:rgba(255,255,240,.9);border:1px solid var(--gold);border-radius:6px;padding:6px 10px;font-size:.74rem;line-height:1.7;color:var(--ink2)">
+      初始水位：<strong>50 mL</strong><br>
+      現在水位：<strong id="cur-level">50</strong> mL<br>
+      排開體積：<strong id="disp-vol">0</strong> mL
+    </div>
+    <div id="bath-result" style="position:absolute;bottom:8px;left:80px;background:rgba(200,240,200,.92);border:2px solid var(--correct);border-radius:8px;padding:6px 10px;font-size:.78rem;display:none;max-width:170px;line-height:1.5"></div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0">
+    <button class="btn btn-blue btn-sm" onclick="resetTub()">↩ 清空浴缸</button>
+    <span style="font-size:.82rem;color:var(--ink2)">👆 點擊或拖曳人物放進浴缸！</span>
+  </div>
+
+  <div class="slider-wrap" id="slider-wrap" style="display:none">
+    <label>沒入程度：</label>
+    <input type="range" id="immerse-slider" min="0" max="100" value="100" oninput="updateImmerse(this.value)">
+    <span id="immerse-pct">100%</span>
+  </div>
+
+  <div class="quiz-box" id="quiz2" style="display:none">
+    <h3>📝 觀念檢核：當物體浸入液體中，液面上升的體積（排開的液體體積），剛好等於物體哪一部分的體積？</h3>
+    <button class="option" onclick="ans2(this,'A')">(A) 露出液面 部分的體積</button>
+    <button class="option" onclick="ans2(this,'B')">(B) 浸入（沒入）液面下 部分的體積</button>
+    <button class="option" onclick="ans2(this,'C')">(C) 整個物體的總體積（不論有沒有沒入）</button>
+    <button class="option" onclick="ans2(this,'D')">(D) 物體最寬處的截面積</button>
+    <div class="feedback" id="fb2"></div>
+  </div>
+</section>
+
+<!-- ═══════ SECTION 3 ═══════ -->
+<section class="section" id="sec2">
+  <div class="card">
+    <h2>🌊 關卡三：解開浮力密碼 ─ 清水 vs 死海</h2>
+    <p>為什麼人在死海可以輕鬆漂浮？阿基米德的發現給了我們答案！將同一個方塊壓入兩種不同密度的液體，看看<strong>排開液體的重量</strong>如何改變浮力！</p>
+  </div>
+
+  <div class="progress-bar">
+    <div class="prog-dot current" id="p3-1"></div>
+    <div style="flex:1;height:2px;background:var(--gold);opacity:.3"></div>
+    <div class="prog-dot" id="p3-2"></div>
+  </div>
+
+  <div class="scene" id="tank-scene" style="height:280px">
+    <div class="tank" id="tank-fresh">
+      <div class="tank-label">清水<br>d = 1.0 g/cm³</div>
+      <div class="tank-liquid" id="liq-fresh" style="height:150px;background:linear-gradient(180deg,rgba(79,195,247,.3),rgba(79,195,247,.75))"></div>
+    </div>
+    <div class="tank" id="tank-salt">
+      <div class="tank-label">死海鹽水<br>d = 1.2 g/cm³</div>
+      <div class="tank-liquid" id="liq-salt" style="height:150px;background:linear-gradient(180deg,rgba(200,230,100,.35),rgba(200,230,100,.7))"></div>
+    </div>
+    <div class="block-obj" id="blk-fresh" style="bottom:200px;left:76px" onclick="dropBlock('fresh')">100 cm³<br>方塊<br>▼點擊沒入</div>
+    <div class="block-obj" id="blk-salt" style="bottom:200px;right:76px" onclick="dropBlock('salt')">100 cm³<br>方塊<br>▼點擊沒入</div>
+    <div class="scale-display" id="scale-fresh" style="left:8px;top:30px">
+      <div>排開液重</div><div id="fresh-val" style="font-size:1rem;color:var(--blue)">─</div>
+    </div>
+    <div class="scale-display" id="scale-salt" style="right:8px;top:30px">
+      <div>排開液重</div><div id="salt-val" style="font-size:1rem;color:#6a9a20">─</div>
+    </div>
+    <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:1.5rem">⚖️</div>
+  </div>
+
+  <div style="display:flex;gap:8px;justify-content:center;margin:8px 0;flex-wrap:wrap">
+    <button class="btn btn-blue btn-sm" onclick="resetTanks()">↩ 重置方塊</button>
+  </div>
+
+  <div class="quiz-box" id="quiz3" style="display:none">
+    <h3>🏆 終極大問答：要讓浮力變大，可以透過哪兩種方法？（多選）</h3>
+    <button class="option" id="q3a" onclick="toggleQ3(this,'A')">(A) 增加物體浸入液體的體積</button>
+    <button class="option" id="q3b" onclick="toggleQ3(this,'B')">(B) 降低液體的密度</button>
+    <button class="option" id="q3c" onclick="toggleQ3(this,'C')">(C) 提高液體的密度</button>
+    <button class="option" id="q3d" onclick="toggleQ3(this,'D')">(D) 減少物體接觸液體的表面積</button>
+    <button class="btn btn-gold" onclick="checkQ3()" style="margin-top:10px">✓ 送出答案</button>
+    <div class="feedback" id="fb3"></div>
+  </div>
+
+  <div id="final-summary" style="display:none">
+    <div class="card" style="border-color:var(--gold);background:linear-gradient(135deg,#fffbe8,#f5e8c0);margin-top:16px">
+      <h2>🎉 恭喜完成三大關卡！</h2>
+      <p style="margin-top:10px;line-height:2">
+        阿基米德的偉大總結：<br>
+        🔵 <strong>浮力 = 物體排開的液體重量</strong><br>
+        🔵 浮力大小與 <strong>排開液體的體積</strong> 成正比<br>
+        🔵 浮力大小與 <strong>液體的密度（d）</strong> 成正比<br><br>
+        浮力公式：<strong style="font-size:1.15rem">F<sub>浮</sub> = d<sub>液</sub> × V<sub>排</sub> × g</strong><br><br>
+        從王冠的體積祕密、澡堂的排水發現，到死海的密度奧妙 ——<br>
+        你已經完整走過阿基米德的思考旅程，也掌握了浮力的三個核心觀念。<br>
+        <strong>觀察、推理、再驗證，這正是科學家發現真理的方式！</strong> 🏛️
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div class="eureka-overlay" id="eureka"></div>
+<div id="fireworks"><canvas id="fw-canvas"></canvas></div>
+
+<script>
+const unlocked=[true,false,false];
+function goSection(i){
+  if(!unlocked[i])return;
+  document.querySelectorAll('.section').forEach((s,j)=>s.classList.toggle('active',i===j));
+  document.querySelectorAll('nav button').forEach((b,j)=>b.classList.toggle('active',i===j));
+}
+function unlockNext(i){
+  unlocked[i]=true;
+  const tab=document.getElementById('tab'+i);
+  tab.classList.remove('locked');
+  tab.querySelector('.lock-icon')?.remove();
+}
+
+/* FIREWORKS */
+const fw=document.getElementById('fw-canvas'),fwCtx=fw.getContext('2d');
+let fwParticles=[];
+function resizeFW(){fw.width=window.innerWidth;fw.height=window.innerHeight}
+window.addEventListener('resize',resizeFW);resizeFW();
+function spawnFirework(){
+  const x=fw.width*.2+Math.random()*fw.width*.6,y=fw.height*.15+Math.random()*fw.height*.4;
+  const colors=['#f0d080','#ff6b6b','#4fc3f7','#81c784','#ce93d8'];
+  for(let k=0;k<40;k++){const a=Math.random()*Math.PI*2,s=2+Math.random()*5;
+    fwParticles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,color:colors[Math.floor(Math.random()*colors.length)]});}
+}
+function animFW(){
+  fwCtx.clearRect(0,0,fw.width,fw.height);
+  fwParticles=fwParticles.filter(p=>p.life>0);
+  fwParticles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.08;p.life-=.02;
+    fwCtx.globalAlpha=p.life;fwCtx.fillStyle=p.color;
+    fwCtx.beginPath();fwCtx.arc(p.x,p.y,3,0,Math.PI*2);fwCtx.fill();});
+  fwCtx.globalAlpha=1;
+  if(fwParticles.length)requestAnimationFrame(animFW);
+}
+function celebrate(msg){
+  spawnFirework();setTimeout(spawnFirework,200);setTimeout(spawnFirework,400);animFW();
+  const el=document.getElementById('eureka');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+/* SECTION 1 */
+let s1step=0;
+function dropGold(){
+  if(s1step>0)return;s1step=1;
+  document.getElementById('btn-gold').disabled=true;
+  const gb=document.getElementById('gold-block');
+  gb.style.transition='bottom .8s ease,opacity .5s';gb.style.bottom='46px';
+  setTimeout(()=>gb.style.opacity='0.45',600);
+  setTimeout(()=>{
+    document.getElementById('wf-left').style.height='62px';
+    document.getElementById('cw-left').style.height='30px';
+    document.getElementById('cyl-label-left').textContent='26 mL';
+    document.getElementById('p1-2').classList.add('current');
+  },800);
+  setTimeout(()=>document.getElementById('btn-crown').disabled=false,1200);
+}
+function dropCrown(){
+  if(s1step>1)return;s1step=2;
+  document.getElementById('btn-crown').disabled=true;
+  const cr=document.getElementById('crown');
+  cr.style.transition='bottom .8s ease,opacity .5s';cr.style.bottom='46px';
+  setTimeout(()=>cr.style.opacity='0.45',600);
+  setTimeout(()=>{
+    document.getElementById('wf-right').style.height='62px';
+    document.getElementById('cw-right').style.height='46px';
+    document.getElementById('cyl-label-right').textContent='40 mL';
+    document.getElementById('beam').style.transform='translateX(-50%) rotate(4deg)';
+    document.getElementById('p1-3').classList.add('current');
+  },800);
+  setTimeout(()=>{
+    document.getElementById('quiz1').style.display='block';
+    document.getElementById('quiz1').scrollIntoView({behavior:'smooth'});
+  },1400);
+}
+function ans1(btn,choice){
+  document.querySelectorAll('#quiz1 .option').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('fb1');
+  if(choice==='B'){
+    btn.classList.add('correct');
+    fb.className='feedback correct show';
+    fb.innerHTML='✅ 正確！銀的密度比金小（金 d≈19.3 g/cm³，銀 d≈10.5 g/cm³），相同重量下，摻銀王冠的體積比純金更大，所以排開了更多水。<br><br>🏛️ <strong>阿基米德大喊 Eureka！他發現浮力的第一個關鍵：祕密藏在「排開的體積」裡！</strong>';
+    setTimeout(()=>{celebrate('EUREKA！🏆');unlockNext(1);},500);
+  }else{
+    btn.classList.add('wrong');
+    document.querySelectorAll('#quiz1 .option')[1].classList.add('correct');
+    fb.className='feedback wrong show';
+    fb.innerHTML='❌ 再想想！兩者重量相同（都是500g），所以答案不是重量的問題。重點在於體積！';
+  }
+}
+function resetS1(){
+  s1step=0;
+  ['gold-block','crown'].forEach(id=>{const el=document.getElementById(id);el.style.transition='';el.style.bottom='';el.style.opacity='';});
+  document.getElementById('beam').style.transform='translateX(-50%)';
+  document.getElementById('wf-left').style.height='76px';
+  document.getElementById('wf-right').style.height='76px';
+  document.getElementById('cw-left').style.height='0';
+  document.getElementById('cw-right').style.height='0';
+  document.getElementById('cyl-label-left').textContent='0 mL';
+  document.getElementById('cyl-label-right').textContent='0 mL';
+  document.getElementById('btn-gold').disabled=false;
+  document.getElementById('btn-crown').disabled=true;
+  document.getElementById('quiz1').style.display='none';
+  document.querySelectorAll('#quiz1 .option').forEach(b=>{b.disabled=false;b.className='option'});
+  document.getElementById('fb1').className='feedback';
+  ['p1-2','p1-3'].forEach(id=>document.getElementById(id).classList.remove('current'));
+}
+
+/* SECTION 2 */
+let tubFigure=null;
+const figData={a:{emoji:'🧍',name:'阿基米德',rise:20,base:50},b:{emoji:'🧍‍♂️',name:'將軍',rise:45,base:50}};
+const TROUGH_MAX_PX=170;
+function dragStart(e,who){e.dataTransfer.setData('who',who)}
+function dropInTub(e){
+  e.preventDefault();
+  const who=e.dataTransfer.getData('who');
+  if(tubFigure)return;
+  placeFigure(who,100);
+}
+function placeFigure(who,pct){
+  if(tubFigure)return;
+  tubFigure=who;
+  const d=figData[who];
+  document.getElementById('fig-'+who).style.opacity='.3';
+  const tf=document.getElementById('tub-figure');
+  tf.textContent=d.emoji;tf.style.display='block';
+  updateWaterLevel(d.base+Math.round(d.rise*pct/100));
+  document.getElementById('slider-wrap').style.display='flex';
+  document.getElementById('immerse-slider').value=100;
+  document.getElementById('immerse-pct').textContent='100%';
+  const res=document.getElementById('bath-result');
+  res.style.display='block';
+  res.innerHTML=`<strong>${d.name}</strong><br>沒入體積 = ${Math.round(d.rise*(pct/100))} mL<br><em>（水面上升量）</em>`;
+  if(tubFigure==='b'){
+    setTimeout(()=>document.getElementById('quiz2').style.display='block',600);
+  }else{
+    setTimeout(()=>{document.getElementById('bath-result').innerHTML+='<br>👉 換「將軍」再試一次！';},800);
+  }
+}
+function updateImmerse(val){
+  if(!tubFigure)return;
+  const pct=parseInt(val);
+  document.getElementById('immerse-pct').textContent=pct+'%';
+  const d=figData[tubFigure];
+  const rise=Math.round(d.rise*pct/100);
+  updateWaterLevel(d.base+rise);
+  document.getElementById('bath-result').innerHTML=`<strong>${d.name}</strong><br>沒入程度：${pct}%<br>排開體積 = ${rise} mL`;
+}
+function updateWaterLevel(ml){
+  const pxPerML=TROUGH_MAX_PX/100;
+  const h=ml*pxPerML*.95;
+  document.getElementById('bath-water').style.height=h+'px';
+  document.getElementById('cur-level').textContent=ml;
+  document.getElementById('disp-vol').textContent=ml-50;
+  document.getElementById('tub-figure').style.bottom=h+'px';
+}
+function resetTub(){
+  tubFigure=null;
+  document.getElementById('fig-a').style.opacity='1';
+  document.getElementById('fig-b').style.opacity='1';
+  document.getElementById('tub-figure').style.display='none';
+  updateWaterLevel(50);
+  document.getElementById('slider-wrap').style.display='none';
+  document.getElementById('bath-result').style.display='none';
+  document.getElementById('quiz2').style.display='none';
+  document.querySelectorAll('#quiz2 .option').forEach(b=>{b.disabled=false;b.className='option'});
+  document.getElementById('fb2').className='feedback';
+}
+function ans2(btn,choice){
+  document.querySelectorAll('#quiz2 .option').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('fb2');
+  if(choice==='B'){
+    btn.classList.add('correct');
+    fb.className='feedback correct show';
+    fb.innerHTML='✅ 正確！排開的液體體積 = 物體<strong>浸入（沒入）液面下</strong>部分的體積。這就是阿基米德的澡堂大發現！<br><br>🏛️ 準備好探索「液體密度」如何影響浮力了嗎？';
+    setTimeout(()=>{celebrate('澡堂大發現！🛁');unlockNext(2);},500);
+  }else{
+    btn.classList.add('wrong');
+    document.querySelectorAll('#quiz2 .option')[1].classList.add('correct');
+    fb.className='feedback wrong show';
+    fb.innerHTML='❌ 再想想！水面上升的體積，只跟「泡在水裡」的那一部分有關，露出來的部分不會排開水喔。';
+  }
+}
+
+/* SECTION 3 */
+const tankState={fresh:false,salt:false};
+function dropBlock(which){
+  if(tankState[which])return;
+  tankState[which]=true;
+  const blk=document.getElementById('blk-'+which);
+  blk.style.bottom='76px';blk.style.opacity='.6';blk.style.cursor='default';
+  blk.innerHTML='100 cm³<br>（已沒入）';
+  const sc=document.getElementById('scale-'+which);
+  sc.style.opacity='1';
+  setTimeout(()=>{
+    if(which==='fresh'){document.getElementById('fresh-val').textContent='100 gw';sc.style.background='#d0f0ff';}
+    else{document.getElementById('salt-val').textContent='120 gw';sc.style.background='#d8f0c0';}
+    document.getElementById('p3-2').classList.add('current');
+  },700);
+  if(tankState.fresh&&tankState.salt){
+    setTimeout(()=>{
+      document.getElementById('quiz3').style.display='block';
+      document.getElementById('quiz3').scrollIntoView({behavior:'smooth'});
+    },1000);
+  }
+}
+function resetTanks(){
+  ['fresh','salt'].forEach(w=>{
+    tankState[w]=false;
+    const blk=document.getElementById('blk-'+w);
+    blk.style.bottom='200px';blk.style.opacity='1';blk.style.cursor='pointer';
+    blk.innerHTML='100 cm³<br>方塊<br>▼點擊沒入';
+    document.getElementById('scale-'+w).style.opacity='0';
+  });
+  document.getElementById('p3-2').classList.remove('current');
+  document.getElementById('quiz3').style.display='none';
+  document.getElementById('fb3').className='feedback';
+  ['q3a','q3b','q3c','q3d'].forEach(id=>{const el=document.getElementById(id);el.className='option';el.disabled=false;});
+  q3sel.clear();
+  document.getElementById('final-summary').style.display='none';
+}
+const q3sel=new Set();
+function toggleQ3(btn,c){
+  if(btn.disabled)return;
+  if(q3sel.has(c)){q3sel.delete(c);btn.classList.remove('selected')}
+  else{q3sel.add(c);btn.classList.add('selected')}
+}
+function checkQ3(){
+  const correct=new Set(['A','C']);
+  const fb=document.getElementById('fb3');
+  const isCorrect=[...correct].every(c=>q3sel.has(c))&&q3sel.size===2;
+  if(isCorrect){
+    ['q3a','q3b','q3c','q3d'].forEach(id=>document.getElementById(id).disabled=true);
+    ['A','B','C','D'].forEach((c,i)=>{
+      const el=document.getElementById('q3'+['a','b','c','d'][i]);
+      if(correct.has(c))el.classList.add('multi-correct');
+      else if(q3sel.has(c))el.classList.add('multi-wrong');
+    });
+    fb.className='feedback correct show';
+    fb.innerHTML='🎉 完美！浮力公式：<strong>F浮 = d液 × V排 × g</strong><br>① 增加浸入體積（V排↑）→ 浮力變大<br>② 提高液體密度（d液↑）→ 浮力變大<br><br>所以死海密度高，浮力大，人自然浮起來！';
+    setTimeout(()=>{
+      celebrate('EUREKA！⚡🎊');
+      document.getElementById('final-summary').style.display='block';
+      document.getElementById('final-summary').scrollIntoView({behavior:'smooth'});
+    },600);
+  }else{
+    fb.className='feedback wrong show';
+    fb.innerHTML='❌ 答案需要選兩個！回想：浮力 = d液 × V排 × g，哪兩個因素可以讓浮力變大？';
+  }
+}
+</script>
+</body>
+</html>
