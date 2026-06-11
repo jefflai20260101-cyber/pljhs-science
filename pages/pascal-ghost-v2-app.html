@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👻 鬼界壓力特訓班：團結之力大作戰</title>
+<style>
+:root{
+  --bg:#13101f; --card:#241d3d; --card2:#2d2450;
+  --ghost:#7CFFB2; --ghost-dim:#3fae77;
+  --purple:#8b5cf6; --purple-deep:#5b3fa8;
+  --pink:#f472b6; --amber:#fbbf24; --red:#f87171;
+  --text:#e9e4ff; --muted:#a79fc9; --line:#3b3163;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{
+  font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  background:radial-gradient(1200px 600px at 70% -10%, #2a1f4d 0%, var(--bg) 55%) fixed;
+  color:var(--text); min-height:100vh; padding:16px;
+}
+.wrap{max-width:1040px;margin:0 auto;}
+
+/* Header */
+header{
+  background:linear-gradient(135deg,var(--card) 0%,#1f1838 100%);
+  border:1px solid var(--line); border-radius:20px; padding:24px 20px;
+  text-align:center; box-shadow:0 8px 30px rgba(0,0,0,.45); position:relative; overflow:hidden;
+}
+header::before{content:"👻";position:absolute;font-size:130px;opacity:.05;right:-12px;top:-24px;transform:rotate(15deg);}
+h1{
+  font-size:clamp(1.3rem,4vw,2rem);
+  background:linear-gradient(90deg,var(--ghost),var(--purple),var(--pink));
+  -webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:12px;letter-spacing:1px;
+}
+.story{
+  color:var(--muted);font-size:.95rem;line-height:1.85;max-width:780px;margin:0 auto 16px;text-align:left;
+  background:rgba(0,0,0,.25);border-radius:12px;padding:14px 16px;border-left:4px solid var(--ghost);
+}
+.story b{color:var(--ghost);} .story .hl{color:var(--amber);font-weight:700;}
+.btn-shuffle{
+  background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;border:none;border-radius:14px;
+  padding:12px 24px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 18px rgba(139,92,246,.45);
+  transition:transform .15s,box-shadow .15s;
+}
+.btn-shuffle:active{transform:scale(.96);}
+.btn-shuffle:hover{box-shadow:0 6px 24px rgba(244,114,182,.5);}
+
+/* Tabs */
+.tabs{display:flex;gap:8px;margin:20px 0 14px;flex-wrap:wrap;justify-content:center;}
+.tab{
+  flex:1 1 130px;max-width:240px;background:var(--card);border:1px solid var(--line);color:var(--muted);
+  border-radius:12px;padding:10px 8px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;
+}
+.tab.active{background:linear-gradient(135deg,var(--purple-deep),var(--purple));color:#fff;border-color:var(--purple);box-shadow:0 4px 14px rgba(139,92,246,.4);}
+.tab .badge{display:inline-block;margin-left:4px;}
+.panel{display:none;animation:fadeIn .35s ease;}
+.panel.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 6px 24px rgba(0,0,0,.35);}
+.card h2{font-size:1.15rem;color:var(--ghost);margin-bottom:6px;}
+.card .desc{color:var(--muted);font-size:.9rem;line-height:1.7;margin-bottom:14px;}
+.card .desc b{color:var(--amber);}
+
+.grid2{display:grid;grid-template-columns:1fr;gap:18px;}
+@media(min-width:780px){.grid2{grid-template-columns:1.1fr 1fr;}}
+.svg-box{background:#15112a;border:1px solid var(--line);border-radius:14px;padding:8px;display:flex;justify-content:center;}
+.svg-box svg{width:100%;max-width:460px;height:auto;}
+
+.chip-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.88rem;}
+.chip b{color:var(--amber);}
+
+/* generic buttons */
+.btn{border:none;border-radius:12px;font-weight:800;cursor:pointer;transition:transform .15s;padding:10px 18px;font-size:.95rem;}
+.btn:active{transform:scale(.95);}
+.btn-grn{background:linear-gradient(135deg,var(--ghost-dim),var(--ghost));color:#0c2418;box-shadow:0 4px 16px rgba(124,255,178,.3);}
+.btn-pur{background:linear-gradient(135deg,#7c3aed,var(--pink));color:#fff;box-shadow:0 4px 16px rgba(244,114,182,.35);}
+.btn-sm{background:var(--card2);border:1.5px solid var(--purple);color:var(--text);padding:9px 14px;}
+.btn-sm:active{transform:scale(.93);}
+
+/* Level1 controls */
+.ctrl-block{margin-bottom:16px;}
+.ctrl-label{font-size:.9rem;font-weight:700;color:var(--ghost);margin-bottom:8px;}
+.ghost-counter{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.count-pill{background:#0f0c1d;border:2px solid var(--purple);border-radius:12px;padding:8px 16px;font-size:1.1rem;font-weight:800;color:var(--ghost);min-width:90px;text-align:center;}
+.area-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.area-btn{flex:1 1 100px;background:var(--card2);border:2px solid var(--line);color:var(--text);border-radius:12px;padding:10px 6px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .18s;text-align:center;line-height:1.5;}
+.area-btn.sel{border-color:var(--ghost);background:rgba(124,255,178,.12);color:var(--ghost);box-shadow:0 0 0 3px rgba(124,255,178,.15);}
+.formula-box{background:#0f0c1d;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;margin:14px 0;font-size:1.05rem;line-height:1.9;}
+.formula-box .big{font-size:1.5rem;font-weight:800;color:var(--amber);}
+.reaction{font-size:1rem;font-weight:700;margin-top:6px;}
+.slogan{text-align:center;color:var(--pink);font-weight:700;font-size:.92rem;margin:10px 0;}
+
+/* tofu / dent svg */
+#tofuTop{transition:d .5s ease;}
+.ghost-stack{font-size:20px;}
+
+/* result boxes */
+.result{border-radius:12px;padding:12px 14px;font-size:.95rem;line-height:1.7;display:none;animation:pop .3s ease;margin-top:6px;}
+@keyframes pop{from{transform:scale(.92);opacity:0;}to{transform:none;opacity:1;}}
+.result.ok{display:block;background:rgba(124,255,178,.12);border:1px solid var(--ghost);color:var(--ghost);}
+.result.bad{display:block;background:rgba(248,113,113,.12);border:1px solid var(--red);color:#fda4a4;}
+.result.info{display:block;background:rgba(139,92,246,.14);border:1px solid var(--purple);color:#d6c8ff;}
+
+/* Level2 */
+.num-input{background:#0f0c1d;border:2px solid var(--purple);border-radius:12px;color:var(--ghost);font-size:1.2rem;font-weight:700;padding:10px 14px;width:140px;text-align:center;outline:none;transition:border-color .2s,box-shadow .2s;}
+.num-input:focus{border-color:var(--ghost);box-shadow:0 0 0 3px rgba(124,255,178,.2);}
+.input-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 4px;line-height:1.15;font-weight:700;}
+.frac span:first-child{border-bottom:1.5px solid currentColor;padding:0 4px;}
+.frac span:last-child{padding:0 4px;}
+#pistonR,#weightBox,#weightTxt{transition:transform 1.2s cubic-bezier(.2,.8,.3,1.2);}
+.lift #pistonR,.lift #weightBox,.lift #weightTxt{transform:translateY(-46px);}
+@keyframes confetti{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-60px) scale(1.6);}}
+.sparkle{position:absolute;pointer-events:none;font-size:22px;animation:confetti 1s ease forwards;}
+
+/* Level3 */
+.opt{display:block;width:100%;text-align:left;background:#19142e;border:1.5px solid var(--line);color:var(--text);border-radius:10px;padding:11px 14px;margin-bottom:8px;font-size:.92rem;line-height:1.6;cursor:pointer;transition:all .18s;}
+.opt:hover{border-color:var(--purple);background:#221a40;}
+.opt.correct{border-color:var(--ghost);background:rgba(124,255,178,.13);color:var(--ghost);}
+.opt.wrong{border-color:var(--red);background:rgba(248,113,113,.13);color:#fda4a4;}
+.opt:disabled{cursor:default;}
+.q-exp{display:none;margin-top:10px;border-radius:10px;padding:11px 13px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);color:#fde8b0;font-size:.88rem;line-height:1.7;}
+.q-exp.show{display:block;animation:pop .3s ease;}
+.reveal-area{display:none;margin-top:16px;}
+.reveal-area.show{display:block;animation:fadeIn .4s ease;}
+#plungerG{transition:transform .5s cubic-bezier(.6,0,.4,1.4);}
+.pressing #plungerG{transform:translateY(34px);}
+.arrowP{opacity:0;}
+.flow .arrowP{animation:arrowPulse 1.4s ease infinite;}
+.flow .arrowP.d1{animation-delay:0s;}.flow .arrowP.d2{animation-delay:.2s;}.flow .arrowP.d3{animation-delay:.4s;}.flow .arrowP.d4{animation-delay:.6s;}
+@keyframes arrowPulse{0%{opacity:0;transform:translateY(-4px);}30%{opacity:1;}70%{opacity:1;transform:translateY(4px);}100%{opacity:0;transform:translateY(8px);}}
+
+/* Quiz */
+.q-block{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;}
+.q-title{font-size:.98rem;line-height:1.8;margin-bottom:12px;}
+.q-title .qno{color:var(--amber);font-weight:800;margin-right:6px;}
+.quiz-note{color:var(--muted);font-size:.85rem;margin-bottom:14px;line-height:1.7;}
+.cert{display:none;text-align:center;margin-top:18px;padding:24px 18px;border-radius:18px;background:linear-gradient(150deg,#173326,#10241c);border:2px solid var(--ghost);animation:pop .4s ease;}
+.cert.show{display:block;}
+.cert .emoji{font-size:3rem;}
+.cert h3{color:var(--ghost);font-size:1.3rem;margin:8px 0;}
+.cert p{color:#cdeedd;font-size:.95rem;line-height:1.8;}
+
+/* progress badges on tabs */
+.done-dot{color:var(--ghost);}
+footer{text-align:center;color:#5e5683;font-size:.78rem;margin:26px 0 10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>👻 鬼界壓力特訓班：團結之力大作戰 👻</h1>
+    <div class="story">
+      在鬼界，單隻鬼的力量微不足道，根本嚇不了人！但鬼界流傳一個祕訣：只要鬼群<b>團結合作</b>，把大家的力量（合力 <span class="hl">F</span>）疊加起來，再<b>集中攻擊在越小的面積 A 上</b>，產生的「壓力 <span class="hl">P = F / A</span>」就會強到讓人類聞風喪膽！你是剛入學的菜鳥小鬼，請依序通過四大特訓關卡，學會壓力與帕斯卡原理的奧義，成為合格的搗蛋鬼！
+    </div>
+    <button class="btn-shuffle" onclick="shuffleAll()">🔄 隨機生成新關卡（洗牌題序）</button>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-p="p1" onclick="goTab(this)">①壓力煉成術<span class="badge" id="b1"></span></button>
+    <button class="tab" data-p="p2" onclick="goTab(this)">②怨力液壓機<span class="badge" id="b2"></span></button>
+    <button class="tab" data-p="p3" onclick="goTab(this)">③馬桶幽靈謎題<span class="badge" id="b3"></span></button>
+    <button class="tab" data-p="p4" onclick="goTab(this)">④習作檢測<span class="badge" id="b4"></span></button>
+  </div>
+
+  <!-- ===== 第一關 ===== -->
+  <section class="panel active" id="p1">
+    <div class="card">
+      <h2>① 鬼群集結！壓力煉成術</h2>
+      <p class="desc">壓力的祕密：<b>壓力 P = 力 F ÷ 受力面積 A</b>。召喚更多鬼來增加合力 F，再選擇把力量集中在多小的面積 A 上，看看人類豆腐床會凹陷多深！目標：製造出 <b>壓力 ≥ <span id="thrTxt">?</span> gw/cm²</b> 的攻擊。</p>
+      <div class="grid2">
+        <div class="svg-box" id="tofuBox">
+          <svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg">
+            <!-- 鬼群 -->
+            <g id="ghostStack" class="ghost-stack"></g>
+            <!-- 攻擊指示 -->
+            <text x="230" y="118" text-anchor="middle" fill="#7CFFB2" font-size="13" font-weight="bold" id="attackLabel">攻擊面：🖐 整個手掌</text>
+            <!-- 豆腐床 -->
+            <rect x="40" y="150" width="380" height="14" fill="#fef3c7" opacity=".3"/>
+            <path id="tofuTop" d="M40 160 L420 160 L420 250 L40 250 Z" fill="#fde68a" stroke="#fbbf24" stroke-width="2"/>
+            <rect x="40" y="248" width="380" height="34" fill="#d97706" opacity=".55"/>
+            <text x="230" y="296" text-anchor="middle" fill="#fbbf24" font-size="12" opacity=".75">🛏️ 人類豆腐床</text>
+            <!-- 凹陷處鬼爪 -->
+            <text x="230" y="148" text-anchor="middle" font-size="22" id="clawIcon">🖐</text>
+          </svg>
+        </div>
+        <div>
+          <div class="ctrl-block">
+            <div class="ctrl-label">🧟 步驟一：召喚鬼群（每隻鬼 = 20 gw）</div>
+            <div class="ghost-counter">
+              <button class="btn btn-sm" onclick="changeGhost(-1)">➖ 撤退</button>
+              <div class="count-pill"><span id="ghostCount">1</span> 隻</div>
+              <button class="btn btn-sm" onclick="changeGhost(1)">➕ 召喚</button>
+            </div>
+            <div style="margin-top:8px;font-size:.9rem;color:var(--muted);">目前合力 F = <b style="color:var(--ghost)" id="forceTxt">20</b> gw</div>
+          </div>
+          <div class="ctrl-block">
+            <div class="ctrl-label">🎯 步驟二：選擇攻擊面積 A</div>
+            <div class="area-btns">
+              <button class="area-btn sel" data-a="100" data-icon="🖐" data-name="整個手掌" onclick="selectArea(this)">🖐 整個手掌<br>100 cm²</button>
+              <button class="area-btn" data-a="10" data-icon="☝" data-name="一根手指" onclick="selectArea(this)">☝ 一根手指<br>10 cm²</button>
+              <button class="area-btn" data-a="1" data-icon="📍" data-name="指尖鬼爪" onclick="selectArea(this)">📍 指尖鬼爪<br>1 cm²</button>
+            </div>
+          </div>
+          <div class="formula-box">
+            P = F ÷ A = <span id="fVal">20</span> ÷ <span id="aVal">100</span> = <span class="big" id="pVal">0.2</span> gw/cm²
+            <div class="reaction" id="reactionTxt">😴 人類毫無感覺</div>
+          </div>
+          <div class="slogan">💡 同樣的力，越集中（A 越小），壓力越大！</div>
+          <button class="btn btn-grn" style="width:100%;" onclick="checkL1()">⚡ 發動攻擊</button>
+          <div class="result" id="l1Result"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 第二關 ===== -->
+  <section class="panel" id="p2">
+    <div class="card">
+      <h2>② 帕斯卡怨力液壓機</h2>
+      <p class="desc">密閉液體就像鬼群的<b>團結陣形</b>——對它施加的壓力，會原封不動地傳遞到液體的每一點！請在左側小活塞輸入適當的力 F1，利用 <b>F2 = F1 × (A2 ÷ A1)</b> 把巨石頂起來。</p>
+      <div class="grid2">
+        <div class="svg-box" id="hydraulicBox">
+          <svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg">
+            <path d="M60 90 L60 240 Q60 268 88 268 L372 268 Q400 268 400 240 L400 70 L330 70 L330 220 Q330 232 318 232 L142 232 Q130 232 130 220 L130 90 Z" fill="#231c40" stroke="#5b4f93" stroke-width="3"/>
+            <path d="M64 150 L64 240 Q64 264 88 264 L372 264 Q396 264 396 240 L396 135 L334 135 L334 220 Q334 236 318 236 L142 236 Q126 236 126 220 L126 150 Z" fill="#2563eb" opacity="0.85"/>
+            <path d="M64 150 L126 150 M334 135 L396 135" stroke="#7cc6ff" stroke-width="3"/>
+            <g id="pistonL">
+              <rect x="62" y="128" width="66" height="20" rx="4" fill="#9ca3af" stroke="#e5e7eb" stroke-width="2"/>
+              <rect x="86" y="78" width="18" height="52" rx="3" fill="#6b7280"/>
+              <text x="95" y="68" text-anchor="middle" fill="#7CFFB2" font-size="15" font-weight="bold">F1 = ?</text>
+              <path d="M95 70 L95 76 M90 73 L95 79 L100 73" stroke="#7CFFB2" stroke-width="2.5" fill="none"/>
+            </g>
+            <text x="95" y="170" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="bold">A1 = 10 cm²</text>
+            <g id="pistonR"><rect x="332" y="112" width="66" height="22" rx="4" fill="#9ca3af" stroke="#e5e7eb" stroke-width="2"/></g>
+            <g id="weightBox">
+              <rect x="328" y="58" width="74" height="52" rx="8" fill="#4c1d95" stroke="#a78bfa" stroke-width="2.5"/>
+              <text x="365" y="82" text-anchor="middle" fill="#e9e4ff" font-size="20">🪨</text>
+              <text x="365" y="101" text-anchor="middle" fill="#fda4a4" font-size="12" font-weight="bold" id="wLabelIn">W</text>
+            </g>
+            <text id="weightTxt" x="365" y="44" text-anchor="middle" fill="#f472b6" font-size="14" font-weight="bold"></text>
+            <text x="365" y="160" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="bold" id="a2Label">A2 = ? cm²</text>
+            <text x="228" y="295" text-anchor="middle" fill="#7CFFB2" font-size="12" opacity=".7">密閉液體 · 壓力等值傳遞 👻</text>
+          </svg>
+        </div>
+        <div>
+          <div class="chip-row">
+            <div class="chip">A1 = <b>10 cm²</b></div>
+            <div class="chip" id="chipA2">A2 = <b>?</b></div>
+            <div class="chip" id="chipW">W = <b>?</b></div>
+          </div>
+          <div class="input-row">
+            <label for="f1Input" style="font-weight:700;">輸入 F1（gw）：</label>
+            <input type="number" class="num-input" id="f1Input" min="0" step="1" placeholder="?" inputmode="numeric">
+          </div>
+          <button class="btn btn-grn" style="width:100%;" onclick="checkL2()">🛡️ 啟動鬼力</button>
+          <div class="result" id="l2Result"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 第三關 ===== -->
+  <section class="panel" id="p3">
+    <div class="card">
+      <h2>③ 馬桶幽靈謎題</h2>
+      <p class="desc">馬桶幽靈把堵塞物卡在彎管深處，吸盤根本碰不到它。先<b>想一想原因</b>，再下壓吸盤驗證你的推理！</p>
+      <div class="q-block" style="margin-bottom:14px;">
+        <div class="q-title"><span class="qno">思考題</span>為什麼用力下壓吸盤，明明碰不到堵塞物，卻能把卡在彎管深處的堵塞物推開？</div>
+        <div id="l3Opts"></div>
+        <div class="q-exp" id="l3Exp"></div>
+      </div>
+      <div class="reveal-area" id="l3Reveal">
+        <div class="svg-box" id="toiletBox" style="margin-bottom:10px;">
+          <svg viewBox="0 0 460 320" xmlns="http://www.w3.org/2000/svg">
+            <path d="M70 90 Q70 70 95 70 L195 70 Q220 70 220 90 L220 150 Q220 195 165 200 L145 200 Q90 195 80 160 Z" fill="#2d2450" stroke="#5b4f93" stroke-width="3"/>
+            <path d="M78 110 L212 110 L212 150 Q212 190 164 194 L146 194 Q95 190 86 158 Z" fill="#2563eb" opacity=".85"/>
+            <line x1="78" y1="110" x2="212" y2="110" stroke="#7cc6ff" stroke-width="3"/>
+            <path d="M160 198 Q150 240 200 246 Q256 250 260 208 Q264 176 300 178 Q340 181 340 222 L340 282 L380 282 L380 222 Q380 144 300 142 Q236 140 222 186 L214 184 Q190 192 165 196 Z" fill="#2563eb" opacity=".85"/>
+            <g id="clog">
+              <ellipse cx="300" cy="160" rx="26" ry="17" fill="#374151" stroke="#9ca3af" stroke-width="2.5"/>
+              <text x="300" y="166" text-anchor="middle" font-size="15">👾</text>
+              <text x="300" y="128" text-anchor="middle" fill="#fda4a4" font-size="12" font-weight="bold">堵塞物</text>
+            </g>
+            <g id="plungerG">
+              <rect x="138" y="6" width="10" height="58" rx="4" fill="#a16207"/>
+              <path d="M108 64 Q143 44 178 64 L178 84 Q143 98 108 84 Z" fill="#b91c1c" stroke="#f87171" stroke-width="2"/>
+              <text x="210" y="36" fill="#fbbf24" font-size="13" font-weight="bold">馬桶吸盤</text>
+            </g>
+            <g stroke="#f87171" stroke-width="3.5" fill="none" stroke-linecap="round">
+              <g class="arrowP d1"><path d="M120 130 L120 158 M113 150 L120 160 L127 150"/></g>
+              <g class="arrowP d2"><path d="M170 130 L170 162 M163 154 L170 164 L177 154"/></g>
+              <g class="arrowP d3"><path d="M200 215 L222 230 M210 232 L224 231 L218 219"/></g>
+              <g class="arrowP d4"><path d="M268 200 L286 184 M272 184 L288 182 L286 196"/></g>
+            </g>
+            <text x="230" y="312" text-anchor="middle" fill="#7CFFB2" font-size="12" opacity=".7">存水彎內充滿水，是傳遞壓力的最佳介質 👻</text>
+          </svg>
+        </div>
+        <div style="text-align:center;"><button class="btn btn-pur" onclick="pressPlunger()">🔽 用力下壓吸盤</button></div>
+        <div class="result info" id="l3Msg" style="display:none;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 第四關 ===== -->
+  <section class="panel" id="p4">
+    <div class="card">
+      <h2>④ 最終挑戰：標準習作檢測</h2>
+      <p class="quiz-note">恭喜你通過三大特訓關卡！最後請回到課本，用標準題目驗收學習成果。共 2 題，作答後立即顯示詳解；兩題全對即可正式結業！</p>
+      <div id="quizArea"></div>
+      <div class="cert" id="certBox">
+        <div class="emoji">🎓👻</div>
+        <h3>恭喜通過鬼界壓力特訓班！</h3>
+        <p>你已完全掌握 <b style="color:var(--amber)">壓力 P = F/A</b> 與 <b style="color:var(--amber)">帕斯卡原理</b> 的奧義，<br>正式成為一名合格的搗蛋鬼！🎉</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>八年級自然科 · 壓力與帕斯卡原理互動平台 · 離線單檔版</footer>
+</div>
+
+<script>
+/* ===== 工具 ===== */
+function shuffleArr(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+function goTab(btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(btn.dataset.p).classList.add('active');
+}
+const progress={1:false,2:false,3:false,4:false};
+function setDone(n){progress[n]=true;document.getElementById('b'+n).innerHTML=' ✅';}
+
+/* ===== 第一關 ===== */
+const GHOST_FORCE=20;
+let ghostN=1, areaA=100, areaIcon='🖐', areaName='整個手掌', threshold=20;
+
+function genThreshold(){
+  // 門檻設計：需要學生「集中面積」才容易達成，避免太簡單
+  const choices=[20,40,80,120];
+  threshold=choices[Math.floor(Math.random()*choices.length)];
+  document.getElementById('thrTxt').textContent=threshold;
+}
+function changeGhost(d){
+  ghostN=Math.max(1,Math.min(8,ghostN+d));
+  updateL1();
+}
+function selectArea(btn){
+  document.querySelectorAll('.area-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  areaA=parseFloat(btn.dataset.a);
+  areaIcon=btn.dataset.icon; areaName=btn.dataset.name;
+  updateL1();
+}
+function renderGhostStack(){
+  const g=document.getElementById('ghostStack');
+  let s='';
+  const perRow=4;
+  for(let i=0;i<ghostN;i++){
+    const row=Math.floor(i/perRow), col=i%perRow;
+    const inRow=Math.min(perRow,ghostN-row*perRow);
+    const startX=230-(inRow-1)*16;
+    const x=startX+col*32;
+    const y=95-row*26;
+    s+='<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="20">👻</text>';
+  }
+  g.innerHTML=s;
+}
+function updateL1(){
+  const F=ghostN*GHOST_FORCE;
+  const P=F/areaA;
+  document.getElementById('ghostCount').textContent=ghostN;
+  document.getElementById('forceTxt').textContent=F;
+  document.getElementById('fVal').textContent=F;
+  document.getElementById('aVal').textContent=areaA;
+  document.getElementById('pVal').textContent=(Math.round(P*100)/100);
+  document.getElementById('attackLabel').textContent='攻擊面：'+areaIcon+' '+areaName;
+  document.getElementById('clawIcon').textContent=areaIcon;
+  renderGhostStack();
+  // 凹陷深度（依壓力，封頂）
+  const depth=Math.min(70,P*1.6+4);
+  const top=160, bottom=250;
+  const cx=230, halfW=areaA>=100?150:(areaA>=10?60:20);
+  const d='M40 '+top+' L'+(cx-halfW)+' '+top+' Q'+cx+' '+(top+depth*1.4)+' '+(cx+halfW)+' '+top+' L420 '+top+' L420 '+bottom+' L40 '+bottom+' Z';
+  document.getElementById('tofuTop').setAttribute('d',d);
+  // 反應文字
+  const r=document.getElementById('reactionTxt');
+  if(P<1){r.textContent='😴 人類毫無感覺';r.style.color='#a79fc9';}
+  else if(P<20){r.textContent='🤨 人類覺得癢癢的';r.style.color='#7CFFB2';}
+  else if(P<80){r.textContent='😬 人類感到刺痛！';r.style.color='#fbbf24';}
+  else{r.textContent='😱 人類嚇到彈起來！';r.style.color='#f472b6';}
+}
+function checkL1(){
+  const F=ghostN*GHOST_FORCE, P=F/areaA;
+  const res=document.getElementById('l1Result');
+  if(P>=threshold){
+    res.className='result ok';
+    res.innerHTML='🎉 <b>攻擊成功！</b>你用 '+ghostN+' 隻鬼（F = '+F+' gw）集中在 '+areaName+'（A = '+areaA+' cm²），製造出 P = '+ (Math.round(P*100)/100) +' gw/cm²，超過門檻 '+threshold+' gw/cm²！<br>📖 重點：力固定時，把面積變小（更集中）就能讓壓力暴增——這就是壓力的本質！';
+    burstSparkles(document.getElementById('tofuBox'));
+    setDone(1);
+  }else{
+    res.className='result bad';
+    res.innerHTML='👻 壓力還不夠！目前 P = '+(Math.round(P*100)/100)+' gw/cm²，未達門檻 '+threshold+' gw/cm²。<br>試試看：<b>召喚更多鬼增加 F</b>，或<b>把攻擊面積 A 變小（更集中）</b>，壓力就會變大！';
+  }
+}
+function burstSparkles(container){
+  const emo=['✨','💫','🌟','👻','🎉'];
+  container.style.position='relative';
+  for(let i=0;i<8;i++){
+    const s=document.createElement('span');
+    s.className='sparkle';s.textContent=emo[i%emo.length];
+    s.style.left=(20+Math.random()*60)+'%';s.style.top=(20+Math.random()*50)+'%';
+    s.style.animationDelay=(Math.random()*0.4)+'s';
+    container.appendChild(s);setTimeout(()=>s.remove(),1600);
+  }
+}
+
+/* ===== 第二關 ===== */
+let A2=20, W=40;
+function genLevel2(){
+  const choices=[20,30,40,50];
+  A2=choices[Math.floor(Math.random()*choices.length)];
+  const ratio=A2/10;
+  const opts=[];
+  for(let f=10;f<=150;f+=5){const w=f*ratio;if(w>=40&&w<=150)opts.push(f);}
+  const f1=opts[Math.floor(Math.random()*opts.length)];
+  W=f1*ratio;
+  document.getElementById('a2Label').textContent='A2 = '+A2+' cm²';
+  document.getElementById('chipA2').innerHTML='A2 = <b>'+A2+' cm²</b>';
+  document.getElementById('chipW').innerHTML='W = <b>'+W+' gw</b>';
+  document.getElementById('weightTxt').textContent='W = '+W+' gw';
+  document.getElementById('wLabelIn').textContent=W+' gw';
+  document.getElementById('f1Input').value='';
+  document.getElementById('hydraulicBox').classList.remove('lift');
+  const res=document.getElementById('l2Result');res.className='result';res.innerHTML='';
+}
+function checkL2(){
+  const val=parseFloat(document.getElementById('f1Input').value);
+  const res=document.getElementById('l2Result');
+  const box=document.getElementById('hydraulicBox');
+  if(isNaN(val)||val<0){res.className='result bad';res.innerHTML='⚠️ 請先輸入一個有效的力 F1（gw）！';return;}
+  const ratio=A2/10, F2=val*ratio;
+  if(F2>=W){
+    box.classList.add('lift');res.className='result ok';
+    const extra=(F2>W)?'（你的推力 F2 = '+F2+' gw 已超過巨石重量，當然頂得動！剛好平衡所需的最小力是 F1 = '+(W/ratio)+' gw）':'（F2 = '+val+' × '+ratio+' = '+F2+' gw，恰好等於 W，完美平衡！）';
+    res.innerHTML='🎉 <b>計算正確！鬼群的壓力完美傳遞，小力量頂起大重物！</b><br>'+extra;
+    burstSparkles(box);setDone(2);
+  }else{
+    box.classList.remove('lift');res.className='result bad';
+    res.innerHTML='👻 噢不！力量不對，無法平衡，請重新計算 <span class="frac"><span>F1</span><span>A1</span></span> = <span class="frac"><span>W</span><span>A2</span></span> 的數值！<br>（提示：你目前的 F2 = '+val+' × '+ratio+' = '+F2+' gw，還不足以對抗 W = '+W+' gw）';
+  }
+}
+
+/* ===== 第三關 ===== */
+const l3Q={
+  opts:[
+    {t:'彎管內充滿水（密閉液體），吸盤對水加壓後，壓力會以原來的大小傳遞到水中每一點，包括堵塞物上方，因此把它推開',ok:true},
+    {t:'吸盤產生的強大風力，沿著管路把堵塞物吹走',ok:false},
+    {t:'吸盤的高速震動讓堵塞物鬆動，自己掉下去',ok:false},
+    {t:'下壓時摩擦生熱，水溫升高把堵塞物融化掉',ok:false}
+  ],
+  exp:'正解：彎管內充滿水，是「密閉液體」。依帕斯卡原理，對密閉液體施加的壓力會以原來大小傳遞到液體中的每一點與容器壁上，所以即使吸盤碰不到堵塞物，加壓產生的壓力仍能透過水傳到堵塞物上方，把它推開。空氣傳壓效果差、震動與熱都不是主因。'
+};
+function renderL3(){
+  const box=document.getElementById('l3Opts');
+  box.innerHTML='';
+  document.getElementById('l3Exp').className='q-exp';
+  document.getElementById('l3Reveal').classList.remove('show');
+  document.getElementById('l3Msg').style.display='none';
+  const labels=['(A)','(B)','(C)','(D)'];
+  const opts=shuffleArr(l3Q.opts);
+  const btns=[];
+  opts.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='opt';b.innerHTML='<b>'+labels[i]+'</b> '+o.t;
+    b.onclick=()=>{
+      btns.forEach(x=>x.disabled=true);
+      const exp=document.getElementById('l3Exp');
+      if(o.ok){b.classList.add('correct');exp.innerHTML='✅ <b>答對了！</b>'+l3Q.exp;}
+      else{b.classList.add('wrong');btns.forEach((x,xi)=>{if(opts[xi].ok)x.classList.add('correct');});exp.innerHTML='❌ <b>再想想～</b>'+l3Q.exp;}
+      exp.classList.add('show');
+      document.getElementById('l3Reveal').classList.add('show');
+      setDone(3);
+    };
+    btns.push(b);box.appendChild(b);
+  });
+}
+let pressing=false;
+function pressPlunger(){
+  if(pressing)return;pressing=true;
+  const box=document.getElementById('toiletBox');
+  const msg=document.getElementById('l3Msg');
+  box.classList.add('pressing');
+  setTimeout(()=>{
+    box.classList.add('flow');
+    msg.style.display='block';
+    msg.innerHTML='💡 <b>加壓瞬間，水中的每一點都感受到了相同的壓力增加，壓力成功傳遞到堵塞物上方！</b><br>這正是帕斯卡原理：對密閉液體施加的壓力，會以原來的大小傳遞到液體中的每一點與容器壁上。馬桶吸盤、水管疏通都是這個原理的應用。';
+  },420);
+  setTimeout(()=>{box.classList.remove('pressing');},1100);
+  setTimeout(()=>{box.classList.remove('flow');pressing=false;},4600);
+}
+
+/* ===== 第四關 習作 ===== */
+const quizBank=[
+  {
+    q:'一台油壓機為密閉系統，小活塞的截面積為 2 平方公分，大活塞的截面積為 40 平方公分。今在小活塞上施加 10 重力公克（gw）的力，依據帕斯卡原理，大活塞最多可頂起多重的物體？',
+    opts:[{t:'200 gw',ok:true},{t:'20 gw',ok:false},{t:'800 gw',ok:false},{t:'0.5 gw',ok:false}],
+    exp:'依帕斯卡原理，壓力等值傳遞：P = F1/A1 = F2/A2，故 F2 = F1 × (A2/A1) = 10 × (40/2) = 10 × 20 = 200 gw。油壓機能用小力產生大力，但小活塞需移動較長距離，並不會省功。'
+  },
+  {
+    q:'關於帕斯卡原理的敘述，下列何者正確？',
+    opts:[
+      {t:'對密閉容器內的靜止液體施加壓力時，此壓力會以原來的大小傳遞到液體中的每一點及容器壁上',ok:true},
+      {t:'施加的壓力只會傳遞到容器的底部，側壁不會受到影響',ok:false},
+      {t:'施加在小活塞上的「力」會以相同大小傳遞給大活塞，所以兩活塞受力相等',ok:false},
+      {t:'帕斯卡原理只適用於水，其他液體無法傳遞壓力',ok:false}
+    ],
+    exp:'帕斯卡原理：加在密閉液體上的「壓力」（不是「力」）會以原來的大小傳遞到液體各點與容器壁。傳遞的是壓力 P，兩端的力 F 與活塞面積成正比（F = P × A），面積不同時受力並不相等；且任何液體皆適用，不限於水。'
+  }
+];
+let quizCorrect=0, quizAnswered=0;
+function renderQuiz(){
+  const area=document.getElementById('quizArea');
+  area.innerHTML='';quizCorrect=0;quizAnswered=0;
+  document.getElementById('certBox').classList.remove('show');
+  const qs=shuffleArr(quizBank);
+  qs.forEach((item,qi)=>{
+    const block=document.createElement('div');block.className='q-block';
+    const title=document.createElement('div');title.className='q-title';
+    title.innerHTML='<span class="qno">第 '+(qi+1)+' 題</span>'+item.q;
+    block.appendChild(title);
+    const opts=shuffleArr(item.opts);
+    const exp=document.createElement('div');exp.className='q-exp';exp.innerHTML='💡 <b>詳解：</b>'+item.exp;
+    const labels=['(A)','(B)','(C)','(D)'];const btns=[];
+    opts.forEach((o,oi)=>{
+      const b=document.createElement('button');b.className='opt';b.innerHTML='<b>'+labels[oi]+'</b> '+o.t;
+      b.onclick=()=>{
+        btns.forEach(x=>x.disabled=true);
+        if(o.ok){b.classList.add('correct');quizCorrect++;}
+        else{b.classList.add('wrong');btns.forEach((x,xi)=>{if(opts[xi].ok)x.classList.add('correct');});}
+        exp.classList.add('show');
+        quizAnswered++;
+        if(quizAnswered===quizBank.length){
+          if(quizCorrect===quizBank.length){document.getElementById('certBox').classList.add('show');setDone(4);}
+        }
+      };
+      btns.push(b);block.appendChild(b);
+    });
+    block.appendChild(exp);area.appendChild(block);
+  });
+}
+
+/* ===== 全域洗牌 ===== */
+function shuffleAll(){
+  genThreshold();ghostN=1;
+  document.querySelectorAll('.area-btn').forEach(b=>b.classList.remove('sel'));
+  document.querySelector('.area-btn[data-a="100"]').classList.add('sel');
+  areaA=100;areaIcon='🖐';areaName='整個手掌';
+  document.getElementById('l1Result').className='result';
+  updateL1();
+  genLevel2();
+  renderL3();
+  renderQuiz();
+  const btn=document.querySelector('.btn-shuffle');
+  btn.textContent='✅ 已生成新關卡！';
+  setTimeout(()=>{btn.textContent='🔄 隨機生成新關卡（洗牌題序）';},1200);
+}
+
+/* 初始化 */
+genThreshold();updateL1();genLevel2();renderL3();renderQuiz();
+</script>
+</body>
+</html>
