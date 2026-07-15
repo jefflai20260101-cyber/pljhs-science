@@ -125,6 +125,50 @@
   }
   .step-item:last-child .step-line{display:none;}
 
+  /* ===== Full mindmap canvas ===== */
+  .mindmap-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  .mindmap-legend{display:flex;flex-wrap:wrap;gap:8px 14px;}
+  .legend-chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--ink-soft);}
+  .legend-dot{width:10px;height:10px;border-radius:999px;display:inline-block;flex-shrink:0;}
+  .mindmap-controls{display:flex;align-items:center;gap:6px;}
+  .zoom-btn{width:32px;height:32px;border-radius:9px;border:1.6px solid var(--line);background:var(--card);
+    display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--ink);
+    cursor:pointer;user-select:none;line-height:1;}
+  .zoom-btn:active{transform:scale(.92);}
+  .zoom-hint{font-size:11.5px;color:var(--ink-soft);margin-left:4px;}
+  .mindmap-frame{
+    position:relative;overflow:hidden;border:1px solid var(--line);border-radius:16px;
+    background:var(--card);
+    background-image:radial-gradient(circle at 1px 1px, rgba(43,38,32,.07) 1px, transparent 0);
+    background-size:20px 20px;
+    height:min(70vh,620px);
+    cursor:grab;touch-action:none;
+  }
+  .mindmap-frame.dragging{cursor:grabbing;}
+  .mindmap-canvas{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;}
+  .mindmap-edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+  .mm-node{
+    position:absolute;transform:translateY(-50%);border-radius:10px;
+    box-sizing:border-box;padding:6px 10px;display:flex;flex-direction:column;justify-content:center;
+    white-space:normal;word-break:break-word;
+  }
+  .mm-node .mm-title{line-height:1.25;}
+  .mm-node .mm-sub{line-height:1.25;opacity:.72;margin-top:2px;font-weight:400;}
+  .mm-root{
+    background:var(--ink);color:var(--paper);font-family:'Noto Serif TC',serif;font-weight:900;
+    align-items:center;text-align:center;font-size:15px;border-radius:14px;
+  }
+  .mm-kingdom{
+    font-family:'Noto Serif TC',serif;font-weight:700;font-size:13.5px;background:var(--card);
+    flex-direction:row;align-items:center;gap:7px;border-width:2px;border-style:solid;
+  }
+  .mm-kingdom-dot{width:20px;height:20px;border-radius:999px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .mm-group{background:var(--card);border-width:1.4px;border-style:solid;font-size:12px;font-weight:700;}
+  .mm-group .mm-sub{font-size:10px;}
+  .mm-detail{background:var(--card);border-width:1.1px;border-style:solid;font-size:11px;font-weight:600;}
+  .mm-detail .mm-sub{font-size:9px;}
+  .mm-leaf{border-width:1px;border-style:solid;font-size:10.5px;font-weight:500;text-align:center;align-items:center;}
+
   @media (prefers-reduced-motion: reduce){
     .spec-card, .anim-correct, .anim-wrong, .float-in, .kingdom-btn{animation:none!important;transition:none!important;}
   }
@@ -311,77 +355,169 @@ document.querySelectorAll('.tabbtn').forEach(btn=>{
   });
 });
 
-/* ================= TAB 1: TREE ================= */
-let activeKingdom=null;
-function renderTree(){
-  const el=document.getElementById('panel-tree');
-  el.innerHTML=`
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-      ${KINGDOMS.map(k=>`
-        <button data-k="${k.id}" class="spec-card kcard text-left p-4 flex flex-col gap-3 ${activeKingdom===k.id?'is-active':''}"
-          style="border-color:${activeKingdom===k.id?k.color:'var(--line)'}">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background:${k.tint};color:${k.color}">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">${k.icon}</svg>
-          </div>
-          <div>
-            <div class="label-tag uppercase text-[var(--ink-soft)]">${k.en}</div>
-            <div class="font-display font-bold text-[15px] sm:text-base leading-tight mt-0.5">${k.name}</div>
-          </div>
-        </button>
-      `).join('')}
-    </div>
-    <div id="tree-detail" class="mt-6"></div>
-  `;
-  el.querySelectorAll('.kcard').forEach(c=>{
-    c.addEventListener('click', ()=>{
-      activeKingdom = activeKingdom===c.dataset.k ? null : c.dataset.k;
-      sound('click');
-      renderTree();
-    });
-  });
-  renderTreeDetail();
+/* ================= TAB 1: FULL MINDMAP ================= */
+const MM_ROW_H = 54;
+const MM_COL_X = [20, 250, 530, 850, 1160];
+const MM_BOX_W = [130, 158, 226, 196, 156];
+const MM_MARGIN = 40;
+
+function buildMindmapTree(){
+  return {
+    name:'五界生物', depth:0,
+    children: KINGDOMS.map(k=>({
+      name:k.name, color:k.color, tint:k.tint, icon:k.icon,
+      children: k.groups.map(g=>{
+        let children;
+        if(g.detail){
+          children = g.detail.map(d=>({
+            name:d.name, subtitle:d.trait||'', color:k.color,
+            children:(d.examples&&d.examples.length) ? d.examples.map(ex=>({name:ex,color:k.color})) : []
+          }));
+        }else{
+          children = (g.examples||[]).map(ex=>({name:ex,color:k.color}));
+        }
+        return {name:g.name, subtitle:(g.features||[]).join('、'), color:k.color, children};
+      })
+    }))
+  };
 }
 
-function renderTreeDetail(){
-  const wrap=document.getElementById('tree-detail');
-  if(!wrap) return;
-  if(!activeKingdom){ wrap.innerHTML=''; return; }
-  const k=byId(activeKingdom);
-  wrap.innerHTML=`
-    <div class="float-in rounded-2xl border p-5 sm:p-7" style="border-color:${k.color};background:${k.tint}">
-      <div class="flex items-start justify-between gap-4 mb-5">
-        <div>
-          <div class="label-tag uppercase" style="color:${k.color}">${k.en} 分類特徵</div>
-          <h3 class="font-display text-xl sm:text-2xl font-black mt-1" style="color:${k.color}">${k.name}</h3>
-          <p class="text-sm text-[var(--ink-soft)] mt-1">${k.desc}</p>
-        </div>
-        <div class="w-12 h-12 shrink-0 rounded-full flex items-center justify-center" style="background:${k.color};color:${k.tint}">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">${k.icon}</svg>
-        </div>
+function mmNodeType(node){
+  if(node.depth===0) return 'root';
+  if(node.depth===1) return 'kingdom';
+  if(node.depth===2) return 'group';
+  return node.subtitle ? 'detail' : 'leaf';
+}
+const MM_TYPE_H = {root:56, kingdom:52, group:52, detail:46, leaf:34};
+
+let mmScale=1, mmPanX=0, mmPanY=0, mmDragging=false, mmStartX=0, mmStartY=0, mmStartPanX=0, mmStartPanY=0;
+
+function renderTree(){
+  const el=document.getElementById('panel-tree');
+  const root=buildMindmapTree();
+  let leafCounter=0, maxDepth=0;
+  const flatNodes=[], edges=[];
+  (function layout(node, depth){
+    node.depth=depth;
+    maxDepth=Math.max(maxDepth, depth);
+    node.x=MM_COL_X[depth];
+    if(!node.children || node.children.length===0){
+      node.y = leafCounter*MM_ROW_H + MM_ROW_H/2 + MM_MARGIN;
+      leafCounter++;
+    }else{
+      node.children.forEach(c=>layout(c, depth+1));
+      const ys=node.children.map(c=>c.y);
+      node.y=(Math.min(...ys)+Math.max(...ys))/2;
+    }
+    node.type=mmNodeType(node);
+    flatNodes.push(node);
+  })(root, 0);
+  // second pass: build connectors now that every node.y is finalized
+  (function collectEdges(node){
+    if(!node.children) return;
+    node.children.forEach(child=>{
+      edges.push({
+        x1: node.x+MM_BOX_W[node.depth], y1: node.y,
+        x2: child.x, y2: child.y,
+        color: child.color||'var(--ink)',
+        w: child.depth<=2?3:(child.depth===3?2:1.4)
+      });
+      collectEdges(child);
+    });
+  })(root);
+
+  const totalW = MM_COL_X[maxDepth] + MM_BOX_W[maxDepth] + MM_MARGIN;
+  const totalH = leafCounter*MM_ROW_H + MM_MARGIN*2;
+
+  const nodesHtml = flatNodes.map(n=>{
+    const h=MM_TYPE_H[n.type];
+    const w=MM_BOX_W[n.depth];
+    if(n.type==='root'){
+      return `<div class="mm-node mm-root" style="left:${n.x}px;top:${n.y}px;width:${w}px;height:${h}px;">
+        <div class="mm-title">${n.name}</div>
+      </div>`;
+    }
+    if(n.type==='kingdom'){
+      return `<div class="mm-node mm-kingdom" style="left:${n.x}px;top:${n.y}px;width:${w}px;height:${h}px;border-color:${n.color};color:${n.color}">
+        <div class="mm-kingdom-dot" style="background:${n.tint};color:${n.color}"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">${n.icon}</svg></div>
+        <div class="mm-title" style="color:var(--ink)">${n.name}</div>
+      </div>`;
+    }
+    if(n.type==='group'){
+      return `<div class="mm-node mm-group" style="left:${n.x}px;top:${n.y}px;width:${w}px;height:${h}px;border-color:${n.color}">
+        <div class="mm-title" style="color:${n.color}">${n.name}</div>
+        ${n.subtitle?`<div class="mm-sub">${n.subtitle}</div>`:''}
+      </div>`;
+    }
+    if(n.type==='detail'){
+      return `<div class="mm-node mm-detail" style="left:${n.x}px;top:${n.y}px;width:${w}px;height:${h}px;border-color:${n.color}88">
+        <div class="mm-title" style="color:var(--ink)">${n.name}</div>
+        <div class="mm-sub">${n.subtitle}</div>
+      </div>`;
+    }
+    return `<div class="mm-node mm-leaf" style="left:${n.x}px;top:${n.y}px;width:${w}px;height:${h}px;border-color:${n.color||'var(--line)'}66;background:${n.color?'var(--card)':'var(--card)'}">
+      <div class="mm-title" style="color:${n.color||'var(--ink)'}">${n.name}</div>
+    </div>`;
+  }).join('');
+
+  const edgesSvg = edges.map(e=>{
+    const midX=(e.x1+e.x2)/2;
+    return `<path d="M ${e.x1} ${e.y1} C ${midX} ${e.y1}, ${midX} ${e.y2}, ${e.x2} ${e.y2}" fill="none" stroke="${e.color}" stroke-width="${e.w}" opacity="0.55"/>`;
+  }).join('');
+
+  el.innerHTML=`
+    <div class="mindmap-toolbar">
+      <div class="mindmap-legend">
+        ${KINGDOMS.map(k=>`<span class="legend-chip"><span class="legend-dot" style="background:${k.color}"></span>${k.name}</span>`).join('')}
       </div>
-      <div class="branch-wrap" style="color:${k.color}">
-        ${k.groups.map(g=>`
-          <div class="branch-node">
-            <div class="branch-dot" style="color:${k.color}"></div>
-            <div class="bg-[var(--card)] rounded-xl border p-3.5 sm:p-4" style="border-color:${k.color}">
-              <div class="font-display font-bold text-[15px]" style="color:var(--ink)">${g.name}</div>
-              ${g.features && g.features.length ? `<div class="mt-1.5">${g.features.map(f=>`<span class="feature-chip" style="color:${k.color}">${f}</span>`).join('')}</div>`:''}
-              ${g.detail ? `
-                <div class="mt-3 space-y-2 pl-3 border-l" style="border-color:${k.color}44">
-                  ${g.detail.map(d=>`
-                    <div>
-                      <div class="text-[13px] font-medium" style="color:${k.color}">${d.name}${d.trait?`<span class="text-[var(--ink-soft)] font-normal">　—　${d.trait}</span>`:''}</div>
-                      ${d.examples && d.examples.length ? `<div class="mt-1">${d.examples.map(ex=>`<span class="pill" style="background:${k.tint};color:${k.color}">${ex}</span>`).join(' ')}</div>`:''}
-                    </div>
-                  `).join('')}
-                </div>
-              `: (g.examples && g.examples.length ? `<div class="mt-2">${g.examples.map(ex=>`<span class="pill" style="background:${k.tint};color:${k.color}">${ex}</span>`).join(' ')}</div>` : '')}
-            </div>
-          </div>
-        `).join('')}
+      <div class="mindmap-controls">
+        <span class="zoom-hint">拖曳瀏覽・縮放看細節</span>
+        <button id="mm-zoom-out" class="zoom-btn" aria-label="縮小">－</button>
+        <button id="mm-zoom-reset" class="zoom-btn" aria-label="重置">⤢</button>
+        <button id="mm-zoom-in" class="zoom-btn" aria-label="放大">＋</button>
+      </div>
+    </div>
+    <div id="mm-frame" class="mindmap-frame">
+      <div id="mm-canvas" class="mindmap-canvas" style="width:${totalW}px;height:${totalH}px;">
+        <svg class="mindmap-edges" width="${totalW}" height="${totalH}">${edgesSvg}</svg>
+        ${nodesHtml}
       </div>
     </div>
   `;
+
+  const frame=document.getElementById('mm-frame');
+  const canvas=document.getElementById('mm-canvas');
+
+  function applyMmTransform(){
+    canvas.style.transform=`translate(${mmPanX}px,${mmPanY}px) scale(${mmScale})`;
+  }
+  function fitToFrame(){
+    const fw=frame.clientWidth, fh=frame.clientHeight;
+    mmScale=Math.max(0.24, Math.min(1, (fw-24)/totalW));
+    mmPanX=Math.max(12, (fw - totalW*mmScale)/2);
+    mmPanY=Math.min(12, (fh - totalH*mmScale)/2 > 12 ? (fh-totalH*mmScale)/2 : 12);
+    applyMmTransform();
+  }
+  requestAnimationFrame(fitToFrame);
+
+  frame.addEventListener('pointerdown', (e)=>{
+    mmDragging=true; frame.classList.add('dragging');
+    mmStartX=e.clientX; mmStartY=e.clientY; mmStartPanX=mmPanX; mmStartPanY=mmPanY;
+    frame.setPointerCapture(e.pointerId);
+  });
+  frame.addEventListener('pointermove', (e)=>{
+    if(!mmDragging) return;
+    mmPanX=mmStartPanX + (e.clientX-mmStartX);
+    mmPanY=mmStartPanY + (e.clientY-mmStartY);
+    applyMmTransform();
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(evt=>{
+    frame.addEventListener(evt, ()=>{ mmDragging=false; frame.classList.remove('dragging'); });
+  });
+
+  document.getElementById('mm-zoom-in').addEventListener('click', ()=>{ mmScale=Math.min(1.6, mmScale*1.2); applyMmTransform(); sound('click'); });
+  document.getElementById('mm-zoom-out').addEventListener('click', ()=>{ mmScale=Math.max(0.18, mmScale/1.2); applyMmTransform(); sound('click'); });
+  document.getElementById('mm-zoom-reset').addEventListener('click', ()=>{ fitToFrame(); sound('click'); });
 }
 
 /* ================= TAB 2: GAME ================= */
