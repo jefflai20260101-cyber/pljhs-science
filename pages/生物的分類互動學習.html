@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生物分類大冒險</title>
+<style>
+  :root{
+    --card:#1e293b; --card2:#273449; --ink:#f1f5f9; --muted:#94a3b8; --line:#334155;
+    --k1:#f59e0b; --k2:#10b981; --k3:#8b5cf6; --k4:#22c55e; --k5:#ef4444;
+    --good:#22c55e; --bad:#ef4444; --accent:#38bdf8; --gold:#fbbf24;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;
+    background:radial-gradient(circle at 20% 0%,#16233f,#0b1220 60%);color:var(--ink);
+    min-height:100vh;line-height:1.6;overflow-x:hidden}
+  .wrap{max-width:920px;margin:0 auto;padding:14px}
+
+  .hud{position:sticky;top:0;z-index:50;display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+    background:rgba(15,23,42,.9);backdrop-filter:blur(8px);border:1px solid var(--line);
+    border-radius:14px;padding:10px 16px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+  .hud .item{font-weight:800;font-size:.95rem;display:flex;align-items:center;gap:5px}
+  .hud .sp{flex:1}
+  .hud .val{color:var(--accent)}
+  .combo-flame{color:var(--k1)}
+  .pbar{width:100%;height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-top:8px;flex-basis:100%}
+  .pbar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#0ea5e9,#6366f1);transition:.4s}
+
+  .screen{display:none;animation:fade .35s}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  h1{text-align:center;font-size:2rem;letter-spacing:2px;margin:8px 0}
+  .sub{text-align:center;color:var(--muted);margin-bottom:22px}
+
+  .levels{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:620px){.levels{grid-template-columns:1fr}}
+  .lvcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;position:relative;text-align:center;transition:.2s}
+  .lvcard:hover{border-color:var(--accent);transform:translateY(-3px)}
+  .lvcard .lvemoji{font-size:3rem}
+  .lvcard h3{font-size:1.2rem;margin:8px 0 4px}
+  .lvcard p{color:var(--muted);font-size:.88rem;min-height:40px}
+  .lvcard .done-tag{font-size:.85rem;font-weight:800;margin:8px 0;min-height:24px}
+  .lvcard .done-tag.ok{color:var(--good)}
+  .btnbig{background:linear-gradient(135deg,#0ea5e9,#6366f1);border:none;color:#fff;
+    padding:12px 26px;border-radius:12px;cursor:pointer;font-weight:800;font-size:1rem;box-shadow:0 6px 16px rgba(56,189,248,.3);transition:.15s}
+  .btnbig:hover{transform:translateY(-2px)}
+  .btnbig:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+  .btn{background:var(--card2);border:1px solid var(--line);color:#fff;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:700}
+  .btn:hover{border-color:var(--accent)}
+  .center{text-align:center}
+
+  details.review{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin:22px auto 0;max-width:100%}
+  details.review summary{cursor:pointer;font-weight:800;font-size:1rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:14px}
+  .flip{perspective:1000px;height:140px;cursor:pointer}
+  .flip-inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+  .flip.on .flip-inner{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding:10px;text-align:center;border:1px solid var(--line)}
+  .front{background:var(--card2)}
+  .front .emoji{font-size:2.1rem}
+  .front .name{font-weight:800;margin-top:4px}
+  .badge{display:inline-block;font-size:.66rem;padding:2px 8px;border-radius:99px;margin-bottom:5px;color:#0b1220;font-weight:800}
+  .back{background:#0f1a2e;transform:rotateY(180deg);font-size:.78rem;overflow:auto}
+  .back .ex{margin-top:6px;color:var(--accent);font-weight:800}
+
+  .quizbox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px}
+  .qhead{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-weight:700;margin-bottom:14px}
+  .qtext{font-size:1.1rem;margin-bottom:18px}
+  .qtext .feat{display:block;background:#0f1a2e;border-left:4px solid var(--accent);padding:12px 14px;border-radius:8px;margin-top:8px;font-size:1rem}
+  .qtext .big-ex{font-size:1.6rem;font-weight:900;color:var(--accent)}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.opts{grid-template-columns:1fr}}
+  .opt{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;transition:.15s;font-weight:700;font-size:1rem}
+  .opt:hover{border-color:var(--accent);transform:translateX(2px)}
+  .opt.correct{background:rgba(34,197,94,.2);border-color:var(--good)}
+  .opt.wrong{background:rgba(239,68,68,.2);border-color:var(--bad)}
+  .opt.disabled{pointer-events:none;opacity:.65}
+  .qfoot{margin-top:18px;display:flex;justify-content:space-between;align-items:center;min-height:44px}
+  .fb{font-weight:800}.fb.g{color:var(--good)}.fb.b{color:var(--bad)}
+
+  .float{position:fixed;font-weight:900;font-size:1.6rem;pointer-events:none;z-index:99;animation:floatUp 1s ease-out forwards}
+  @keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(.8)}100%{opacity:0;transform:translateY(-60px) scale(1.3)}}
+
+  .overlay{position:fixed;inset:0;background:rgba(5,10,20,.82);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}
+  .overlay.show{display:flex}
+  .panel-box{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:32px;max-width:460px;width:100%;text-align:center;animation:pop .4s}
+  @keyframes pop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+  .panel-box .big{font-size:3.6rem}
+  .panel-box h2{margin:6px 0}
+  .statline{display:flex;justify-content:space-around;margin:16px 0;color:var(--muted);font-weight:700}
+  .statline b{display:block;color:var(--ink);font-size:1.3rem}
+  .rankname{font-size:1.6rem;font-weight:900;color:var(--gold);margin:6px 0}
+  .rankstars{font-size:1.7rem;letter-spacing:4px;margin:8px 0}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
+  .abadge{background:var(--card2);border:1px solid var(--gold);color:var(--gold);border-radius:99px;padding:6px 12px;font-size:.82rem;font-weight:800}
+  footer{text-align:center;color:var(--muted);font-size:.78rem;margin:26px 0 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud" id="hud" style="display:none">
+    <span class="item">⭐ <span class="val" id="hScore">0</span></span>
+    <span class="item combo-flame" id="hCombo" style="opacity:.4">🔥 <span id="hComboN">0</span> 連擊</span>
+    <span class="sp"></span>
+    <a href="../index.html" class="btn" style="padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; background:rgba(255,255,255,0.1); border-color:var(--line);">🏠 理化網站</a>
+    <button class="btn" id="btnHome" style="padding:6px 14px">🏠 關卡地圖</button>
+    <div class="pbar"><i id="hBar"></i></div>
+  </div>
+
+  <!-- 開始 -->
+  <section class="screen active" id="sIntro">
+    <div style="display:flex; justify-content:flex-start; margin-bottom:12px;">
+      <a href="../index.html" style="color: #38bdf8; text-decoration: none; font-weight: bold; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.4); padding: 6px 16px; border-radius: 20px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; backdrop-filter: blur(4px); transition: all .2s;">🏠 返回理化網站</a>
+    </div>
+    <h1>🧬 生物分類大冒險</h1>
+    <p class="sub">五界分類法闖關遊戲 · 兩關各 10 題，完成後看看你是哪個等級！</p>
+    <div class="lvcard" style="max-width:480px;margin:0 auto">
+      <div class="lvemoji">🗺️</div>
+      <h3>兩大關卡自由挑戰</h3>
+      <p>第一關考「生物分類」，第二關考「生物特徵」。<br>兩關不分先後、都能挑戰，各 10 題，依答題表現計分。<br>兩關都完成後，會頒給你 5 個等級之一！</p>
+      <button class="btnbig" onclick="go('sMap')">開始冒險 🚀</button>
+    </div>
+  </section>
+
+  <!-- 關卡地圖 -->
+  <section class="screen" id="sMap">
+    <h1>🗺️ 關卡地圖</h1>
+    <p class="sub">兩關都能自由挑戰、隨時重玩，完成兩關即可查看你的等級。</p>
+    <div class="levels">
+      <div class="lvcard">
+        <div class="lvemoji">🧩</div>
+        <h3>第一關 · 生物分類</h3>
+        <div class="done-tag" id="tag1">尚未挑戰</div>
+        <p>看生物名稱，選出牠屬於哪一「界」（10 題）</p>
+        <button class="btnbig" id="btn1" onclick="startLevel('cls')">開始挑戰</button>
+      </div>
+      <div class="lvcard">
+        <div class="lvemoji">🔬</div>
+        <h3>第二關 · 生物特徵</h3>
+        <div class="done-tag" id="tag2">尚未挑戰</div>
+        <p>看特徵描述，選出正確的生物類別（10 題）</p>
+        <button class="btnbig" id="btn2" onclick="startLevel('feat')">開始挑戰</button>
+      </div>
+    </div>
+    <div class="center" style="margin-top:24px">
+      <div style="font-size:1.3rem;font-weight:800">目前總分：<span id="totalScore" style="color:var(--accent)">0</span>　答對：<span id="totalCorrect" style="color:var(--gold)">0</span> / 20</div>
+      <button class="btnbig" id="btnRank" style="margin-top:14px;display:none" onclick="showRank()">🏆 查看我的等級</button>
+    </div>
+    <details class="review">
+      <summary>📖 生物圖鑑複習（點我展開全部 22 種）</summary>
+      <div class="grid" id="cards"></div>
+    </details>
+  </section>
+
+  <!-- 測驗（兩關共用） -->
+  <section class="screen" id="sQuiz">
+    <h1 id="qTitle">關卡</h1>
+    <div class="quizbox">
+      <div class="qhead"><span id="qLabel"></span><span id="qProg">第 1 / 10 題</span></div>
+      <div id="qArea"></div>
+    </div>
+  </section>
+
+  <footer>互動學習遊戲 · 依據「生物的分類」學習單製作</footer>
+</div>
+
+<!-- 單關完成 -->
+<div class="overlay" id="ovLevel">
+  <div class="panel-box">
+    <div class="big" id="lvEmoji">🎉</div>
+    <h2 id="lvTitle">過關！</h2>
+    <div class="statline" id="lvStats"></div>
+    <p id="lvMsg" style="color:var(--muted)"></p>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btnbig" id="lvBack">回關卡地圖</button>
+      <button class="btn" id="lvRetry">重玩本關</button>
+    </div>
+  </div>
+</div>
+
+<!-- 最終等級 -->
+<div class="overlay" id="ovRank">
+  <div class="panel-box">
+    <div class="big" id="rankEmoji">🏆</div>
+    <div class="rankname" id="rankName">生物大師</div>
+    <div class="rankstars" id="rankStars">⭐⭐⭐⭐⭐</div>
+    <div class="statline">
+      <div>總分<b id="rankScore">0</b></div>
+      <div>答對<b id="rankCorrect">0/20</b></div>
+      <div>最高連擊<b id="rankCombo">0</b></div>
+    </div>
+    <div class="badges" id="rankBadges"></div>
+    <p id="rankMsg" style="color:var(--muted)"></p>
+    <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btnbig" onclick="closeRank();go('sMap')">回地圖再刷分</button>
+      <button class="btn" onclick="location.reload()">全部重來 🔄</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- 資料 ---------- */
+const KINGDOMS={
+  k1:{name:"原核生物界",icon:"🦠"},k2:{name:"原生生物界",icon:"🔬"},
+  k3:{name:"真菌界",icon:"🍄"},k4:{name:"植物界",icon:"🌿"},k5:{name:"動物界",icon:"🐾"}};
+const KC={k1:"var(--k1)",k2:"var(--k2)",k3:"var(--k3)",k4:"var(--k4)",k5:"var(--k5)"};
+const DATA=[
+  {k:"k1",g:"細菌",emoji:"🦠",ex:"乳酸桿菌",feat:"具有細胞壁，遺傳物質沒有核膜包圍，未形成細胞核，也沒有葉綠體、粒線體或液泡等由膜包圍而成的構造。"},
+  {k:"k2",g:"原生動物",emoji:"🔴",ex:"變形蟲",feat:"有細胞核，沒有細胞壁和葉綠體，無法行光合作用，須由外界攝食獲得養分。"},
+  {k:"k2",g:"原生菌類",emoji:"🟡",ex:"黏菌",feat:"有細胞核，沒有葉綠體，無法行光合作用，須先分解外界的養分再進行吸收。"},
+  {k:"k2",g:"藻類",emoji:"🌿",ex:"海帶",feat:"有細胞核，具有細胞壁和葉綠體，能行光合作用製造養分。"},
+  {k:"k3",g:"酵母菌",emoji:"🫧",ex:"酵母菌",feat:"有細胞核、有細胞壁，無葉綠體無法行光合作用，須分解外界養分再吸收；單細胞生物，個體沒有菌絲。"},
+  {k:"k3",g:"黴菌",emoji:"🍞",ex:"黑黴菌",feat:"有細胞核、有細胞壁，無葉綠體無法行光合作用，須分解外界養分再吸收；多細胞生物，個體由菌絲構成。"},
+  {k:"k3",g:"蕈類",emoji:"🍄",ex:"金針菇",feat:"有細胞核、有細胞壁，無葉綠體無法行光合作用，須分解外界養分再吸收；多細胞生物，個體由菌絲構成。"},
+  {k:"k4",g:"蘚苔",emoji:"🌱",ex:"地錢",feat:"具有細胞壁，無維管束。"},
+  {k:"k4",g:"蕨類",emoji:"🌾",ex:"山蘇",feat:"具有細胞壁，有維管束，無種子。"},
+  {k:"k4",g:"裸子植物",emoji:"🌲",ex:"紅檜",feat:"具有細胞壁，有維管束，有種子；無果實、不會開花。"},
+  {k:"k4",g:"被子植物",emoji:"🌸",ex:"百合",feat:"具有細胞壁，有維管束，有種子；有果實、會開花。"},
+  {k:"k5",g:"刺絲胞動物",emoji:"🎐",ex:"水母",feat:"身體對外只有一個開口，開口周圍有觸手，觸手上有刺絲胞。"},
+  {k:"k5",g:"扁形動物",emoji:"🪱",ex:"渦蟲",feat:"身體扁平，有利於體內細胞和周圍環境進行物質交換。"},
+  {k:"k5",g:"軟體動物",emoji:"🐌",ex:"蝸牛",feat:"身體柔軟不分節，許多種類具有堅硬的外殼保護身體。"},
+  {k:"k5",g:"環節動物",emoji:"🎗️",ex:"水蛭",feat:"身體柔軟細長且分節，每一節外型都很相似。"},
+  {k:"k5",g:"節肢動物",emoji:"🦗",ex:"昆蟲",feat:"身體分節，且各節型態不同（如有頭、胸、腹之分）。"},
+  {k:"k5",g:"棘皮動物",emoji:"⭐",ex:"海星",feat:"身體表面通常有棘和管足；棘可保護身體，管足可攝食、移動和呼吸。"},
+  {k:"k5",g:"魚類",emoji:"🐟",ex:"海馬",feat:"脊索動物；有鰭、用鰓呼吸，體表大多有鱗片保護，行體外受精。"},
+  {k:"k5",g:"兩生類",emoji:"🐸",ex:"蟾蜍",feat:"脊索動物；幼體生活在水中用鰓呼吸，成體用肺和皮膚呼吸，皮膚無法防止水分散失，行體外受精。"},
+  {k:"k5",g:"爬蟲類",emoji:"🐍",ex:"蛇",feat:"脊索動物；用肺呼吸，體表有可防水分散失的鱗片或骨板，行體內受精，受精卵常有蛋殼保護。"},
+  {k:"k5",g:"鳥類",emoji:"🦅",ex:"老鷹",feat:"脊索動物；用肺呼吸並有氣囊，前肢特化為翼，體表有羽毛，骨骼中空且輕，有瞬膜，行體內受精。"},
+  {k:"k5",g:"哺乳類",emoji:"🐨",ex:"無尾熊",feat:"脊索動物；母體會分泌乳汁哺育幼兒，體表大多有毛髮助維持體溫，大多胎生，行體內受精。"},
+];
+
+/* ---------- 狀態 ---------- */
+const G={score:0,combo:0,maxCombo:0,
+  cls:{done:false,score:0,correct:0},
+  feat:{done:false,score:0,correct:0}};
+const $=id=>document.getElementById(id);
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ---------- 音效 ---------- */
+let AC;
+function beep(f,d,t){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  const o=AC.createOscillator(),g=AC.createGain();o.type=t||'sine';o.frequency.value=f;
+  o.connect(g);g.connect(AC.destination);g.gain.setValueAtTime(.12,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+const sGood=()=>{beep(660,.12);setTimeout(()=>beep(880,.14),90);};
+const sBad=()=>beep(160,.3,'sawtooth');
+const sWin=()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.2),i*130));};
+
+function updHUD(){
+  $('hScore').textContent=G.score;
+  $('hComboN').textContent=G.combo;
+  $('hCombo').style.opacity=G.combo>0?1:.4;
+  $('hCombo').style.transform=G.combo>0?'scale('+(1+Math.min(G.combo,10)*.03)+')':'scale(1)';
+}
+function floatPts(txt,color){const f=document.createElement('div');f.className='float';f.textContent=txt;
+  f.style.color=color;f.style.left=(window.innerWidth/2-20)+'px';f.style.top='120px';
+  document.body.appendChild(f);setTimeout(()=>f.remove(),1000);}
+
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');
+  $('hud').style.display=(id==='sIntro')?'none':'flex';window.scrollTo(0,0);}
+$('btnHome').onclick=()=>{go('sMap');refreshMap();};
+
+/* ---------- 圖鑑翻卡 ---------- */
+(function(){const c=$('cards');DATA.forEach(d=>{const el=document.createElement('div');el.className='flip';
+  el.innerHTML=`<div class="flip-inner">
+    <div class="face front"><span class="badge" style="background:${KC[d.k]}">${KINGDOMS[d.k].name}</span>
+      <div class="emoji">${d.emoji}</div><div class="name">${d.g}</div></div>
+    <div class="face back"><div>${d.feat}</div><div class="ex">例：${d.ex}</div></div></div>`;
+  el.onclick=()=>el.classList.toggle('on');c.appendChild(el);});})();
+
+/* ---------- 測驗引擎（兩關共用） ---------- */
+let Q={type:null,list:[],i:0};
+const N=10; // 每關題數
+function startLevel(type){
+  G.combo=0;
+  Q={type,list:shuffle([...DATA]).slice(0,N),i:0};
+  G[type].correct=0;G[type].score=0; // 重玩時該關重新計算
+  $('qTitle').textContent=type==='cls'?'🧩 第一關 · 生物分類':'🔬 第二關 · 生物特徵';
+  $('qLabel').textContent=type==='cls'?'選出正確的「界」':'選出正確的生物類別';
+  go('sQuiz');renderQ();
+}
+function renderQ(){
+  const type=Q.type,d=Q.list[Q.i];
+  $('qProg').textContent=`第 ${Q.i+1} / ${N} 題`;
+  $('hBar').style.width=(Q.i/N*100)+'%';
+  let prompt,options,correctVal;
+  if(type==='cls'){
+    prompt=`<div class="qtext">下列生物屬於哪一「界」？<span class="feat"><span class="big-ex">${d.emoji} ${d.ex}</span></span></div>`;
+    correctVal=d.k;
+    const wrong=shuffle(Object.keys(KINGDOMS).filter(k=>k!==d.k)).slice(0,3);
+    options=shuffle([d.k,...wrong]).map(k=>({val:k,label:`${KINGDOMS[k].icon} ${KINGDOMS[k].name}`}));
+  }else{
+    prompt=`<div class="qtext">下列特徵屬於哪一類生物？<span class="feat">「${d.feat}」</span></div>`;
+    correctVal=d.g;
+    const wrong=shuffle(DATA.filter(x=>x.g!==d.g)).slice(0,3);
+    options=shuffle([d,...wrong]).map(x=>({val:x.g,label:`${x.emoji} ${x.g}（${KINGDOMS[x.k].name}）`}));
+  }
+  $('qArea').innerHTML=prompt+`<div class="opts" id="opts"></div>
+    <div class="qfoot"><span class="fb" id="fb"></span><button class="btnbig" id="qnext" disabled>下一題 →</button></div>`;
+  const oe=$('opts');
+  options.forEach(o=>{const b=document.createElement('div');b.className='opt';b.textContent=o.label;
+    b.onclick=()=>answer(o.val,correctVal,d,b);oe.appendChild(b);});
+  $('qnext').onclick=()=>{Q.i++;if(Q.i>=N)finishLevel();else renderQ();};
+  if(Q.i===N-1)$('qnext').textContent='完成本關 🏁';
+}
+function answer(val,correctVal,d,b){
+  document.querySelectorAll('#opts .opt').forEach(x=>x.classList.add('disabled'));
+  const fb=$('fb');
+  if(val===correctVal){
+    G.combo++;G.maxCombo=Math.max(G.maxCombo,G.combo);
+    const pts=10+(G.combo-1)*2;G.score+=pts;G[Q.type].score+=pts;G[Q.type].correct++;
+    b.classList.add('correct');fb.textContent=`✅ 答對！+${pts}分`+(G.combo>1?`（🔥${G.combo}連擊）`:'');fb.className='fb g';
+    floatPts('+'+pts,'#22c55e');sGood();
+  }else{
+    G.combo=0;b.classList.add('wrong');sBad();
+    document.querySelectorAll('#opts .opt').forEach(x=>{
+      const ans=Q.type==='cls'?KINGDOMS[d.k].name:d.g;
+      if(x.textContent.includes(ans))x.classList.add('correct');});
+    fb.textContent=Q.type==='cls'?`❌ 正確答案：${KINGDOMS[d.k].name}`:`❌ 正確答案：${d.g}`;fb.className='fb b';
+  }
+  updHUD();$('qnext').disabled=false;
+}
+function finishLevel(){
+  $('hBar').style.width='100%';
+  const t=Q.type;G[t].done=true;
+  const c=G[t].correct;
+  sWin();confetti();
+  $('lvEmoji').textContent=c>=9?'🌟':c>=6?'🎉':'💪';
+  $('lvTitle').textContent=(t==='cls'?'第一關':'第二關')+' 完成！';
+  $('lvStats').innerHTML=`<div>答對<b>${c}/${N}</b></div><div>本關得分<b>${G[t].score}</b></div><div>最高連擊<b>${G.maxCombo}</b></div>`;
+  const other=t==='cls'?'feat':'cls';
+  $('lvMsg').textContent=G[other].done?'兩關都完成了！回地圖看看你的等級吧 🏆':'還有另一關等你挑戰，兩關都完成才能看等級喔！';
+  $('lvBack').onclick=()=>{$('ovLevel').classList.remove('show');go('sMap');refreshMap();};
+  $('lvRetry').onclick=()=>{$('ovLevel').classList.remove('show');startLevel(t);};
+  $('ovLevel').classList.add('show');
+}
+
+/* ---------- 地圖刷新 ---------- */
+function refreshMap(){
+  [['cls','tag1','btn1'],['feat','tag2','btn2']].forEach(([t,tag,btn])=>{
+    if(G[t].done){$(tag).textContent=`✅ 已完成　答對 ${G[t].correct}/${N}　${G[t].score} 分`;$(tag).className='done-tag ok';
+      $(btn).textContent='重新挑戰';}
+    else{$(tag).textContent='尚未挑戰';$(tag).className='done-tag';}
+  });
+  $('totalScore').textContent=G.score;
+  $('totalCorrect').textContent=G.cls.correct+G.feat.correct;
+  $('btnRank').style.display=(G.cls.done&&G.feat.done)?'inline-block':'none';
+  updHUD();
+}
+
+/* ---------- 最終等級（5 級） ---------- */
+const RANKS=[
+  {min:19,emoji:"🏆",name:"生物大師",stars:5,msg:"近乎滿分，你完全掌握五界分類！"},
+  {min:15,emoji:"🧬",name:"分類專家",stars:4,msg:"表現優異，只差臨門一腳就滿星！"},
+  {min:11,emoji:"🔬",name:"生物觀察家",stars:3,msg:"基礎穩固，再多練習就能更上層樓！"},
+  {min:7,emoji:"🌱",name:"見習生物學家",stars:2,msg:"有點概念了，回圖鑑複習再挑戰吧！"},
+  {min:0,emoji:"🦠",name:"初階探索者",stars:1,msg:"別氣餒，翻翻生物圖鑑再來一次！"},
+];
+function showRank(){
+  const correct=G.cls.correct+G.feat.correct;
+  const r=RANKS.find(x=>correct>=x.min);
+  $('rankEmoji').textContent=r.emoji;$('rankName').textContent=`${r.name}（第 ${r.stars} 級）`;
+  $('rankStars').textContent='⭐'.repeat(r.stars)+'☆'.repeat(5-r.stars);
+  $('rankScore').textContent=G.score;$('rankCorrect').textContent=correct+'/20';$('rankCombo').textContent=G.maxCombo;
+  const badges=[];
+  if(G.cls.correct===N)badges.push('🧩 分類滿分');
+  if(G.feat.correct===N)badges.push('🔬 特徵滿分');
+  if(G.maxCombo>=10)badges.push('🔥 連擊達人');
+  if(correct===20)badges.push('💯 完美通關');
+  $('rankBadges').innerHTML=badges.length?badges.map(b=>`<span class="abadge">${b}</span>`).join(''):'';
+  $('rankMsg').textContent=r.msg;
+  $('ovRank').classList.add('show');sWin();confetti();
+}
+function closeRank(){$('ovRank').classList.remove('show');}
+
+/* ---------- 彩帶 ---------- */
+function confetti(){const em=['🎉','⭐','✨','🎊','🌟'];
+  for(let i=0;i<28;i++){const d=document.createElement('div');d.textContent=em[i%em.length];
+    d.style.cssText=`position:fixed;top:-30px;left:${Math.random()*100}vw;font-size:${14+Math.random()*16}px;z-index:90;pointer-events:none;`;
+    document.body.appendChild(d);const dur=1500+Math.random()*1500;
+    d.animate([{transform:'translateY(0) rotate(0)',opacity:1},{transform:`translateY(${window.innerHeight+60}px) rotate(${360+Math.random()*360}deg)`,opacity:.9}],
+      {duration:dur,easing:'ease-in'});setTimeout(()=>d.remove(),dur);}}
+</script>
+</body>
+</html>

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>神經探險隊 · 互動教材</title>
+<style>
+  :root{
+    --blue:#4f46e5; --blue-d:#3730a3; --pink:#ec4899; --purple:#8b5cf6;
+    --red:#e11d48; --amber:#f59e0b; --green:#16a34a; --teal:#0d9488;
+    --ink:#1f2937; --muted:#6b7280; --card:#ffffff; --line:#e5e7eb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; color:var(--ink);
+    font-family:"標楷體","DFKai-SB","Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif;
+    line-height:1.6;
+    background:linear-gradient(135deg,#eef2ff,#faf5ff,#ecfeff,#fef2f8);
+    background-size:400% 400%; animation:bgshift 18s ease infinite;
+  }
+  @keyframes bgshift{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+  header{
+    background:linear-gradient(120deg,var(--purple),var(--blue),var(--pink));
+    background-size:200% 200%; animation:bgshift 10s ease infinite;
+    color:#fff; padding:16px 20px; box-shadow:0 4px 18px rgba(79,70,229,.35);
+  }
+  .hrow{max-width:960px; margin:0 auto; display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+  .brand{font-size:24px; font-weight:900; letter-spacing:1px; text-shadow:0 2px 6px rgba(0,0,0,.2);}
+  .brand small{display:block; font-size:12px; font-weight:normal; opacity:.9; letter-spacing:0;}
+  .xpwrap{display:flex; align-items:center; gap:10px; margin-left:auto;}
+  .lvl{background:#fff; color:var(--blue-d); font-weight:900; border-radius:999px; padding:4px 12px; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,.15);}
+  .xpbar{width:150px; height:14px; background:rgba(255,255,255,.35); border-radius:999px; overflow:hidden;}
+  #xpfill{height:100%; width:0%; background:linear-gradient(90deg,#fde047,#facc15); transition:width .5s;}
+  .xptext{font-weight:bold; font-size:14px; white-space:nowrap;}
+  .badges{display:flex; gap:6px;}
+  .badge{
+    font-size:24px; filter:grayscale(1); opacity:.35; transition:.3s;
+    background:rgba(255,255,255,.25); border-radius:12px; padding:3px 7px;
+  }
+  .badge.earned{filter:none; opacity:1; animation:pop .5s;}
+  @keyframes pop{0%{transform:scale(.4);}60%{transform:scale(1.35);}100%{transform:scale(1);}}
+
+  .tabs{
+    display:flex; justify-content:center; gap:10px; flex-wrap:wrap;
+    padding:14px; position:sticky; top:0; z-index:20;
+    background:rgba(255,255,255,.75); backdrop-filter:blur(6px); border-bottom:1px solid var(--line);
+  }
+  .tab{
+    border:none; background:#fff; color:var(--ink);
+    padding:10px 20px; border-radius:999px; cursor:pointer; font-size:15px;
+    font-family:inherit; transition:.15s; font-weight:bold;
+    box-shadow:0 3px 8px rgba(0,0,0,.08);
+  }
+  .tab:hover{transform:translateY(-2px);}
+  .tab.active{background:linear-gradient(120deg,var(--purple),var(--pink)); color:#fff; box-shadow:0 5px 14px rgba(139,92,246,.45);}
+  main{max-width:960px; margin:0 auto; padding:20px 16px 70px;}
+  .panel{display:none; animation:fade .35s;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:20px;
+    padding:22px; margin-bottom:18px; box-shadow:0 8px 24px rgba(79,70,229,.10);
+  }
+  h2{margin:0 0 4px; font-size:22px;}
+  .sub{color:var(--muted); font-size:14px; margin-bottom:16px;}
+  .btn{
+    background:linear-gradient(120deg,var(--blue),var(--purple)); color:#fff; border:none; padding:11px 22px;
+    border-radius:12px; cursor:pointer; font-family:inherit; font-size:15px; font-weight:bold;
+    box-shadow:0 4px 12px rgba(79,70,229,.3); transition:.12s;
+  }
+  .btn:hover{filter:brightness(1.06);}
+  .btn:active{transform:scale(.95);}
+  .btn.ghost{background:#fff; color:var(--blue); border:2px solid var(--blue); box-shadow:none;}
+  .btn.sm{padding:8px 15px; font-size:14px;}
+  .controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px;}
+  .score{font-size:16px; font-weight:900; color:var(--blue-d);}
+
+  /* ---- Brain (panel 1) ---- */
+  .brainwrap{display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;}
+  #brainSvg{width:100%; max-width:420px; height:auto; flex:1 1 340px;}
+  .region{cursor:pointer; transition:.15s; stroke:#fff; stroke-width:2;}
+  .region:hover{filter:brightness(.92);}
+  .region.hi{stroke:#111827; stroke-width:3.5;}
+  .brain-side{flex:1 1 260px; min-width:230px;}
+  .pool{display:flex; flex-wrap:wrap; gap:9px; margin-bottom:8px;}
+  .chip{
+    background:#fff; border:2px solid var(--purple); color:var(--ink);
+    padding:9px 12px; border-radius:12px; cursor:grab; font-size:14px;
+    user-select:none; transition:.12s; box-shadow:0 2px 6px rgba(139,92,246,.15);
+  }
+  .chip:hover{background:#f5f3ff; transform:translateY(-2px);}
+  .chip.sel{background:linear-gradient(120deg,var(--purple),var(--pink)); color:#fff; border-color:transparent;}
+  .chip.wrong{animation:shake .4s;}
+  .legend{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;}
+  .lg{border:2px solid var(--line); border-radius:14px; padding:10px;}
+  .lg h4{margin:0 0 6px; font-size:15px;}
+  .lg .dot{display:inline-block; width:12px; height:12px; border-radius:4px; margin-right:6px; vertical-align:middle;}
+  .lg ul{margin:0; padding-left:0; list-style:none;}
+  .lg li{font-size:13px; color:#14532d; background:#dcfce7; border-radius:7px; padding:3px 8px; margin:3px 0; animation:pop .4s;}
+
+  /* ---- Sequence game (panel 2) ---- */
+  .evbar{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:6px;}
+  .evtitle{font-size:19px; font-weight:900;}
+  .seqbox{
+    min-height:100px; border:3px dashed var(--line); border-radius:16px; background:#faf5ff;
+    display:flex; align-items:center; flex-wrap:wrap; gap:6px; padding:14px; margin:14px 0;
+  }
+  .seqbox.empty::before{content:'依序點選下方圖卡,排出傳遞路徑'; color:#a78bfa; font-size:14px;}
+  .seqbox.over{border-color:var(--purple); background:#f5f3ff;}
+  .seqbox .arrow{color:#c4b5fd; font-size:22px; font-weight:bold;}
+  .stagecard{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-width:82px; padding:9px 8px; border-radius:14px; border:2.5px solid; cursor:pointer;
+    background:#fff; user-select:none; transition:.12s; font-weight:bold; box-shadow:0 3px 8px rgba(0,0,0,.08);
+  }
+  .stagecard .ic{font-size:22px; line-height:1;}
+  .stagecard .nm{font-size:14px; margin-top:3px;}
+  .stagecard .cd{font-size:11px; opacity:.7;}
+  .stagecard:hover{transform:translateY(-3px);}
+  .stagecard.used{opacity:.3; pointer-events:none;}
+  .r-peri{border-color:var(--green); color:#14532d;}
+  .r-nerve{border-color:var(--purple); color:#5b21b6;}
+  .r-c{border-color:var(--red); color:#9f1239;}
+  .r-d{border-color:var(--amber); color:#92400e;}
+  .r-e{border-color:var(--blue); color:var(--blue-d);}
+  .bank{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
+  .fb{margin-top:14px; padding:14px 16px; border-radius:14px; font-size:15px; display:none;}
+  .fb.show{display:block; animation:pop .4s;}
+  .fb.ok{background:#dcfce7; border-left:6px solid var(--green);}
+  .fb.no{background:#fee2e2; border-left:6px solid var(--red);}
+  .fb .meta{margin-top:6px; font-size:14px;}
+  .pill{display:inline-block; padding:2px 11px; border-radius:999px; font-size:13px; font-weight:bold; margin-right:6px;}
+  .pill.reflex{background:#fee2e2; color:#9f1239;} .pill.conscious{background:#dbeafe; color:#1e40af;}
+  .pill.spinal{background:#dcfce7; color:#14532d;} .pill.nospinal{background:#f3f4f6; color:#4b5563;}
+  @keyframes shake{0%,100%{transform:none;}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+  .shake{animation:shake .4s;}
+
+  /* ---- Quiz (panel 3) ---- */
+  .q{margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid var(--line);}
+  .q:last-child{border-bottom:none;}
+  .q .qt{font-weight:bold; margin-bottom:10px;}
+  .q .tag{color:var(--muted); font-size:13px; font-weight:normal;}
+  .opt{
+    display:block; width:100%; text-align:left; margin:6px 0; padding:11px 14px;
+    border:2px solid var(--line); border-radius:12px; background:#fff; cursor:pointer;
+    font-family:inherit; font-size:15px; transition:.12s;
+  }
+  .opt:hover{border-color:var(--purple); transform:translateX(3px);}
+  .opt.correct{background:#dcfce7; border-color:var(--green); color:#14532d;}
+  .opt.wrong{background:#fee2e2; border-color:var(--red); color:#7f1d1d;}
+  .opt:disabled{cursor:default;}
+  .explain{
+    margin-top:8px; font-size:14px; padding:10px 12px; border-radius:12px;
+    background:#fffbeb; border-left:4px solid var(--amber); display:none;
+  }
+  .explain.show{display:block;}
+  .quiz-top{
+    position:sticky; top:66px; padding:10px 12px; margin-bottom:6px;
+    display:flex; justify-content:space-between; align-items:center; z-index:10;
+    background:rgba(255,255,255,.8); backdrop-filter:blur(6px); border-radius:12px;
+  }
+  .confetti{position:fixed; width:11px; height:15px; top:-24px; z-index:999; pointer-events:none; border-radius:2px;}
+  @keyframes fall{to{transform:translateY(108vh) rotate(600deg);}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <a href="../index.html" style="color: #fff; text-decoration: none; font-weight: bold; background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 14px; display: inline-flex; align-items: center; gap: 4px; backdrop-filter: blur(4px); transition: background .2s;">🏠 理化網站</a>
+    <div class="brand">🧠 神經探險隊<small>國一 · 神經系統與神經傳遞闖關</small></div>
+    <div class="xpwrap">
+      <span class="lvl">Lv.<span id="lvl">1</span></span>
+      <div class="xpbar"><div id="xpfill"></div></div>
+      <span class="xptext">⭐ <span id="xp">0</span> XP</span>
+    </div>
+    <div class="badges">
+      <span class="badge" id="b1" title="腦區達人">🧠</span>
+      <span class="badge" id="b2" title="路徑高手">🔀</span>
+      <span class="badge" id="b3" title="會考王">🏆</span>
+    </div>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-p="brain">① 腦部功能配對</button>
+  <button class="tab" data-p="path">② 傳遞路徑排列</button>
+  <button class="tab" data-p="quiz">③ 會考題測驗</button>
+</div>
+
+<main>
+  <!-- PANEL 1: BRAIN -->
+  <section class="panel active" id="brain">
+    <div class="card">
+      <h2>🧩 神經系統構造配對</h2>
+      <div class="sub">點選功能卡片,再點示意圖上正確的構造(電腦也可直接拖曳)。除了腦的四區,別忘了周邊的「受器」與「動器」。配對正確會加分並列入清單。</div>
+      <div class="brainwrap">
+        <svg id="brainSvg" viewBox="0 0 380 360" xmlns="http://www.w3.org/2000/svg">
+          <path class="region" data-r="大腦" d="M74,126 C56,66 126,26 198,32 C270,26 344,62 326,128 C338,150 322,184 270,188 L138,190 C100,188 72,158 74,126 Z"/>
+          <ellipse class="region" data-r="小腦" cx="308" cy="204" rx="44" ry="34"/>
+          <path class="region" data-r="腦幹" d="M226,180 q20,-4 30,10 q9,14 2,40 q-5,20 -20,22 q-14,2 -18,-16 q-4,-34 6,-56 Z"/>
+          <rect class="region" data-r="脊髓" x="224" y="238" width="22" height="100" rx="10"/>
+          <rect class="region" data-r="受器" x="20" y="238" width="112" height="42" rx="21"/>
+          <rect class="region" data-r="動器" x="20" y="292" width="112" height="42" rx="21"/>
+          <g fill="none" stroke="#ffffff" stroke-width="2" opacity="0.7" style="pointer-events:none;">
+            <path d="M100,120 q20,-16 44,-6 M160,100 q22,-14 46,-2 M216,102 q22,-12 46,4 M116,150 q26,-8 52,2 M180,150 q26,-8 52,4"/>
+          </g>
+          <g stroke="#ffffff" stroke-width="2" opacity="0.7" style="pointer-events:none;">
+            <line x1="272" y1="182" x2="272" y2="226"/><line x1="290" y1="176" x2="290" y2="230"/>
+            <line x1="308" y1="174" x2="308" y2="232"/><line x1="326" y1="178" x2="326" y2="228"/>
+          </g>
+          <g style="pointer-events:none; font-family:inherit; font-weight:900;">
+            <text x="170" y="118" font-size="18" fill="#312e81">大腦</text>
+            <text x="290" y="208" font-size="15" fill="#7c4a03">小腦</text>
+            <text x="208" y="228" font-size="14" fill="#7f1d3a" text-anchor="end">腦幹</text>
+            <text x="254" y="296" font-size="14" fill="#14532d">脊髓</text>
+            <text x="76" y="264" font-size="15" fill="#065f46" text-anchor="middle">👁️ 受器</text>
+            <text x="76" y="318" font-size="15" fill="#134e4a" text-anchor="middle">💪 動器</text>
+          </g>
+        </svg>
+        <div class="brain-side">
+          <div style="font-weight:bold; color:var(--muted); font-size:14px; margin-bottom:6px;">功能卡片:</div>
+          <div class="pool" id="pool"></div>
+          <div class="controls">
+            <span class="score" id="bScore">已配對 0 / 12</span>
+            <button class="btn ghost sm" id="bReset" style="margin-left:auto;">↺ 重新開始</button>
+          </div>
+          <div class="legend" id="legend"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANEL 2: PATH -->
+  <section class="panel" id="path">
+    <div class="card">
+      <h2>🔀 神經傳遞路徑排列</h2>
+      <div class="sub">讀出上方事件,從下方 7 張構造圖卡「依序點選(或拖曳)」排出正確傳遞路徑,再按檢查。留意是反射還是意識反應,以及會不會經過脊髓。</div>
+      <div class="evbar"><span class="evtitle" id="evTitle"></span></div>
+      <div class="seqbox empty" id="seqBox"></div>
+      <div class="controls">
+        <button class="btn" id="checkBtn">✓ 檢查</button>
+        <button class="btn ghost sm" id="clearBtn">清除</button>
+        <button class="btn ghost sm" id="ansBtn">顯示答案</button>
+        <button class="btn ghost sm" id="prevBtn">← 上一個</button>
+        <button class="btn ghost sm" id="nextBtn">下一個 →</button>
+        <span class="score" id="pProg" style="margin-left:auto;"></span>
+      </div>
+      <div class="fb" id="fb"></div>
+      <div style="margin-top:16px; font-weight:bold; color:var(--muted); font-size:14px;">構造圖卡:</div>
+      <div class="bank" id="bank"></div>
+    </div>
+  </section>
+
+  <!-- PANEL 3: QUIZ -->
+  <section class="panel" id="quiz">
+    <div class="quiz-top">
+      <span class="score" id="qScore">得分 0 / 9</span>
+      <button class="btn ghost sm" id="qReset">↺ 重作</button>
+    </div>
+    <div class="card" id="quizCard"></div>
+  </section>
+</main>
+
+<script>
+/* ===== Gamification core ===== */
+var totalXP=0;
+function addXP(n){ totalXP+=n; var lvl=Math.floor(totalXP/100)+1;
+  document.getElementById('xp').textContent=totalXP;
+  document.getElementById('lvl').textContent=lvl;
+  document.getElementById('xpfill').style.width=(totalXP%100)+'%';
+}
+function earnBadge(id){ var b=document.getElementById(id); if(b&&!b.classList.contains('earned')) b.classList.add('earned'); }
+function confetti(){
+  var colors=['#f43f5e','#f59e0b','#22c55e','#3b82f6','#8b5cf6','#ec4899','#facc15'];
+  for(var i=0;i<48;i++){(function(){
+    var d=document.createElement('div'); d.className='confetti';
+    d.style.left=Math.random()*100+'vw';
+    d.style.background=colors[Math.floor(Math.random()*colors.length)];
+    d.style.animation='fall '+(1.6+Math.random()*1.6)+'s linear '+(Math.random()*0.4)+'s forwards';
+    d.style.opacity=0.9;
+    document.body.appendChild(d);
+    setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); },3800);
+  })();}
+}
+/* ===== Tabs ===== */
+document.querySelectorAll('.tab').forEach(function(t){
+  t.onclick=function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('active');});
+    t.classList.add('active');
+    document.getElementById(t.dataset.p).classList.add('active');
+  };
+});
+/* ===== Panel 1: Brain matching (6 parts incl. 受器/動器) ===== */
+var FUNCS=[
+  {t:'產生感覺、思考、判斷與記憶', r:'大腦'},
+  {t:'判斷榴槤是香還是臭', r:'大腦'},
+  {t:'協調肌肉、維持平衡與姿勢', r:'小腦'},
+  {t:'閉眼換姿勢仍能維持平衡', r:'小腦'},
+  {t:'控制呼吸、心跳等維持生命活動', r:'腦幹'},
+  {t:'眨眼、打噴嚏等反射中樞', r:'腦幹'},
+  {t:'反射作用中樞、上下傳導通道', r:'脊髓'},
+  {t:'手觸電快速縮回的反射中樞', r:'脊髓'},
+  {t:'接收環境刺激(眼、耳、皮膚)', r:'受器'},
+  {t:'把刺激轉成神經訊息的起點', r:'受器'},
+  {t:'執行反應的構造(肌肉、腺體)', r:'動器'},
+  {t:'接收命令後做出動作的終點', r:'動器'}
+];
+var PARTS=['大腦','小腦','腦幹','脊髓','受器','動器'];
+var RCOLOR={'大腦':'#a5b4fc','小腦':'#fcd34d','腦幹':'#fca5a5','脊髓':'#86efac','受器':'#6ee7b7','動器':'#5eead4'};
+var RCOLOR_ON={'大腦':'#4f46e5','小腦':'#f59e0b','腦幹':'#ef4444','脊髓':'#22c55e','受器':'#059669','動器':'#0d9488'};
+var selChip=null, placed=0;
+function paintRegions(){
+  document.querySelectorAll('#brainSvg .region').forEach(function(el){ el.setAttribute('fill', RCOLOR[el.dataset.r]); });
+}
+function buildBrain(){
+  placed=0; selChip=null; paintRegions();
+  var pool=document.getElementById('pool'); pool.innerHTML='';
+  var order=FUNCS.map(function(f,i){return i;}).sort(function(){return Math.random()-0.5;});
+  order.forEach(function(idx){
+    var f=FUNCS[idx];
+    var c=document.createElement('div');
+    c.className='chip'; c.textContent=f.t; c.dataset.r=f.r; c.draggable=true;
+    c.onclick=function(){
+      if(selChip===c){c.classList.remove('sel'); selChip=null; return;}
+      if(selChip)selChip.classList.remove('sel');
+      selChip=c; c.classList.add('sel');
+    };
+    c.ondragstart=function(e){selChip=c; e.dataTransfer.setData('text','x');};
+    pool.appendChild(c);
+  });
+  var lg=document.getElementById('legend'); lg.innerHTML='';
+  PARTS.forEach(function(r){
+    var d=document.createElement('div'); d.className='lg';
+    d.innerHTML='<h4><span class="dot" style="background:'+RCOLOR_ON[r]+'"></span>'+r+'</h4><ul id="ul-'+r+'"></ul>';
+    lg.appendChild(d);
+  });
+  document.getElementById('brainSvg').querySelectorAll('.region').forEach(function(el){
+    var r=el.dataset.r;
+    el.onclick=function(){tryPlace(r,el);};
+    el.onmouseenter=function(){el.classList.add('hi');};
+    el.onmouseleave=function(){el.classList.remove('hi');};
+    el.ondragover=function(e){e.preventDefault(); el.classList.add('hi');};
+    el.ondragleave=function(){el.classList.remove('hi');};
+    el.ondrop=function(e){e.preventDefault(); el.classList.remove('hi'); tryPlace(r,el);};
+  });
+  updateBScore();
+}
+function tryPlace(r,el){
+  if(!selChip)return;
+  var chip=selChip;
+  if(chip.dataset.r===r){
+    var li=document.createElement('li'); li.textContent='✓ '+chip.textContent;
+    document.getElementById('ul-'+r).appendChild(li);
+    chip.parentNode.removeChild(chip); selChip=null; placed++;
+    el.setAttribute('fill', RCOLOR_ON[r]);
+    setTimeout(function(){ if(placed<FUNCS.length) el.setAttribute('fill', RCOLOR[r]); },450);
+    addXP(10); updateBScore();
+    if(placed===FUNCS.length){ earnBadge('b1'); addXP(30); confetti();
+      setTimeout(function(){alert('🎉 構造配對全部完成!獲得徽章「腦區達人」🧠');},250); }
+  }else{
+    chip.classList.add('wrong');
+    setTimeout(function(){chip.classList.remove('wrong');},400);
+  }
+}
+function updateBScore(){document.getElementById('bScore').textContent='已配對 '+placed+' / '+FUNCS.length;}
+document.getElementById('bReset').onclick=buildBrain;
+buildBrain();
+
+/* ===== Panel 2: Sequence game ===== */
+var STAGES={
+  A:{nm:'受器',ic:'👁️',cls:'r-peri'}, B:{nm:'感覺神經',ic:'⬆️',cls:'r-nerve'},
+  C:{nm:'脊髓',ic:'🟥',cls:'r-c'}, D:{nm:'腦幹',ic:'🟧',cls:'r-d'},
+  E:{nm:'大腦',ic:'🧠',cls:'r-e'}, F:{nm:'運動神經',ic:'⬇️',cls:'r-nerve'}, G:{nm:'動器',ic:'💪',cls:'r-peri'}
+};
+var ORDER=['A','B','C','D','E','F','G'];
+var EVENTS=[
+  {name:'聽到音樂,大聲跟著唱', cat:'意識反應', spinal:'不經脊髓', path:['A','B','D','E','F','G'],
+   note:'耳(受器)和口(動器)都在頭部,走腦神經、不經脊髓;訊息上到大腦判斷後才跟著唱。'},
+  {name:'聽到電話聲響,用手拿起話筒', cat:'意識反應', spinal:'有經脊髓', path:['A','B','C','D','E','F','G'],
+   note:'耳接收後上傳大腦判斷是否接聽;拿話筒的動器在手,運動命令需下行經脊髓到手部肌肉。'},
+  {name:'手觸電後,快速收回', cat:'反射作用', spinal:'有經脊髓', path:['A','B','C','F','G'],
+   note:'脊髓反射:訊息傳到脊髓就折返,不上大腦,所以反應很快。'},
+  {name:'看見球飛來,不自主眨眼', cat:'反射作用', spinal:'不經脊髓', path:['A','B','D','F','G'],
+   note:'腦幹反射:受器(眼)與動器(眼瞼)都在頭部,中樞在腦幹,不經脊髓。'},
+  {name:'絆倒腳受傷,嚎啕大哭', cat:'意識反應', spinal:'有經脊髓', path:['A','B','C','D','E','F','G'],
+   note:'受器在腳,痛覺上行經脊髓、腦幹到大腦,產生情緒後才大哭。'},
+  {name:'吸到胡椒粒,不自主打噴嚏', cat:'反射作用', spinal:'不經脊髓', path:['A','B','D','F','G'],
+   note:'腦幹反射:受器在鼻,中樞在腦幹(延腦),不經脊髓。'},
+  {name:'摸到蟑螂,拿拖鞋打', cat:'意識反應', spinal:'有經脊髓', path:['A','B','C','D','E','F','G'],
+   note:'受器與動器都在手(四肢),訊息上行、命令下行都經脊髓,是最完整的路徑。'},
+  {name:'腳踩到圖釘,快速縮回腳', cat:'反射作用', spinal:'有經脊髓', path:['A','B','C','F','G'],
+   note:'脊髓反射:傳到脊髓就折返,快速縮腳,不經大腦。'}
+];
+var evIdx=0, seq=[], solved=[];
+function stageCardHTML(code){var s=STAGES[code];return '<span class="ic">'+s.ic+'</span><span class="nm">'+s.nm+'</span><span class="cd">'+code+'</span>';}
+function renderBank(){
+  var bank=document.getElementById('bank'); bank.innerHTML='';
+  ORDER.forEach(function(code){
+    var c=document.createElement('div');
+    c.className='stagecard '+STAGES[code].cls+(seq.indexOf(code)>=0?' used':'');
+    c.innerHTML=stageCardHTML(code); c.draggable=true;
+    c.onclick=function(){ if(seq.indexOf(code)<0){seq.push(code); renderSeq(); renderBank();} };
+    c.ondragstart=function(e){ e.dataTransfer.setData('text',code); };
+    bank.appendChild(c);
+  });
+}
+function renderSeq(){
+  var box=document.getElementById('seqBox'); box.innerHTML='';
+  box.classList.toggle('empty', seq.length===0);
+  seq.forEach(function(code,i){
+    if(i>0){var a=document.createElement('span'); a.className='arrow'; a.textContent='→'; box.appendChild(a);}
+    var c=document.createElement('div'); c.className='stagecard '+STAGES[code].cls;
+    c.innerHTML=stageCardHTML(code); c.title='點一下移除';
+    c.onclick=function(){ seq.splice(i,1); renderSeq(); renderBank(); };
+    box.appendChild(c);
+  });
+}
+function loadEvent(){
+  seq=[]; document.getElementById('fb').className='fb';
+  document.getElementById('evTitle').textContent='事件:'+EVENTS[evIdx].name;
+  document.getElementById('pProg').textContent='第 '+(evIdx+1)+' / '+EVENTS.length+' 題';
+  renderSeq(); renderBank();
+}
+function checkSeq(){
+  var ev=EVENTS[evIdx], fb=document.getElementById('fb');
+  if(seq.join('')===ev.path.join('')){
+    fb.className='fb ok show';
+    fb.innerHTML='✔ 完全正確!<div class="meta">'
+      +'<span class="pill '+(ev.cat==='反射作用'?'reflex':'conscious')+'">'+ev.cat+'</span>'
+      +'<span class="pill '+(ev.spinal==='有經脊髓'?'spinal':'nospinal')+'">'+ev.spinal+'</span><br>'+ev.note+'</div>';
+    if(!solved[evIdx]){ solved[evIdx]=true; addXP(20);
+      if(solved.filter(Boolean).length===EVENTS.length){ earnBadge('b2'); addXP(40); confetti();
+        setTimeout(function(){alert('🎉 八個事件全部排對!獲得徽章「路徑高手」🔀');},250); } }
+  }else{
+    fb.className='fb no show';
+    fb.innerHTML='✘ 還不對——想想這是反射還是意識反應?會不會經過脊髓?可按「顯示答案」對照。';
+    var sb=document.getElementById('seqBox'); sb.classList.add('shake');
+    setTimeout(function(){sb.classList.remove('shake');},400);
+  }
+}
+document.getElementById('checkBtn').onclick=checkSeq;
+document.getElementById('clearBtn').onclick=function(){seq=[]; document.getElementById('fb').className='fb'; renderSeq(); renderBank();};
+document.getElementById('ansBtn').onclick=function(){seq=EVENTS[evIdx].path.slice(); renderSeq(); renderBank();
+  var ev=EVENTS[evIdx], fb=document.getElementById('fb'); fb.className='fb ok show';
+  fb.innerHTML='📖 正確路徑如上。<div class="meta"><span class="pill '+(ev.cat==='反射作用'?'reflex':'conscious')+'">'+ev.cat+'</span><span class="pill '+(ev.spinal==='有經脊髓'?'spinal':'nospinal')+'">'+ev.spinal+'</span><br>'+ev.note+'</div>';};
+document.getElementById('prevBtn').onclick=function(){evIdx=(evIdx-1+EVENTS.length)%EVENTS.length; loadEvent();};
+document.getElementById('nextBtn').onclick=function(){evIdx=(evIdx+1)%EVENTS.length; loadEvent();};
+(function(){var box=document.getElementById('seqBox');
+  box.ondragover=function(e){e.preventDefault(); box.classList.add('over');};
+  box.ondragleave=function(){box.classList.remove('over');};
+  box.ondrop=function(e){e.preventDefault(); box.classList.remove('over');
+    var code=e.dataTransfer.getData('text');
+    if(code && seq.indexOf(code)<0){seq.push(code); renderSeq(); renderBank();}};
+})();
+loadEvent();
+
+/* ===== Panel 3: Quiz ===== */
+var QUIZ=[
+ {q:'小芳閉眼從甲動作換成乙動作,協調肌肉維持平衡主要由何者調控?',tag:'109會考',o:['腦垂腺','小腦','腦幹','脊髓'],a:1,e:'維持平衡、協調肌肉的中樞是小腦。'},
+ {q:'對榴槤氣味有人覺香、有人覺臭,此感受由哪一部位產生?',tag:'108會考',o:['鼻子','腦幹','大腦','小腦'],a:2,e:'一切「感受、判斷」都在大腦產生;鼻子只是受器。'},
+ {q:'聽到電話鈴聲趕緊接聽並回答,下列敘述何者最合理?',tag:'103會考',o:['聽到鈴聲的感覺由耳朵產生','回答語句由腦幹產生','拿起話筒速度由脊髓決定','是否接聽由大腦決定'],a:3,e:'是否接聽是有意識的判斷,由大腦決定;感覺也在大腦而非耳朵產生。'},
+ {q:'玩「心臟病」牌卡遊戲時,關於神經訊息傳遞何者【錯誤】?',tag:'112會考',o:['眼、耳受器接收刺激','動作指令由腦幹產生','指令經運動神經元傳至手部肌肉','可比較接受刺激到反應的快慢'],a:1,e:'自主動作指令來自大腦,不是腦幹——這是本題要選的錯誤敘述。'},
+ {q:'看到好友立即揮手打招呼,下列敘述何者正確?',tag:'107會考',o:['立即揮手屬反射作用','受器在手部肌肉','興奮感覺由感受神經產生','揮手命令由運動神經傳遞'],a:3,e:'命令由運動神經傳出;揮手經大腦判斷,屬意識反應而非反射,受器在眼睛。'},
+ {q:'使用電子耳聽聲音的部分傳導途徑,下列何者正確?',tag:'111會考補考',o:['電子耳將電流轉成聲波','聽覺受器將電流轉成聲波','訊息由聽覺受器傳至運動神經元','訊息經感覺神經元傳至大腦'],a:3,e:'受器接收後,由感覺神經元把訊息傳到大腦而產生聽覺。'},
+ {q:'吃到苦味立刻吐出,才知食物混有苦瓜,下列何者最合理?',tag:'110會考補考',o:['立刻吐出是反射作用','苦味受器位於大腦','突然覺得苦是反射作用','經大腦判斷得知混有苦瓜'],a:3,e:'分辨出苦瓜需要大腦判斷;吐出經大腦屬意識反應,不是反射。'},
+ {q:'一人尖叫遮眼、一人直視不動,比較兩人反應何者最合理?',tag:'104會考',o:['兩人反應都屬反射作用','兩人反應都藉肌肉表現','小庭受器是眼、小瑋受器是手','兩人分別只有感覺或運動神經參與'],a:1,e:'不論尖叫或刻意不動,都是靠肌肉(動器)來表現反應。'},
+ {q:'觸電後立刻縮手又因疼痛甩手,圖中甲乙丙為神經,路徑配對何者最合理?',tag:'106會考',o:['觸電立刻縮手—甲、乙','觸電感覺疼痛—乙、丙','受器傳至中樞—乙、丙','中樞發出甩手命令傳至動器—丙、甲'],a:3,e:'縮手是反射;中樞發出甩手命令經運動神經傳到動器,對應丙、甲。'}
+];
+var qScore=0, qAnswered=0;
+function buildQuiz(){
+  qScore=0; qAnswered=0;
+  var card=document.getElementById('quizCard'); card.innerHTML='';
+  QUIZ.forEach(function(item,qi){
+    var wrap=document.createElement('div'); wrap.className='q';
+    wrap.innerHTML='<div class="qt">'+(qi+1)+'. '+item.q+' <span class="tag">〔'+item.tag+'〕</span></div>';
+    item.o.forEach(function(opt,oi){
+      var b=document.createElement('button'); b.className='opt'; b.textContent='('+'ABCD'[oi]+') '+opt;
+      b.onclick=function(){answer(wrap,item,oi,b);};
+      wrap.appendChild(b);
+    });
+    var ex=document.createElement('div'); ex.className='explain';
+    ex.innerHTML='✔ 正解 ('+'ABCD'[item.a]+')　'+item.e;
+    wrap.appendChild(ex); card.appendChild(wrap);
+  });
+  updateQScore();
+}
+function answer(wrap,item,oi,btn){
+  if(wrap.dataset.done)return; wrap.dataset.done='1';
+  wrap.querySelectorAll('.opt').forEach(function(o,i){ o.disabled=true; if(i===item.a)o.classList.add('correct'); });
+  if(oi!==item.a)btn.classList.add('wrong'); else { qScore++; addXP(15); }
+  wrap.querySelector('.explain').classList.add('show');
+  qAnswered++; updateQScore();
+  if(qAnswered===QUIZ.length){ earnBadge('b3');
+    if(qScore===QUIZ.length){ addXP(50); confetti(); setTimeout(function(){alert('🏆 滿分!獲得徽章「會考王」🏆');},250); }
+    else { setTimeout(function(){alert('作答完成!得分 '+qScore+' / '+QUIZ.length+',獲得徽章「會考王」🏆');},250); } }
+}
+function updateQScore(){document.getElementById('qScore').textContent='得分 '+qScore+' / '+QUIZ.length;}
+document.getElementById('qReset').onclick=buildQuiz;
+buildQuiz();
+</script>
+</body>
+</html>
